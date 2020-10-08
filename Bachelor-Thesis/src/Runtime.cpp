@@ -8,8 +8,13 @@
 namespace Lang {
 
 	InterpretResult Runtime::Interpret(const char* source) {
-		Compiler::Compile(source);
-		return InterpretResult::OK;
+		if (!Compiler::Compile(source, m_Chunk)) {
+			return InterpretResult::CompileError;
+		}
+
+		m_CodeIndex = 0;
+		InterpretResult res = Run();
+		return res;
 	}
 
 	InterpretResult Runtime::Run() {
