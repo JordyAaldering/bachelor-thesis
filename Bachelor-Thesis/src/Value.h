@@ -6,10 +6,10 @@ namespace Lang {
 
 	struct Value {
 		uint8_t Dim;
-		uint8_t* Shape;
-		double* Values;
+		std::vector<uint8_t> Shape;
+		std::vector<double> Values;
 
-		Value(uint8_t dim, uint8_t* shape, double* values)
+		Value(uint8_t dim, std::vector<uint8_t> shape, std::vector<double> values)
 			: Dim(dim), Shape(shape), Values(values) {
 		}
 

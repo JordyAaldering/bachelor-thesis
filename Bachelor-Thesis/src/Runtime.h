@@ -19,15 +19,11 @@ namespace Lang {
 		uint8_t ReadByte();
 		Value ReadConstant();
 
-		void Push(Value value);
-		Value Pop();
-
 	private:
 		std::shared_ptr<Chunk> m_Chunk;
 		uint8_t m_CodeIndex;
 
-		Value m_Stack[256];
-		Value* m_StackTop;
+		std::stack<Value> m_Stack;
 	};
 
 }

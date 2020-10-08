@@ -1,8 +1,8 @@
 #include "Runtime.h"
 
-#ifdef DEBUG_TRACE
+#ifdef DEBUG
 #include "Debug/Disassembler.h"
-#endif // DEBUG_TRACE
+#endif // DEBUG
 
 
 namespace Lang {
@@ -15,24 +15,27 @@ namespace Lang {
 
 	InterpretResult Runtime::Run() {
 		while (true) {
-			#ifdef DEBUG_TRACE
+			#ifdef DEBUG
 			Disassembler::DisassembleInstruction(m_Chunk, m_CodeIndex);
-			#endif // DEBUG_TRACE
-
+			#endif // DEBUG
 
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:
-					ReadConstant().Print();
-					printf("\n");
+					m_Stack.push(ReadConstant());
 					break;
 
 				case OpCode::Return:
+					m_Stack.top().Print();
+					m_Stack.pop();
+					printf("\n");
 					return InterpretResult::OK;
+
+				default:
+					fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
+					return InterpretResult::RuntimeError;
 			}
 		}
-
-		return InterpretResult::OK;
 	}
 
 	uint8_t Runtime::ReadByte() {
@@ -42,14 +45,6 @@ namespace Lang {
 	Value Runtime::ReadConstant() {
 		uint8_t index = ReadByte();
 		return m_Chunk->Constants[index];
-	}
-
-	void Runtime::Push(Value value) {
-
-	}
-
-	Value Runtime::Pop() {
-
 	}
 
 }

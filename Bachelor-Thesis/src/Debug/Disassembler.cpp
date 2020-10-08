@@ -6,13 +6,13 @@ namespace Lang {
 		printf("== %s ==\n", name);
 		printf("Offset Line OpCode\n");
 
-		int offset = 0;
+		uint32_t offset = 0;
 		while (offset < chunk->Code.size()) {
 			offset = DisassembleInstruction(chunk, offset);
 		}
 	}
 
-	int Disassembler::DisassembleInstruction(std::shared_ptr<Chunk> chunk, int offset) {
+	int Disassembler::DisassembleInstruction(std::shared_ptr<Chunk> chunk, uint32_t offset) {
 		printf("%04d   ", offset);
 		if (offset == 0 || chunk->Lines[offset] != chunk->Lines[offset - 1]) {
 			printf("%4d ", chunk->Lines[offset]);
@@ -24,13 +24,14 @@ namespace Lang {
 		switch (instruction) {
 			case OpCode::Constant: return ConstantInstruction("Constant", chunk, offset);
 			case OpCode::Return: return SimpleInstruction("Return", offset);
-		}
 
-		fprintf(stderr, "Unknown OpCode `%d'.\n", instruction);
-		return offset + 1;
+			default:
+				fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
+				return offset + 1;
+		}
 	}
 
-	int Disassembler::ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, int offset) {
+	int Disassembler::ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, uint32_t offset) {
 		uint8_t index = chunk->Code[offset + 1];
 		printf("%-12s %4d `", name, index);
 		chunk->Constants[index].Print();
@@ -38,7 +39,7 @@ namespace Lang {
 		return offset + 2;
 	}
 
-	int Disassembler::SimpleInstruction(const char* name, int offset) {
+	int Disassembler::SimpleInstruction(const char* name, uint32_t offset) {
 		printf("%s\n", name);
 		return offset + 1;
 	}

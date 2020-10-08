@@ -12,19 +12,21 @@ namespace Lang {
 
 	struct Chunk {
 		std::vector<uint8_t> Code;
-		std::vector<int> Lines;
+		std::vector<uint16_t> Lines;
 		std::vector<Value> Constants;
 
-		void Write(uint8_t byte, int line) {
+		/// <summary>Writes a byte to the bytcode.</summary>
+		void Write(uint8_t byte, uint16_t line) {
 			Code.push_back(byte);
 			Lines.push_back(line);
 		}
 
 		/// <summary>Adds a new value to the constants array.</summary>
 		/// <returns>The index at which the value was added.</returns>
-		int AddConstant(uint8_t dim, uint8_t* shape, double* values) {
+		uint8_t AddConstant(uint8_t dim, std::vector<uint8_t> shape, std::vector<double> values) {
+			uint8_t index = (uint8_t)Constants.size();
 			Constants.emplace_back(dim, shape, values);
-			return Constants.size() - 1;
+			return index;
 		}
 
 	};
