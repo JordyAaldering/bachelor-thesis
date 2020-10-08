@@ -1,19 +1,30 @@
 #pragma once
 
 #include "Base.h"
+#include "Value.h"
 
 namespace Lang {
 
 	enum class OpCode {
+		Constant,
 		Return,
 	};
 
 	struct Chunk {
-		std::vector<OpCode> Code;
+		std::vector<uint8_t> Code;
+		std::vector<Value> Constants;
 
-		void Write(OpCode byte) {
+		void Write(uint8_t byte) {
 			Code.push_back(byte);
 		}
+
+		/// <summary>Adds a new value to the constants array.</summary>
+		/// <returns>The index at which the value was added.</returns>
+		int AddConstant(uint8_t dim, uint8_t* shape, double* values) {
+			Constants.emplace_back(dim, shape, values);
+			return Constants.size() - 1;
+		}
+
 	};
 
 }

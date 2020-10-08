@@ -11,6 +11,7 @@ namespace Lang {
 		static int DisassembleInstruction(Chunk* chunk, int offset);
 
 	private:
+		static int ConstantInstruction(const char* name, Chunk* chunk, int offset);
 		static int SimpleInstruction(const char* name, int offset);
 	};
 

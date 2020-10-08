@@ -14,13 +14,22 @@ namespace Lang {
 	int Disassembler::DisassembleInstruction(Chunk* chunk, int offset) {
 		printf("%04d ", offset);
 
-		OpCode instruction = chunk->Code[offset];
+		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
+			case OpCode::Constant: return ConstantInstruction("Constant", chunk, offset);
 			case OpCode::Return: return SimpleInstruction("Return", offset);
 		}
 
 		fprintf(stderr, "Unknown OpCode `%d'.\n", instruction);
 		return offset + 1;
+	}
+
+	int Disassembler::ConstantInstruction(const char* name, Chunk* chunk, int offset) {
+		uint8_t index = chunk->Code[offset + 1];
+		printf("%-16s %4d `", name, index);
+		chunk->Constants[index].Print();
+		printf("'\n");
+		return offset + 2;
 	}
 
 	int Disassembler::SimpleInstruction(const char* name, int offset) {
