@@ -15,8 +15,14 @@ namespace Lang {
 		void Advance();
 		void Consume(TokenType type, const char* msg);
 
+		void Grouping();
+		void Expression();
+		void Number();
+
 		void EmitByte(uint8_t byte);
 		void EmitBytes(uint8_t byte1, uint8_t byte2);
+		void EmitConstant(double value);
+		uint8_t MakeConstant(double value);
 
 		std::shared_ptr<Chunk> GetCurrentChunk();
 

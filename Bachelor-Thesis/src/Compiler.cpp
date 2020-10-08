@@ -40,6 +40,20 @@ namespace Lang {
 		Error(&m_Parser.Current, msg);
 	}
 
+	void Compiler::Grouping() {
+		Expression();
+		Consume(TokenType::RightParen, "Expect `)' after expression\n");
+	}
+
+	void Compiler::Expression() {
+
+	}
+
+	void Compiler::Number() {
+		double value = strtod(m_Parser.Previous.Start, NULL);
+		EmitConstant(value);
+	}
+
 	void Compiler::EmitByte(uint8_t byte) {
 		GetCurrentChunk()->Write(byte, m_Parser.Previous.Line);
 	}
@@ -47,6 +61,14 @@ namespace Lang {
 	void Compiler::EmitBytes(uint8_t byte1, uint8_t byte2) {
 		EmitByte(byte1);
 		EmitByte(byte2);
+	}
+
+	void Compiler::EmitConstant(double value) {
+		EmitBytes((uint8_t)OpCode::Constant, MakeConstant(value));
+	}
+
+	uint8_t Compiler::MakeConstant(double value) {
+		return GetCurrentChunk()->AddConstant(0, {}, { value });
 	}
 
 	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {
