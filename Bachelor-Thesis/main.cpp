@@ -11,9 +11,9 @@ int main(int argc, char* argv[]) {
 	double values[] = { 7.0, 6.0 };
 	int index = chunk.AddConstant(dim, shape, values);
 	
-	chunk.Write((uint8_t)OpCode::Constant);
-	chunk.Write(index);
-	chunk.Write((uint8_t)OpCode::Return);
+	chunk.Write((uint8_t)OpCode::Constant, 123);
+	chunk.Write(index, 123);
+	chunk.Write((uint8_t)OpCode::Return, 124);
 	Disassembler::Disassemble(&chunk, "Test");
 
 	return 0;

@@ -4,6 +4,7 @@ namespace Lang {
 
 	void Disassembler::Disassemble(Chunk* chunk, const char* name) {
 		printf("== %s ==\n", name);
+		printf("Offset Line OpCode\n");
 
 		int offset = 0;
 		while (offset < chunk->Code.size()) {
@@ -12,7 +13,12 @@ namespace Lang {
 	}
 
 	int Disassembler::DisassembleInstruction(Chunk* chunk, int offset) {
-		printf("%04d ", offset);
+		printf("%04d   ", offset);
+		if (offset == 0 || chunk->Lines[offset] != chunk->Lines[offset - 1]) {
+			printf("%4d ", chunk->Lines[offset]);
+		} else {
+			printf("   | ");
+		}
 
 		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
@@ -26,7 +32,7 @@ namespace Lang {
 
 	int Disassembler::ConstantInstruction(const char* name, Chunk* chunk, int offset) {
 		uint8_t index = chunk->Code[offset + 1];
-		printf("%-16s %4d `", name, index);
+		printf("%-12s %4d `", name, index);
 		chunk->Constants[index].Print();
 		printf("'\n");
 		return offset + 2;

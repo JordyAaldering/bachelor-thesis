@@ -12,10 +12,12 @@ namespace Lang {
 
 	struct Chunk {
 		std::vector<uint8_t> Code;
+		std::vector<int> Lines;
 		std::vector<Value> Constants;
 
-		void Write(uint8_t byte) {
+		void Write(uint8_t byte, int line) {
 			Code.push_back(byte);
+			Lines.push_back(line);
 		}
 
 		/// <summary>Adds a new value to the constants array.</summary>
