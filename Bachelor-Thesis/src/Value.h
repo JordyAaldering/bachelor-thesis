@@ -19,7 +19,6 @@ namespace Lang {
 			for (double v : Values) {
 				neg.push_back(-v);
 			}
-
 			return Value(Dim, Shape, neg);
 		}
 
@@ -29,7 +28,6 @@ namespace Lang {
 			for (int i = 0; i < Values.size(); i++) {
 				v.push_back(Values[i] + r.Values[i]);
 			}
-
 			return Value(Dim, Shape, v);
 		}
 
@@ -39,7 +37,6 @@ namespace Lang {
 			for (int i = 0; i < Values.size(); i++) {
 				v.push_back(Values[i] - r.Values[i]);
 			}
-
 			return Value(Dim, Shape, v);
 		}
 
@@ -49,7 +46,6 @@ namespace Lang {
 			for (int i = 0; i < Values.size(); i++) {
 				v.push_back(Values[i] * r.Values[i]);
 			}
-
 			return Value(Dim, Shape, v);
 		}
 
@@ -59,7 +55,6 @@ namespace Lang {
 			for (int i = 0; i < Values.size(); i++) {
 				v.push_back(Values[i] / r.Values[i]);
 			}
-
 			return Value(Dim, Shape, v);
 		}
 

@@ -25,7 +25,6 @@ namespace Lang {
 	private:
 		std::shared_ptr<Chunk> m_Chunk;
 		uint8_t m_CodeIndex;
-
 		std::stack<Value> m_Stack;
 	};
 

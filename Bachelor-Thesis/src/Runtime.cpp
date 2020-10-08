@@ -4,7 +4,6 @@
 #include "Debug/Disassembler.h"
 #endif // DEBUG
 
-
 namespace Lang {
 
 	InterpretResult Runtime::Interpret(std::shared_ptr<Chunk> chunk) {
@@ -17,7 +16,7 @@ namespace Lang {
 		while (true) {
 			#ifdef DEBUG
 			Disassembler::DisassembleInstruction(m_Chunk, m_CodeIndex);
-			#endif // DEBUG
+			#endif
 
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
@@ -73,7 +72,6 @@ namespace Lang {
 		return m_Chunk->Constants[index];
 	}
 
-
 	void Runtime::Push(Value value) {
 		m_Stack.push(value);
 	}
@@ -83,6 +81,5 @@ namespace Lang {
 		m_Stack.pop();
 		return v;
 	}
-
 
 }
