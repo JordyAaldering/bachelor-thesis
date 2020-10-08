@@ -12,6 +12,8 @@ workspace "Bachelor-Thesis"
         "MultiProcessorCompile"
     }
 
+OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
 project "Bachelor-Thesis"
     location "Bachelor-Thesis"
     kind "ConsoleApp"
@@ -19,7 +21,11 @@ project "Bachelor-Thesis"
     cppdialect "C++17"
     staticruntime "on"
 
+    targetdir ("bin/" .. OutputDir .. "/%{prj.name}")
+    objdir ("bin-int/" .. OutputDir .. "/%{prj.name}")
+
     files {
+        "%{prj.name}/main.cpp",
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp"
     }
