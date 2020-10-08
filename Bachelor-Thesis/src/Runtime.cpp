@@ -28,10 +28,33 @@ namespace Lang {
 				case OpCode::Negate:
 					Push(-Pop());
 					break;
+				case OpCode::Add: {
+					Value r = Pop();
+					Value l = Pop();
+					Push(l + r);
+					break;
+				}
+				case OpCode::Subtract: {
+					Value r = Pop();
+					Value l = Pop();
+					Push(l - r);
+					break;
+				}
+				case OpCode::Multiply: {
+					Value r = Pop();
+					Value l = Pop();
+					Push(l * r);
+					break;
+				}
+				case OpCode::Divide: {
+					Value r = Pop();
+					Value l = Pop();
+					Push(l / r);
+					break;
+				}
 
 				case OpCode::Return:
 					Pop().Print();
-					printf("\n");
 					return InterpretResult::OK;
 
 				default:

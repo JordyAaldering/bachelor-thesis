@@ -9,8 +9,15 @@ int main(int argc, char* argv[]) {
 	int index = chunk->AddConstant(1, { 2 }, { 7.0, 6.0 });	
 	chunk->Write((uint8_t)OpCode::Constant, 123);
 	chunk->Write(index, 123);
-	chunk->Write((uint8_t)OpCode::Negate, 123);
-	chunk->Write((uint8_t)OpCode::Return, 124);
+
+	index = chunk->AddConstant(1, { 2 }, { 2.0, 2.0 });
+	chunk->Write((uint8_t)OpCode::Constant, 124);
+	chunk->Write(index, 124);
+
+	chunk->Write((uint8_t)OpCode::Divide, 123);
+	chunk->Write((uint8_t)OpCode::Negate, 124);
+
+	chunk->Write((uint8_t)OpCode::Return, 125);
 	
 	Runtime vm;
 	vm.Interpret(chunk);

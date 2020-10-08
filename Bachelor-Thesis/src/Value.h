@@ -23,6 +23,46 @@ namespace Lang {
 			return Value(Dim, Shape, neg);
 		}
 
+		Value operator+(Value r) {
+			std::vector<double> v;
+			v.reserve(Values.size());
+			for (int i = 0; i < Values.size(); i++) {
+				v.push_back(Values[i] + r.Values[i]);
+			}
+
+			return Value(Dim, Shape, v);
+		}
+
+		Value operator-(Value r) {
+			std::vector<double> v;
+			v.reserve(Values.size());
+			for (int i = 0; i < Values.size(); i++) {
+				v.push_back(Values[i] - r.Values[i]);
+			}
+
+			return Value(Dim, Shape, v);
+		}
+
+		Value operator*(Value r) {
+			std::vector<double> v;
+			v.reserve(Values.size());
+			for (int i = 0; i < Values.size(); i++) {
+				v.push_back(Values[i] * r.Values[i]);
+			}
+
+			return Value(Dim, Shape, v);
+		}
+
+		Value operator/(Value r) {
+			std::vector<double> v;
+			v.reserve(Values.size());
+			for (int i = 0; i < Values.size(); i++) {
+				v.push_back(Values[i] / r.Values[i]);
+			}
+
+			return Value(Dim, Shape, v);
+		}
+
 		void Print() {
 			if (Dim == 0) {
 				printf("<0, [], %f>", Values[0]);
@@ -39,7 +79,7 @@ namespace Lang {
 			for (int i = 1; i < size; i++) {
 				printf(", %f", Values[i]);
 			}
-			printf("]>");
+			printf("]>\n");
 		}
 	};
 

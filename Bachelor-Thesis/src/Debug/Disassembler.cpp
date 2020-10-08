@@ -22,9 +22,13 @@ namespace Lang {
 
 		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
-			case OpCode::Constant: return ConstantInstruction("Constant", chunk, offset);
-			case OpCode::Negate: return SimpleInstruction("Negate", offset);
-			case OpCode::Return: return SimpleInstruction("Return", offset);
+			case OpCode::Constant:	return ConstantInstruction("Constant", chunk, offset);
+			case OpCode::Negate:	return SimpleInstruction("Negate", offset);
+			case OpCode::Add:		return SimpleInstruction("Add", offset);
+			case OpCode::Subtract:	return SimpleInstruction("Subtract", offset);
+			case OpCode::Multiply:	return SimpleInstruction("Multiply", offset);
+			case OpCode::Divide:	return SimpleInstruction("Divide", offset);
+			case OpCode::Return:	return SimpleInstruction("Return", offset);
 
 			default:
 				fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
@@ -34,9 +38,8 @@ namespace Lang {
 
 	int Disassembler::ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, uint32_t offset) {
 		uint8_t index = chunk->Code[offset + 1];
-		printf("%-12s %4d `", name, index);
+		printf("%-12s %4d ", name, index);
 		chunk->Constants[index].Print();
-		printf("'\n");
 		return offset + 2;
 	}
 
