@@ -11,7 +11,7 @@ namespace Lang {
 
 	class Runtime {
 	public:
-		InterpretResult Interpret(std::shared_ptr<Chunk> chunk);
+		InterpretResult Interpret(const char* source);
 
 	private:
 		InterpretResult Run();

@@ -1,4 +1,5 @@
 #include "Runtime.h"
+#include "Compiler.h"
 
 #ifdef DEBUG
 #include "Debug/Disassembler.h"
@@ -6,10 +7,9 @@
 
 namespace Lang {
 
-	InterpretResult Runtime::Interpret(std::shared_ptr<Chunk> chunk) {
-		m_Chunk = chunk;
-		m_CodeIndex = 0;
-		return Run();
+	InterpretResult Runtime::Interpret(const char* source) {
+		Compiler::Compile(source);
+		return InterpretResult::OK;
 	}
 
 	InterpretResult Runtime::Run() {

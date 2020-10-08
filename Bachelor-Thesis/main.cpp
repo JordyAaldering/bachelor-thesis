@@ -3,24 +3,69 @@
 
 using namespace Lang;
 
-int main(int argc, char* argv[]) {
-	auto chunk = std::make_shared<Chunk>();
-
-	int index = chunk->AddConstant(1, { 2 }, { 7.0, 6.0 });	
-	chunk->Write((uint8_t)OpCode::Constant, 123);
-	chunk->Write(index, 123);
-
-	index = chunk->AddConstant(1, { 2 }, { 2.0, 2.0 });
-	chunk->Write((uint8_t)OpCode::Constant, 124);
-	chunk->Write(index, 124);
-
-	chunk->Write((uint8_t)OpCode::Divide, 123);
-	chunk->Write((uint8_t)OpCode::Negate, 124);
-
-	chunk->Write((uint8_t)OpCode::Return, 125);
-	
+static void Repl() {
 	Runtime vm;
-	vm.Interpret(chunk);
+	char line[1024];
+
+	while (true) {
+		printf("> ");
+
+		if (!fgets(line, sizeof(line), stdin)) {
+			printf("\n");
+			break;
+		}
+
+		vm.Interpret(line);
+	}
+}
+
+static char* ReadFile(char* path) {
+	FILE* file = fopen(path, "rb");
+	if (file == NULL) {
+		fprintf(stderr, "Could not open file `%s'\n", path);
+		exit(74);
+	}
+
+	fseek(file, 0L, SEEK_END);
+	size_t size = ftell(file);
+	rewind(file);
+
+	char* buffer = (char*)malloc(size + 1);
+	if (buffer == NULL) {
+		fprintf(stderr, "Not enough memory to read `%s'\n", path);
+		exit(74);
+	}
+
+	size_t bytesRead = fread(buffer, sizeof(char), size, file);
+	if (bytesRead < size) {
+		fprintf(stderr, "Could not read file `%s'\n", path);
+		exit(74);
+	}
+
+	buffer[bytesRead] = '\0';
+	fclose(file);
+	return buffer;
+}
+
+static void RunFile(char* path) {
+	Runtime vm;
+	char* source = ReadFile(path);
+	InterpretResult result = vm.Interpret(source);
+	free(source);
+
+	if (result == InterpretResult::CompileError) exit(65);
+	if (result == InterpretResult::RuntimeError) exit(70);
+}
+
+int main(int argc, char* argv[]) {
+	if (argc == 1) {
+		Repl();
+	} else if (argc == 2) {
+		RunFile(argv[1]);
+	} else {
+		fprintf(stderr, "Usage: %s [path]\n", argv[0]);
+		exit(64);
+	}
 
 	return 0;
 }
