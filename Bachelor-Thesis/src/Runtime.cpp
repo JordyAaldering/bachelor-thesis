@@ -44,4 +44,12 @@ namespace Lang {
 		return m_Chunk->Constants[index];
 	}
 
+	void Runtime::Push(Value value) {
+
+	}
+
+	Value Runtime::Pop() {
+
+	}
+
 }
