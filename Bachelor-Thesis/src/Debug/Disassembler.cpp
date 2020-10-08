@@ -2,7 +2,7 @@
 
 namespace Lang {
 
-	void Disassembler::Disassemble(Chunk* chunk, const char* name) {
+	void Disassembler::Disassemble(std::shared_ptr<Chunk> chunk, const char* name) {
 		printf("== %s ==\n", name);
 		printf("Offset Line OpCode\n");
 
@@ -12,7 +12,7 @@ namespace Lang {
 		}
 	}
 
-	int Disassembler::DisassembleInstruction(Chunk* chunk, int offset) {
+	int Disassembler::DisassembleInstruction(std::shared_ptr<Chunk> chunk, int offset) {
 		printf("%04d   ", offset);
 		if (offset == 0 || chunk->Lines[offset] != chunk->Lines[offset - 1]) {
 			printf("%4d ", chunk->Lines[offset]);
@@ -30,7 +30,7 @@ namespace Lang {
 		return offset + 1;
 	}
 
-	int Disassembler::ConstantInstruction(const char* name, Chunk* chunk, int offset) {
+	int Disassembler::ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, int offset) {
 		uint8_t index = chunk->Code[offset + 1];
 		printf("%-12s %4d `", name, index);
 		chunk->Constants[index].Print();
