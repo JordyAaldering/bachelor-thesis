@@ -30,7 +30,7 @@ namespace Lang {
 	struct Token {
 		TokenType Type;
 		const char* Start;
-		uint16_t Length;
+		uint8_t Length;
 		uint16_t Line;
 	};
 
@@ -39,6 +39,12 @@ namespace Lang {
 		Scanner(const char* source);
 
 		Token ScanToken();
+
+	private:
+		Token MakeToken(TokenType type);
+		Token ErrorToken(const char* message);
+
+		bool IsAtEnd();
 
 	private:
 		const char* m_Start;
