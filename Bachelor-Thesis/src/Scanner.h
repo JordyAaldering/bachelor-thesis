@@ -9,22 +9,16 @@ namespace Lang {
 		LeftBrace, RightBrace,
 		Comma, Dot, Semicolon,
 		Plus, Minus, Star, Slash,
-
 		Bang, BangEqual,
 		Equal, EqualEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
-
-		Number,
-		Identifier,
-
-		Var, Null, True, False, 
-		If, Else, And, Or,
-		Fun, Print, Return,
-		Sel, Shape, Dim,
-
-		Error,
-		Eof,
+		And, Or,
+		Number, Identifier,
+		Var, Fun, If, Else,
+		Dim, Shape, Sel,
+		Print, Return,
+		Error, Eof,
 	};
 
 	struct Token {
@@ -43,8 +37,19 @@ namespace Lang {
 	private:
 		Token MakeToken(TokenType type);
 		Token ErrorToken(const char* message);
+		Token MakeNumber();
+		Token MakeIdentifier();
+		TokenType GetIdentifierType();
 
+		char Peek();
+		char PeekNext();
+		char Advance();
+		bool Match(char expected);
+		bool IsDigit(char c);
+		bool IsAlpha(char c);
 		bool IsAtEnd();
+
+		void SkipWhitespace();
 
 	private:
 		const char* m_Start;
