@@ -22,12 +22,15 @@ namespace Lang {
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:
-					m_Stack.push(ReadConstant());
+					Push(ReadConstant());
+					break;
+
+				case OpCode::Negate:
+					Push(-Pop());
 					break;
 
 				case OpCode::Return:
-					m_Stack.top().Print();
-					m_Stack.pop();
+					Pop().Print();
 					printf("\n");
 					return InterpretResult::OK;
 
@@ -46,5 +49,17 @@ namespace Lang {
 		uint8_t index = ReadByte();
 		return m_Chunk->Constants[index];
 	}
+
+
+	void Runtime::Push(Value value) {
+		m_Stack.push(value);
+	}
+
+	Value Runtime::Pop() {
+		Value v = m_Stack.top();
+		m_Stack.pop();
+		return v;
+	}
+
 
 }

@@ -23,6 +23,7 @@ namespace Lang {
 		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
 			case OpCode::Constant: return ConstantInstruction("Constant", chunk, offset);
+			case OpCode::Negate: return SimpleInstruction("Negate", offset);
 			case OpCode::Return: return SimpleInstruction("Return", offset);
 
 			default:

@@ -7,6 +7,11 @@ namespace Lang {
 
 	enum class OpCode {
 		Constant,
+
+		Negate,
+		Add, Subtract,
+		Multiply, Divide,
+
 		Return,
 	};
 

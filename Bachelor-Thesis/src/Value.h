@@ -13,25 +13,33 @@ namespace Lang {
 			: Dim(dim), Shape(shape), Values(values) {
 		}
 
+		Value operator-() {
+			std::vector<double> neg;
+			neg.reserve(Values.size());
+			for (double v : Values) {
+				neg.push_back(-v);
+			}
+
+			return Value(Dim, Shape, neg);
+		}
+
 		void Print() {
 			if (Dim == 0) {
-				printf("0, [], %f", Values[0]);
+				printf("<0, [], %f>", Values[0]);
 				return;
 			}
 
-			printf("%d, [%d", Dim, Shape[0]);
+			printf("<%d, [%d", Dim, Shape[0]);
 			int size = Shape[0];
 			for (int i = 1; i < Dim; i++) {
 				printf(", %d", Shape[i]);
 				size *= Shape[i];
 			}
-
 			printf("], [%f", Values[0]);
 			for (int i = 1; i < size; i++) {
 				printf(", %f", Values[i]);
 			}
-
-			printf("]");
+			printf("]>");
 		}
 	};
 
