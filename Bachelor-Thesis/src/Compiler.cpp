@@ -16,6 +16,8 @@ namespace Lang {
 		{ NULL,		NULL,	Precedence::None },			// RightParen
 		{ NULL,		NULL,	Precedence::None },			// LeftBrace
 		{ NULL,		NULL,	Precedence::None },			// RightBrace
+		{ Vector,	NULL,	Precedence::None },			// LeftSquare
+		{ NULL,		NULL,	Precedence::None },			// RightSquare
 		{ NULL,		NULL,	Precedence::None },			// Dot
 		{ NULL,		NULL,	Precedence::None },			// Comma
 		{ NULL,		NULL,	Precedence::None },			// Semicolon
@@ -54,19 +56,19 @@ namespace Lang {
 
 		Advance();
 		Expression();
-		Consume(TokenType::Eof, "Expected EOF");
+		Consume(TokenType::Eof, "Expected end of file");
 
-		EndCompiler();
-		return !m_Parser.HadError;
+		return EndCompiler();
 	}
 
-	void Compiler::EndCompiler() {
+	bool Compiler::EndCompiler() {
 		EmitByte((uint8_t)OpCode::Return);
 		#ifdef DEBUG
 		if (!m_Parser.HadError) {
 			Disassembler::Disassemble(GetCurrentChunk(), "Code");
 		}
 		#endif
+		return !m_Parser.HadError;
 	}
 
 	void Compiler::Advance() {
@@ -115,6 +117,22 @@ namespace Lang {
 
 	void Compiler::Expression() {
 		ParsePrecedence(Precedence::Assignment);
+	}
+
+	void Compiler::Vector() {
+		std::vector<double> v;
+		while (m_Parser.Current.Type == TokenType::Number) {
+			Advance();
+			v.push_back(strtod(m_Parser.Previous.Start, NULL));
+			if (m_Parser.Current.Type != TokenType::Comma) {
+				break;
+			}
+
+			Advance();
+		}
+
+		Consume(TokenType::RightSquare, "Expect `]' after vector");
+		EmitConstant({ 1, { (uint8_t)v.size() }, v });
 	}
 
 	void Compiler::Number() {

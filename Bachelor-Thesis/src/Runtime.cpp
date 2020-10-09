@@ -33,6 +33,7 @@ namespace Lang {
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:		Push(ReadConstant()); break;
+
 				case OpCode::Not:			UNARY_OP(!); break;
 				case OpCode::Equal:			BINARY_OP(==); break;
 				case OpCode::NotEqual:		BINARY_OP(!=); break;
@@ -40,6 +41,7 @@ namespace Lang {
 				case OpCode::GreaterEqual:	BINARY_OP(>=); break;
 				case OpCode::Less:			BINARY_OP(<); break;
 				case OpCode::LessEqual:		BINARY_OP(<=); break;
+
 				case OpCode::Negate:		UNARY_OP(-); break;
 				case OpCode::Add:			BINARY_OP(+); break;
 				case OpCode::Subtract:		BINARY_OP(-); break;

@@ -7,6 +7,7 @@ namespace Lang {
 	enum class TokenType {
 		LeftParen, RightParen,
 		LeftBrace, RightBrace,
+		LeftSquare, RightSquare,
 		Dot, Comma, Semicolon,
 		Plus, Minus, Star, Slash,
 		Bang, Equal,
@@ -30,7 +31,6 @@ namespace Lang {
 	class Scanner {
 	public:
 		Scanner(const char* source);
-
 		Token ScanToken();
 
 	private:

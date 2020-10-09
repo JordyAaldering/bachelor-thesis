@@ -20,17 +20,23 @@ namespace Lang {
 			case ')': return MakeToken(TokenType::RightParen);
 			case '{': return MakeToken(TokenType::LeftBrace);
 			case '}': return MakeToken(TokenType::RightBrace);
+			case '[': return MakeToken(TokenType::LeftSquare);
+			case ']': return MakeToken(TokenType::RightSquare);
+
 			case '.': return MakeToken(TokenType::Dot);
 			case ',': return MakeToken(TokenType::Comma);
 			case ';': return MakeToken(TokenType::Semicolon);
+
 			case '+': return MakeToken(TokenType::Plus);
 			case '-': return MakeToken(TokenType::Minus);
 			case '*': return MakeToken(TokenType::Star);
 			case '/': return MakeToken(TokenType::Slash);
+
 			case '!': return MakeToken(Match('=') ? TokenType::BangEqual	: TokenType::Bang);
 			case '=': return MakeToken(Match('=') ? TokenType::EqualEqual	: TokenType::Equal);
 			case '>': return MakeToken(Match('=') ? TokenType::GreaterEqual : TokenType::Greater);
 			case '<': return MakeToken(Match('=') ? TokenType::LessEqual	: TokenType::Less);
+
 			case '&': if (Match('&')) return MakeToken(TokenType::And); break;
 			case '|': if (Match('|')) return MakeToken(TokenType::Or); break;
 		}
@@ -43,20 +49,28 @@ namespace Lang {
 	}
 
 	Token Scanner::ErrorToken(const char* message) {
-		return { TokenType::Error,message,(uint8_t)strlen(message),m_Line };
+		return { TokenType::Error, message, (uint8_t)strlen(message), m_Line };
 	}
 
 	Token Scanner::MakeNumber() {
-		while (IsDigit(Peek())) Advance();
+		while (IsDigit(Peek())) {
+			Advance();
+		}
+
 		if (Match('.') && IsDigit(Peek())) {
-			while (IsDigit(Peek())) Advance();
+			while (IsDigit(Peek())) {
+				Advance();
+			}
 		}
 
 		return MakeToken(TokenType::Number);
 	}
 
 	Token Scanner::MakeIdentifier() {
-		while (IsAlpha(Peek()) || IsDigit(Peek())) Advance();
+		while (IsAlpha(Peek()) || IsDigit(Peek())) {
+			Advance();
+		}
+
 		return MakeToken(GetIdentifierType());
 	}
 
@@ -68,6 +82,7 @@ namespace Lang {
 		if (strncmp(m_Start, "dim", 3) == 0)		return TokenType::Dim;
 		if (strncmp(m_Start, "shape", 5) == 0)		return TokenType::Shape;
 		if (strncmp(m_Start, "sel", 3) == 0)		return TokenType::Sel;
+
 		return TokenType::Identifier;
 	}
 
@@ -119,16 +134,6 @@ namespace Lang {
 				case '\n':
 					m_Line++;
 					Advance();
-					break;
-
-				case '/':
-					if (PeekNext() == '/') {
-						while (Peek() != '\n' && !IsAtEnd()) {
-							Advance();
-						}
-					} else {
-						return;
-					}
 					break;
 
 				default:

@@ -29,7 +29,7 @@ namespace Lang {
 	class Compiler {
 	public:
 		static bool Compile(const char* source, std::shared_ptr<Chunk> chunk);
-		static void EndCompiler();
+		static bool EndCompiler();
 
 	private:
 		static void Advance();
@@ -38,6 +38,7 @@ namespace Lang {
 
 		static void Grouping();
 		static void Expression();
+		static void Vector();
 		static void Number();
 		static void Binary();
 		static void Unary();

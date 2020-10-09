@@ -62,15 +62,13 @@ namespace Lang {
 			return;
 		}
 
-		printf("<%d, [%d", Dim, Shape[0]);
-		int size = Shape[0];
-		for (int i = 1; i < Dim; i++) {
-			printf(", %d", Shape[i]);
-			size *= Shape[i];
+		printf("<%d, [", Dim);
+		for (uint8_t s : Shape) {
+			printf("%d,", s);
 		}
-		printf("], [%f", Values[0]);
-		for (int i = 1; i < size; i++) {
-			printf(", %f", Values[i]);
+		printf("], [");
+		for (double v : Values) {
+			printf("%f,", v);
 		}
 		printf("]>");
 	}

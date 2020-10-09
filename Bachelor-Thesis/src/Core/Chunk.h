@@ -7,8 +7,7 @@ namespace Lang {
 
 	enum class OpCode {
 		Constant,
-		Not,
-		Equal, NotEqual,
+		Not, Equal, NotEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
 		Negate, Add, Subtract,
@@ -20,8 +19,6 @@ namespace Lang {
 		std::vector<uint8_t> Code;
 		std::vector<uint16_t> Lines;
 		std::vector<Value> Constants;
-
-		Chunk();
 
 		/// <summary>Writes a byte to the bytcode.</summary>
 		void Write(uint8_t byte, uint16_t line);
