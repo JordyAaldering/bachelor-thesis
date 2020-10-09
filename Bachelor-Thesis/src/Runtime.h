@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Base.h"
-#include "Chunk.h"
+#include "Core/Chunk.h"
 
 namespace Lang {
 

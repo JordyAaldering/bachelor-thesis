@@ -23,7 +23,7 @@ namespace Lang {
 		{ Unary, Binary, Precedence::None }, // Minus
 		{ NULL, Binary, Precedence::Factor }, // Star
 		{ NULL, Binary, Precedence::Factor }, // Slash
-		{ NULL, NULL, Precedence::None }, // Bang
+		{ Unary, NULL, Precedence::None }, // Bang
 		{ NULL, NULL, Precedence::None }, // BangEqual
 		{ NULL, NULL, Precedence::None }, // Equal
 		{ NULL, NULL, Precedence::None }, // EqualEqual
@@ -144,7 +144,8 @@ namespace Lang {
 		ParsePrecedence(Precedence::Unary);
 
 		switch (operatorType) {
-			case TokenType::Minus: EmitByte((uint8_t)OpCode::Negate);
+			case TokenType::Bang: EmitByte((uint8_t)OpCode::Not); break;
+			case TokenType::Minus: EmitByte((uint8_t)OpCode::Negate); break;
 			default:
 				fprintf(stderr, "Invalid operator `%d'", operatorType);
 				return;

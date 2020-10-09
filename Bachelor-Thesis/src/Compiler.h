@@ -2,7 +2,7 @@
 
 #include "Base.h"
 #include "Scanner.h"
-#include "Chunk.h"
+#include "Core/Chunk.h"
 
 namespace Lang {
 
@@ -12,7 +12,7 @@ namespace Lang {
 		Factor, Unary, Call, Primary
 	};
 
-	typedef struct Parser {
+	struct Parser {
 		Token Current;
 		Token Previous;
 		bool HadError;

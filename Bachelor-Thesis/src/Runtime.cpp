@@ -3,7 +3,7 @@
 
 #ifdef DEBUG
 #include "Debug/Disassembler.h"
-#endif // DEBUG
+#endif
 
 namespace Lang {
 
@@ -29,6 +29,9 @@ namespace Lang {
 					Push(ReadConstant());
 					break;
 
+				case OpCode::Not:
+					Push(!Pop());
+					break;
 				case OpCode::Negate:
 					Push(-Pop());
 					break;
