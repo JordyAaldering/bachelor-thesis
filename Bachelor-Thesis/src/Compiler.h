@@ -16,6 +16,7 @@ namespace Lang {
 	public:
 		Compiler(const char* source);
 		bool Compile(std::shared_ptr<Chunk> chunk);
+		void EndCompiler();
 
 	private:
 		void Advance();

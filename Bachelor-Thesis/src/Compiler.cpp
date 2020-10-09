@@ -1,5 +1,10 @@
 #include "Compiler.h"
 
+#ifdef DEBUG
+#include "Debug/Disassembler.h"
+#endif
+
+
 namespace Lang {
 
 	typedef void (*ParseFn)();
@@ -61,8 +66,17 @@ namespace Lang {
 		Expression();
 		Consume(TokenType::Eof, "");
 
-		EmitByte((uint8_t)OpCode::Return);
+		EndCompiler();
 		return !m_Parser.HadError;
+	}
+
+	void Compiler::EndCompiler() {
+		EmitByte((uint8_t)OpCode::Return);
+		#ifdef DEBUG
+		if (!m_Parser.HadError) {
+			Disassembler::Disassemble(GetCurrentChunk(), "Code");
+		}
+		#endif
 	}
 
 	void Compiler::Advance() {
