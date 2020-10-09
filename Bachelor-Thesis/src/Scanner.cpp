@@ -3,8 +3,7 @@
 namespace Lang {
 
 	Scanner::Scanner(const char* source)
-		: m_Start(source), m_Current(source), m_Line(1) {
-	}
+		: m_Start(source), m_Current(source), m_Line(1) {}
 
 	Token Scanner::ScanToken() {
 		SkipWhitespace();
@@ -24,19 +23,16 @@ namespace Lang {
 			case '.': return MakeToken(TokenType::Dot);
 			case ',': return MakeToken(TokenType::Comma);
 			case ';': return MakeToken(TokenType::Semicolon);
-
 			case '+': return MakeToken(TokenType::Plus);
 			case '-': return MakeToken(TokenType::Minus);
 			case '*': return MakeToken(TokenType::Star);
 			case '/': return MakeToken(TokenType::Slash);
-
 			case '!': return MakeToken(Match('=') ? TokenType::BangEqual	: TokenType::Bang);
 			case '=': return MakeToken(Match('=') ? TokenType::EqualEqual	: TokenType::Equal);
 			case '>': return MakeToken(Match('=') ? TokenType::GreaterEqual : TokenType::Greater);
 			case '<': return MakeToken(Match('=') ? TokenType::LessEqual	: TokenType::Less);
-
-			case '&': if (Match('&')) return MakeToken(TokenType::And);
-			case '|': if (Match('|')) return MakeToken(TokenType::Or);
+			case '&': if (Match('&')) return MakeToken(TokenType::And); break;
+			case '|': if (Match('|')) return MakeToken(TokenType::Or); break;
 		}
 
 		return ErrorToken("Unexpected character");

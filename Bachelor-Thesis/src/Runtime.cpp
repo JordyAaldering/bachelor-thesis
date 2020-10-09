@@ -7,7 +7,11 @@
 
 namespace Lang {
 
+	Runtime::Runtime()
+		: m_Chunk(), m_CodeIndex(0), m_Stack() {}
+
 	InterpretResult Runtime::Interpret(const char* source) {
+		m_Chunk = std::make_shared<Chunk>();
 		if (!Compiler::Compile(source, m_Chunk)) {
 			return InterpretResult::CompileError;
 		}
@@ -18,6 +22,9 @@ namespace Lang {
 	}
 
 	InterpretResult Runtime::Run() {
+		#define UNARY_OP(op) Push(op Pop());
+		#define BINARY_OP(op) { Value r = Pop(); Push(Pop() op r); }
+
 		while (true) {
 			#ifdef DEBUG
 			Disassembler::DisassembleInstruction(m_Chunk, m_CodeIndex);
@@ -25,43 +32,22 @@ namespace Lang {
 
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
-				case OpCode::Constant:
-					Push(ReadConstant());
-					break;
-
-				case OpCode::Not:
-					Push(!Pop());
-					break;
-				case OpCode::Negate:
-					Push(-Pop());
-					break;
-				case OpCode::Add: {
-					Value r = Pop();
-					Value l = Pop();
-					Push(l + r);
-					break;
-				}
-				case OpCode::Subtract: {
-					Value r = Pop();
-					Value l = Pop();
-					Push(l - r);
-					break;
-				}
-				case OpCode::Multiply: {
-					Value r = Pop();
-					Value l = Pop();
-					Push(l * r);
-					break;
-				}
-				case OpCode::Divide: {
-					Value r = Pop();
-					Value l = Pop();
-					Push(l / r);
-					break;
-				}
+				case OpCode::Constant:		Push(ReadConstant()); break;
+				case OpCode::Not:			UNARY_OP(!); break;
+				case OpCode::Equal:			BINARY_OP(==); break;
+				case OpCode::NotEqual:		BINARY_OP(!=); break;
+				case OpCode::Greater:		BINARY_OP(>); break;
+				case OpCode::GreaterEqual:	BINARY_OP(>=); break;
+				case OpCode::Less:			BINARY_OP(<); break;
+				case OpCode::LessEqual:		BINARY_OP(<=); break;
+				case OpCode::Negate:		UNARY_OP(-); break;
+				case OpCode::Add:			BINARY_OP(+); break;
+				case OpCode::Subtract:		BINARY_OP(-); break;
+				case OpCode::Multiply:		BINARY_OP(*); break;
+				case OpCode::Divide:		BINARY_OP(/); break;
 
 				case OpCode::Return:
-					Pop().Print();
+					Pop().PrintLn();
 					return InterpretResult::OK;
 
 				default:
@@ -69,6 +55,9 @@ namespace Lang {
 					return InterpretResult::RuntimeError;
 			}
 		}
+
+		#undef UNARY_OP
+		#undef BINARY_OP
 	}
 
 	uint8_t Runtime::ReadByte() {

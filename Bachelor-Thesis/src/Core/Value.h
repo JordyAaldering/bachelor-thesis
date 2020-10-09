@@ -9,18 +9,25 @@ namespace Lang {
 		std::vector<uint8_t> Shape;
 		std::vector<double> Values;
 
+		Value(double value);
 		Value(uint8_t dim, std::vector<uint8_t> shape, std::vector<double> values);
 
-		operator bool() const;
 		Value operator!();
+		Value operator!=(Value other);
+		Value operator==(Value other);
+		Value operator>(Value other);
+		Value operator>=(Value other);
+		Value operator<(Value other);
+		Value operator<=(Value other);
 
 		Value operator-();
-		Value operator+(Value r);
-		Value operator-(Value r);
-		Value operator*(Value r);
-		Value operator/(Value r);
+		Value operator+(Value other);
+		Value operator-(Value other);
+		Value operator*(Value other);
+		Value operator/(Value other);
 
 		void Print();
+		void PrintLn();
 	};
 
 }

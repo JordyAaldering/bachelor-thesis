@@ -11,6 +11,7 @@ namespace Lang {
 
 	class Runtime {
 	public:
+		Runtime();
 		InterpretResult Interpret(const char* source);
 
 	private:

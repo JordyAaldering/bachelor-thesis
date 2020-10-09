@@ -2,23 +2,43 @@
 
 namespace Lang {
 
-	Value::Value(uint8_t dim, std::vector<uint8_t> shape, std::vector<double> values)
-		: Dim(dim), Shape(shape), Values(values) {
-	}
+	Value::Value(double value)
+		: Dim(0), Shape({}), Values({ value }) {}
 
-	Value::operator bool() const {
-		bool zeros = true;
-		for (double v : Values) {
-			if (v != 0) {
-				zeros = false;
-				break;
-			}
-		}
-		return zeros;
+	Value::Value(uint8_t dim, std::vector<uint8_t> shape, std::vector<double> values)
+		: Dim(dim), Shape(shape), Values(values) {}
+
+#define EQUALITY_OP(op) \
+	Value Value::operator op(Value other) { \
+		for (int i = 0; i < Values.size(); i++) { \
+			if (!(Values[i] op other.Values[i])) return 0; \
+		} \
+		return 1; \
 	}
 
 	Value Value::operator!() {
-		return Value(0, {}, { (double)!this });
+		for (double v : Values) {
+			if (v != 0) return 0;
+		}
+		return 1;
+	}
+
+	EQUALITY_OP(!=)
+	EQUALITY_OP(==)
+	EQUALITY_OP(>)
+	EQUALITY_OP(>=)
+	EQUALITY_OP(<)
+	EQUALITY_OP(<=)
+#undef EQUALITY_OP
+
+#define ARITH_OP(op) \
+	Value Value::operator op(Value other) { \
+		std::vector<double> v; \
+		v.reserve(Values.size()); \
+		for (int i = 0; i < Values.size(); i++) { \
+			v.push_back(Values[i] op other.Values[i]); \
+		} \
+		return Value(Dim, Shape, v); \
 	}
 
 	Value Value::operator-() {
@@ -30,41 +50,11 @@ namespace Lang {
 		return Value(Dim, Shape, neg);
 	}
 
-	Value Value::operator+(Value r) {
-		std::vector<double> v;
-		v.reserve(Values.size());
-		for (int i = 0; i < Values.size(); i++) {
-			v.push_back(Values[i] + r.Values[i]);
-		}
-		return Value(Dim, Shape, v);
-	}
-
-	Value Value::operator-(Value r) {
-		std::vector<double> v;
-		v.reserve(Values.size());
-		for (int i = 0; i < Values.size(); i++) {
-			v.push_back(Values[i] - r.Values[i]);
-		}
-		return Value(Dim, Shape, v);
-	}
-
-	Value Value::operator*(Value r) {
-		std::vector<double> v;
-		v.reserve(Values.size());
-		for (int i = 0; i < Values.size(); i++) {
-			v.push_back(Values[i] * r.Values[i]);
-		}
-		return Value(Dim, Shape, v);
-	}
-
-	Value Value::operator/(Value r) {
-		std::vector<double> v;
-		v.reserve(Values.size());
-		for (int i = 0; i < Values.size(); i++) {
-			v.push_back(Values[i] / r.Values[i]);
-		}
-		return Value(Dim, Shape, v);
-	}
+	ARITH_OP(+)
+	ARITH_OP(-)
+	ARITH_OP(*)
+	ARITH_OP(/)
+#undef ARITH_OP
 
 	void Value::Print() {
 		if (Dim == 0) {
@@ -82,7 +72,12 @@ namespace Lang {
 		for (int i = 1; i < size; i++) {
 			printf(", %f", Values[i]);
 		}
-		printf("]>\n");
+		printf("]>");
+	}
+
+	void Value::PrintLn() {
+		Print();
+		printf("\n");
 	}
 
 }

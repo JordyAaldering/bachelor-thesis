@@ -44,8 +44,8 @@ namespace Lang {
 
 		static void EmitByte(uint8_t byte);
 		static void EmitBytes(uint8_t byte1, uint8_t byte2);
-		static void EmitConstant(double value);
-		static uint8_t MakeConstant(double value);
+		static void EmitConstant(Value value);
+		static uint8_t MakeConstant(Value value);
 
 		static std::shared_ptr<Chunk> GetCurrentChunk();
 		static ParseRule* GetRule(TokenType type);

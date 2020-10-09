@@ -24,13 +24,13 @@ namespace Lang {
 		{ NULL, Binary, Precedence::Factor }, // Star
 		{ NULL, Binary, Precedence::Factor }, // Slash
 		{ Unary, NULL, Precedence::None }, // Bang
-		{ NULL, NULL, Precedence::None }, // BangEqual
 		{ NULL, NULL, Precedence::None }, // Equal
-		{ NULL, NULL, Precedence::None }, // EqualEqual
-		{ NULL, NULL, Precedence::None }, // Greater
-		{ NULL, NULL, Precedence::None }, // GreaterEqual
-		{ NULL, NULL, Precedence::None }, // Less
-		{ NULL, NULL, Precedence::None }, // LessEqual
+		{ NULL, Binary, Precedence::Equality }, // BangEqual
+		{ NULL, Binary, Precedence::Equality }, // EqualEqual
+		{ NULL, Binary, Precedence::Comparison }, // Greater
+		{ NULL, Binary, Precedence::Comparison }, // GreaterEqual
+		{ NULL, Binary, Precedence::Comparison }, // Less
+		{ NULL, Binary, Precedence::Comparison }, // LessEqual
 		{ NULL, NULL, Precedence::None }, // And
 		{ NULL, NULL, Precedence::None }, // Or
 		{ Number, NULL, Precedence::None }, // Number
@@ -128,10 +128,17 @@ namespace Lang {
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
 
 		switch (operatorType) {
-			case TokenType::Plus:	EmitByte((uint8_t)OpCode::Add); break;
-			case TokenType::Minus:	EmitByte((uint8_t)OpCode::Subtract); break;
-			case TokenType::Star:	EmitByte((uint8_t)OpCode::Multiply); break;
-			case TokenType::Slash:	EmitByte((uint8_t)OpCode::Divide); break;
+			case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
+			case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
+			case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
+			case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
+			case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
+			case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
+			case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
+			case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
+			case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
+			case TokenType::Slash:			EmitByte((uint8_t)OpCode::Divide); break;
+
 			default:
 				fprintf(stderr, "Invalid operator `%d'", operatorType);
 				return;
@@ -144,8 +151,9 @@ namespace Lang {
 		ParsePrecedence(Precedence::Unary);
 
 		switch (operatorType) {
-			case TokenType::Bang: EmitByte((uint8_t)OpCode::Not); break;
-			case TokenType::Minus: EmitByte((uint8_t)OpCode::Negate); break;
+			case TokenType::Bang:	EmitByte((uint8_t)OpCode::Not); break;
+			case TokenType::Minus:	EmitByte((uint8_t)OpCode::Negate); break;
+
 			default:
 				fprintf(stderr, "Invalid operator `%d'", operatorType);
 				return;
@@ -161,12 +169,12 @@ namespace Lang {
 		EmitByte(byte2);
 	}
 
-	void Compiler::EmitConstant(double value) {
+	void Compiler::EmitConstant(Value value) {
 		EmitBytes((uint8_t)OpCode::Constant, MakeConstant(value));
 	}
 
-	uint8_t Compiler::MakeConstant(double value) {
-		return GetCurrentChunk()->AddConstant(0, {}, { value });
+	uint8_t Compiler::MakeConstant(Value value) {
+		return GetCurrentChunk()->AddConstant(value);
 	}
 
 	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {

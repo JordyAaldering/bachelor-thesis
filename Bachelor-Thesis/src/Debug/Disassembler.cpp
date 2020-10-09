@@ -40,7 +40,7 @@ namespace Lang {
 	int Disassembler::ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, uint32_t offset) {
 		uint8_t index = chunk->Code[offset + 1];
 		printf("%-12s %4d ", name, index);
-		chunk->Constants[index].Print();
+		chunk->Constants[index].PrintLn();
 		return offset + 2;
 	}
 
