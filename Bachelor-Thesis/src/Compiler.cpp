@@ -7,14 +7,11 @@
 
 namespace Lang {
 
-	typedef void (*ParseFn)();
-	typedef struct ParseRule {
-		ParseFn Prefix;
-		ParseFn Infix;
-		Precedence Precedence;
-	};
+	Scanner Compiler::m_Scanner = nullptr;
+	std::shared_ptr<Chunk> Compiler::m_CompilingChunk;
+	Parser Compiler::m_Parser;
 
-	static ParseRule rules[] = {
+	ParseRule Compiler::m_Rules[] = {
 		{ Grouping, NULL, Precedence::None }, // LeftParen
 		{ NULL, NULL, Precedence::None }, // RightParen
 		{ NULL, NULL, Precedence::None }, // LeftBrace
@@ -49,15 +46,8 @@ namespace Lang {
 		{ NULL, NULL, Precedence::None }, // Eof
 	};
 
-	static ParseRule* GetRule(TokenType type) {
-		return &rules[type];
-	}
-
-	Compiler::Compiler(const char* source)
-		: m_Scanner(source) {
-	}
-
-	bool Compiler::Compile(std::shared_ptr<Chunk> chunk) {
+	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
+		m_Scanner = Scanner(source);
 		m_CompilingChunk = chunk;
 		m_Parser.HadError = false;
 		m_Parser.InPanicMode = false;
@@ -180,6 +170,10 @@ namespace Lang {
 
 	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {
 		return m_CompilingChunk;
+	}
+
+	ParseRule* Compiler::GetRule(TokenType type) {
+		return &m_Rules[(uint8_t)type];
 	}
 
 	void Compiler::Error(Token* token, const char* msg) {

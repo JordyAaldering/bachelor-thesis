@@ -22,6 +22,8 @@ namespace Lang {
 		void Push(Value value);
 		Value Pop();
 
+		void RuntimeError(const char* format, ...);
+
 	private:
 		std::shared_ptr<Chunk> m_Chunk;
 		uint8_t m_CodeIndex;

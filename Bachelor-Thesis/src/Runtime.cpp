@@ -87,4 +87,15 @@ namespace Lang {
 		return v;
 	}
 
+	void Runtime::RuntimeError(const char* format, ...) {
+		va_list args;
+		va_start(args, format);
+		vfprintf(stderr, format, args);
+		va_end(args);
+		fputs("\n", stderr);
+
+		int line = m_Chunk->Lines[m_CodeIndex];
+		fprintf(stderr, "[line %d] in script\n", line);
+	}
+
 }

@@ -12,42 +12,52 @@ namespace Lang {
 		Factor, Unary, Call, Primary
 	};
 
+	typedef struct Parser {
+		Token Current;
+		Token Previous;
+		bool HadError;
+		bool InPanicMode;
+	};
+
+	typedef void (*ParseFn)();
+	struct ParseRule {
+		ParseFn Prefix;
+		ParseFn Infix;
+		Precedence Precedence;
+	};
+
 	class Compiler {
 	public:
-		Compiler(const char* source);
-		bool Compile(std::shared_ptr<Chunk> chunk);
-		void EndCompiler();
+		static bool Compile(const char* source, std::shared_ptr<Chunk> chunk);
+		static void EndCompiler();
 
 	private:
-		void Advance();
-		void Consume(TokenType type, const char* msg);
-		void ParsePrecedence(Precedence precedence);
+		static void Advance();
+		static void Consume(TokenType type, const char* msg);
+		static void ParsePrecedence(Precedence precedence);
 
-		void Grouping();
-		void Expression();
-		void Number();
-		void Binary();
-		void Unary();
+		static void Grouping();
+		static void Expression();
+		static void Number();
+		static void Binary();
+		static void Unary();
 
-		void EmitByte(uint8_t byte);
-		void EmitBytes(uint8_t byte1, uint8_t byte2);
-		void EmitConstant(double value);
-		uint8_t MakeConstant(double value);
+		static void EmitByte(uint8_t byte);
+		static void EmitBytes(uint8_t byte1, uint8_t byte2);
+		static void EmitConstant(double value);
+		static uint8_t MakeConstant(double value);
 
-		std::shared_ptr<Chunk> GetCurrentChunk();
+		static std::shared_ptr<Chunk> GetCurrentChunk();
+		static ParseRule* GetRule(TokenType type);
 
-		void Error(Token* token, const char* msg);
+		static void Error(Token* token, const char* msg);
 
 	private:
-		Scanner m_Scanner;
-		std::shared_ptr<Chunk> m_CompilingChunk;
+		static Scanner m_Scanner;
+		static std::shared_ptr<Chunk> m_CompilingChunk;
+		static Parser m_Parser;
 
-		struct Parser {
-			Token Current;
-			Token Previous;
-			bool HadError;
-			bool InPanicMode;
-		} m_Parser;
+		static ParseRule m_Rules[];
 	};
 
 }

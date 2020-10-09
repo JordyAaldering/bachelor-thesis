@@ -127,7 +127,9 @@ namespace Lang {
 
 				case '/':
 					if (PeekNext() == '/') {
-						while (Peek() != '\n' && !IsAtEnd()) Advance;
+						while (Peek() != '\n' && !IsAtEnd()) {
+							Advance();
+						}
 					} else {
 						return;
 					}
