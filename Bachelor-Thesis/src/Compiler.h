@@ -6,6 +6,12 @@
 
 namespace Lang {
 
+	enum class Precedence {
+		None, Assignment, Or, And,
+		Equality, Comparison, Term,
+		Factor, Unary, Call, Primary
+	};
+
 	class Compiler {
 	public:
 		Compiler(const char* source);
@@ -14,10 +20,13 @@ namespace Lang {
 	private:
 		void Advance();
 		void Consume(TokenType type, const char* msg);
+		void ParsePrecedence(Precedence precedence);
 
 		void Grouping();
 		void Expression();
 		void Number();
+		void Binary();
+		void Unary();
 
 		void EmitByte(uint8_t byte);
 		void EmitBytes(uint8_t byte1, uint8_t byte2);

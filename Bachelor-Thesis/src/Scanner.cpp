@@ -72,8 +72,6 @@ namespace Lang {
 		if (strncmp(m_Start, "dim", 3) == 0)		return TokenType::Dim;
 		if (strncmp(m_Start, "shape", 5) == 0)		return TokenType::Shape;
 		if (strncmp(m_Start, "sel", 3) == 0)		return TokenType::Sel;
-		if (strncmp(m_Start, "print", 5) == 0)		return TokenType::Print;
-		if (strncmp(m_Start, "return", 6) == 0)		return TokenType::Return;
 		return TokenType::Identifier;
 	}
 

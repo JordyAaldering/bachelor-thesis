@@ -2,6 +2,52 @@
 
 namespace Lang {
 
+	typedef void (*ParseFn)();
+	typedef struct ParseRule {
+		ParseFn Prefix;
+		ParseFn Infix;
+		Precedence Precedence;
+	};
+
+	static ParseRule rules[] = {
+		{ Grouping, NULL, Precedence::None }, // LeftParen
+		{ NULL, NULL, Precedence::None }, // RightParen
+		{ NULL, NULL, Precedence::None }, // LeftBrace
+		{ NULL, NULL, Precedence::None }, // RightBrace
+		{ NULL, NULL, Precedence::None }, // Dot
+		{ NULL, NULL, Precedence::None }, // Comma
+		{ NULL, NULL, Precedence::None }, // Semicolon
+		{ NULL, Binary, Precedence::None }, // Plus
+		{ Unary, Binary, Precedence::None }, // Minus
+		{ NULL, Binary, Precedence::Factor }, // Star
+		{ NULL, Binary, Precedence::Factor }, // Slash
+		{ NULL, NULL, Precedence::None }, // Bang
+		{ NULL, NULL, Precedence::None }, // BangEqual
+		{ NULL, NULL, Precedence::None }, // Equal
+		{ NULL, NULL, Precedence::None }, // EqualEqual
+		{ NULL, NULL, Precedence::None }, // Greater
+		{ NULL, NULL, Precedence::None }, // GreaterEqual
+		{ NULL, NULL, Precedence::None }, // Less
+		{ NULL, NULL, Precedence::None }, // LessEqual
+		{ NULL, NULL, Precedence::None }, // And
+		{ NULL, NULL, Precedence::None }, // Or
+		{ Number, NULL, Precedence::None }, // Number
+		{ NULL, NULL, Precedence::None }, // Identifier
+		{ NULL, NULL, Precedence::None }, // Var
+		{ NULL, NULL, Precedence::None }, // Fun
+		{ NULL, NULL, Precedence::None }, // If
+		{ NULL, NULL, Precedence::None }, // Else
+		{ NULL, NULL, Precedence::None }, // Dim
+		{ NULL, NULL, Precedence::None }, // Shape
+		{ NULL, NULL, Precedence::None }, // Sel
+		{ NULL, NULL, Precedence::None }, // Error
+		{ NULL, NULL, Precedence::None }, // Eof
+	};
+
+	static ParseRule* GetRule(TokenType type) {
+		return &rules[type];
+	}
+
 	Compiler::Compiler(const char* source)
 		: m_Scanner(source) {
 	}
@@ -13,7 +59,7 @@ namespace Lang {
 
 		Advance();
 		Expression();
-		Consume(TokenType::Eof);
+		Consume(TokenType::Eof, "");
 
 		EmitByte((uint8_t)OpCode::Return);
 		return !m_Parser.HadError;
@@ -40,18 +86,65 @@ namespace Lang {
 		Error(&m_Parser.Current, msg);
 	}
 
+	void Compiler::ParsePrecedence(Precedence precedence) {
+		Advance();
+
+		ParseFn prefixRule = GetRule(m_Parser.Previous.Type)->Prefix;
+		if (prefixRule == NULL) {
+			Error(&m_Parser.Previous, "Expect expression");
+			return;
+		}
+
+		prefixRule();
+
+		while (precedence <= GetRule(m_Parser.Current.Type)->Precedence) {
+			Advance();
+			ParseFn infixRule = GetRule(m_Parser.Previous.Type)->Infix;
+			infixRule();
+		}
+	}
+
 	void Compiler::Grouping() {
 		Expression();
-		Consume(TokenType::RightParen, "Expect `)' after expression\n");
+		Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
 	void Compiler::Expression() {
-
+		ParsePrecedence(Precedence::Assignment);
 	}
 
 	void Compiler::Number() {
 		double value = strtod(m_Parser.Previous.Start, NULL);
 		EmitConstant(value);
+	}
+
+	void Compiler::Binary() {
+		TokenType operatorType = m_Parser.Previous.Type;
+		ParseRule* rule = GetRule(operatorType);
+		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
+
+		switch (operatorType) {
+			case TokenType::Plus:	EmitByte((uint8_t)OpCode::Add); break;
+			case TokenType::Minus:	EmitByte((uint8_t)OpCode::Subtract); break;
+			case TokenType::Star:	EmitByte((uint8_t)OpCode::Multiply); break;
+			case TokenType::Slash:	EmitByte((uint8_t)OpCode::Divide); break;
+			default:
+				fprintf(stderr, "Invalid operator `%d'", operatorType);
+				return;
+		}
+	}
+
+	void Compiler::Unary() {
+		TokenType operatorType = m_Parser.Previous.Type;
+		Expression();
+		ParsePrecedence(Precedence::Unary);
+
+		switch (operatorType) {
+			case TokenType::Minus: EmitByte((uint8_t)OpCode::Negate);
+			default:
+				fprintf(stderr, "Invalid operator `%d'", operatorType);
+				return;
+		}
 	}
 
 	void Compiler::EmitByte(uint8_t byte) {
