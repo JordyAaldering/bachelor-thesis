@@ -12,38 +12,38 @@ namespace Lang {
 	Parser Compiler::m_Parser;
 
 	ParseRule Compiler::m_Rules[] = {
-		{ Grouping, NULL, Precedence::None }, // LeftParen
-		{ NULL, NULL, Precedence::None }, // RightParen
-		{ NULL, NULL, Precedence::None }, // LeftBrace
-		{ NULL, NULL, Precedence::None }, // RightBrace
-		{ NULL, NULL, Precedence::None }, // Dot
-		{ NULL, NULL, Precedence::None }, // Comma
-		{ NULL, NULL, Precedence::None }, // Semicolon
-		{ NULL, Binary, Precedence::None }, // Plus
-		{ Unary, Binary, Precedence::None }, // Minus
-		{ NULL, Binary, Precedence::Factor }, // Star
-		{ NULL, Binary, Precedence::Factor }, // Slash
-		{ Unary, NULL, Precedence::None }, // Bang
-		{ NULL, NULL, Precedence::None }, // Equal
-		{ NULL, Binary, Precedence::Equality }, // BangEqual
-		{ NULL, Binary, Precedence::Equality }, // EqualEqual
-		{ NULL, Binary, Precedence::Comparison }, // Greater
-		{ NULL, Binary, Precedence::Comparison }, // GreaterEqual
-		{ NULL, Binary, Precedence::Comparison }, // Less
-		{ NULL, Binary, Precedence::Comparison }, // LessEqual
-		{ NULL, NULL, Precedence::None }, // And
-		{ NULL, NULL, Precedence::None }, // Or
-		{ Number, NULL, Precedence::None }, // Number
-		{ NULL, NULL, Precedence::None }, // Identifier
-		{ NULL, NULL, Precedence::None }, // Var
-		{ NULL, NULL, Precedence::None }, // Fun
-		{ NULL, NULL, Precedence::None }, // If
-		{ NULL, NULL, Precedence::None }, // Else
-		{ NULL, NULL, Precedence::None }, // Dim
-		{ NULL, NULL, Precedence::None }, // Shape
-		{ NULL, NULL, Precedence::None }, // Sel
-		{ NULL, NULL, Precedence::None }, // Error
-		{ NULL, NULL, Precedence::None }, // Eof
+		{ Grouping,	NULL,	Precedence::None },			// LeftParen
+		{ NULL,		NULL,	Precedence::None },			// RightParen
+		{ NULL,		NULL,	Precedence::None },			// LeftBrace
+		{ NULL,		NULL,	Precedence::None },			// RightBrace
+		{ NULL,		NULL,	Precedence::None },			// Dot
+		{ NULL,		NULL,	Precedence::None },			// Comma
+		{ NULL,		NULL,	Precedence::None },			// Semicolon
+		{ NULL,		Binary,	Precedence::Term },			// Plus
+		{ Unary,	Binary,	Precedence::Term },			// Minus
+		{ NULL,		Binary,	Precedence::Factor },		// Star
+		{ NULL,		Binary,	Precedence::Factor },		// Slash
+		{ Unary,	NULL,	Precedence::None },			// Bang
+		{ NULL,		NULL,	Precedence::None },			// Equal
+		{ NULL,		Binary,	Precedence::Equality },		// EqualEqual
+		{ NULL,		Binary,	Precedence::Equality },		// BangEqual
+		{ NULL,		Binary,	Precedence::Comparison },	// Greater
+		{ NULL,		Binary,	Precedence::Comparison },	// GreaterEqual
+		{ NULL,		Binary,	Precedence::Comparison },	// Less
+		{ NULL,		Binary,	Precedence::Comparison },	// LessEqual
+		{ NULL,		NULL,	Precedence::None },			// And
+		{ NULL,		NULL,	Precedence::None },			// Or
+		{ Number,	NULL,	Precedence::None },			// Number
+		{ NULL,		NULL,	Precedence::None },			// Identifier
+		{ NULL,		NULL,	Precedence::None },			// Var
+		{ NULL,		NULL,	Precedence::None },			// Fun
+		{ NULL,		NULL,	Precedence::None },			// If
+		{ NULL,		NULL,	Precedence::None },			// Else
+		{ NULL,		NULL,	Precedence::None },			// Dim
+		{ NULL,		NULL,	Precedence::None },			// Shape
+		{ NULL,		NULL,	Precedence::None },			// Sel
+		{ NULL,		NULL,	Precedence::None },			// Error
+		{ NULL,		NULL,	Precedence::None },			// Eof
 	};
 
 	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
@@ -54,7 +54,7 @@ namespace Lang {
 
 		Advance();
 		Expression();
-		Consume(TokenType::Eof, "");
+		Consume(TokenType::Eof, "Expected EOF");
 
 		EndCompiler();
 		return !m_Parser.HadError;
@@ -128,8 +128,8 @@ namespace Lang {
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
 
 		switch (operatorType) {
-			case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
 			case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
+			case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
 			case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
 			case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
 			case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;

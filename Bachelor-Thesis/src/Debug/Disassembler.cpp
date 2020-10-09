@@ -22,14 +22,20 @@ namespace Lang {
 
 		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
-			case OpCode::Constant:	return ConstantInstruction("Constant", chunk, offset);
-			case OpCode::Not:		return SimpleInstruction("Not", offset);
-			case OpCode::Negate:	return SimpleInstruction("Negate", offset);
-			case OpCode::Add:		return SimpleInstruction("Add", offset);
-			case OpCode::Subtract:	return SimpleInstruction("Subtract", offset);
-			case OpCode::Multiply:	return SimpleInstruction("Multiply", offset);
-			case OpCode::Divide:	return SimpleInstruction("Divide", offset);
-			case OpCode::Return:	return SimpleInstruction("Return", offset);
+			case OpCode::Constant:		return ConstantInstruction("Constant", chunk, offset);
+			case OpCode::Not:			return SimpleInstruction("Not", offset);
+			case OpCode::Equal:			return SimpleInstruction("Equal", offset);
+			case OpCode::NotEqual:		return SimpleInstruction("Not Equal", offset);
+			case OpCode::Greater:		return SimpleInstruction("Greater", offset);
+			case OpCode::GreaterEqual:	return SimpleInstruction("Greater Equal", offset);
+			case OpCode::Less:			return SimpleInstruction("Less", offset);
+			case OpCode::LessEqual:		return SimpleInstruction("Less Equal", offset);
+			case OpCode::Negate:		return SimpleInstruction("Negate", offset);
+			case OpCode::Add:			return SimpleInstruction("Add", offset);
+			case OpCode::Subtract:		return SimpleInstruction("Subtract", offset);
+			case OpCode::Multiply:		return SimpleInstruction("Multiply", offset);
+			case OpCode::Divide:		return SimpleInstruction("Divide", offset);
+			case OpCode::Return:		return SimpleInstruction("Return", offset);
 
 			default:
 				fprintf(stderr, "Unknown OpCode `%d'\n", instruction);

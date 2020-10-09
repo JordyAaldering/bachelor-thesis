@@ -10,7 +10,7 @@ namespace Lang {
 		Dot, Comma, Semicolon,
 		Plus, Minus, Star, Slash,
 		Bang, Equal,
-		BangEqual, EqualEqual,
+		EqualEqual, BangEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
 		And, Or,
