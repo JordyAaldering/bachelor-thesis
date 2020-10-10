@@ -7,12 +7,13 @@ namespace Lang {
 
 	enum class OpCode {
 		Constant,
+		SetLocal, GetLocal,
 		Not, Equal, NotEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
 		Negate, Add, Subtract,
 		Multiply, Divide,
-		Return,
+		Pop, Return,
 	};
 
 	struct Chunk {

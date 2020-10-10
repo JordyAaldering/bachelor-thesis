@@ -36,7 +36,7 @@ namespace Lang {
 		{ NULL,		NULL,	Precedence::None },			// And
 		{ NULL,		NULL,	Precedence::None },			// Or
 		{ Number,	NULL,	Precedence::None },			// Number
-		{ NULL,		NULL,	Precedence::None },			// Identifier
+		{ Variable,	NULL,	Precedence::None },			// Identifier
 		{ NULL,		NULL,	Precedence::None },			// Var
 		{ NULL,		NULL,	Precedence::None },			// Fun
 		{ NULL,		NULL,	Precedence::None },			// If
@@ -113,22 +113,39 @@ namespace Lang {
 			return;
 		}
 
-		prefixRule();
+		bool canAssign = precedence <= Precedence::Assignment;
+		prefixRule(canAssign);
 
 		while (precedence <= GetRule(m_Parser.Current.Type)->Precedence) {
 			Advance();
 			ParseFn infixRule = GetRule(m_Parser.Previous.Type)->Infix;
-			infixRule();
+			infixRule(canAssign);
+		}
+
+		if (canAssign && Match(TokenType::Equal)) {
+			Error(&m_Parser.Previous, "Invalid assignment target");
 		}
 	}
 
-	void Compiler::Grouping() {
+	void Compiler::Grouping(bool canAssign) {
 		Expression();
 		Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
 	void Compiler::Declaration() {
-		Statement();
+		if (Match(TokenType::Var)) {
+			VarDeclaration();
+		} else {
+			Statement();
+		}
+
+		if (m_Parser.InPanicMode) {
+			Synchronize();
+		}
+	}
+
+	void Compiler::VarDeclaration() {
+
 	}
 
 	void Compiler::Expression() {
@@ -138,6 +155,8 @@ namespace Lang {
 	void Compiler::Statement() {
 		if (Match(TokenType::Return)) {
 			ReturnStatement();
+		} else {
+			ExpressionStatement();
 		}
 	}
 
@@ -147,7 +166,27 @@ namespace Lang {
 		EmitByte((uint8_t)OpCode::Return);
 	}
 
-	void Compiler::Vector() {
+	void Compiler::ExpressionStatement() {
+		Expression();
+		Consume(TokenType::Semicolon, "Expect `;' after expression");
+		EmitByte((uint8_t)OpCode::Pop);
+	}
+
+	void Compiler::Variable(bool canAssign) {
+		NamedVariable(m_Parser.Previous, canAssign);
+	}
+
+	void Compiler::NamedVariable(Token name, bool canAssign) {
+		uint8_t arg = 0;
+		if (canAssign && Match(TokenType::Equal)) {
+			Expression();
+			EmitBytes((uint8_t)OpCode::SetLocal, arg);
+		} else {
+			EmitByte((uint8_t)OpCode::GetLocal);
+		}
+	}
+
+	void Compiler::Vector(bool canAssign) {
 		std::vector<double> values;
 		while (Match(TokenType::Number)) {
 			values.push_back(strtod(m_Parser.Previous.Start, NULL));
@@ -160,12 +199,12 @@ namespace Lang {
 		EmitConstant({ 1, { (uint16_t)values.size() }, values });
 	}
 
-	void Compiler::Number() {
+	void Compiler::Number(bool canAssign) {
 		double value = strtod(m_Parser.Previous.Start, NULL);
 		EmitConstant(value);
 	}
 
-	void Compiler::Binary() {
+	void Compiler::Binary(bool canAssign) {
 		TokenType operatorType = m_Parser.Previous.Type;
 		ParseRule* rule = GetRule(operatorType);
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
@@ -188,7 +227,7 @@ namespace Lang {
 		}
 	}
 
-	void Compiler::Unary() {
+	void Compiler::Unary(bool canAssign) {
 		TokenType operatorType = m_Parser.Previous.Type;
 		Expression();
 		ParsePrecedence(Precedence::Unary);
@@ -226,6 +265,26 @@ namespace Lang {
 
 	ParseRule* Compiler::GetRule(TokenType type) {
 		return &m_Rules[(uint16_t)type];
+	}
+
+	void Compiler::Synchronize() {
+		m_Parser.InPanicMode = false;
+		while (Check(TokenType::Eof)) {
+			if (m_Parser.Previous.Type == TokenType::Semicolon) {
+				return;
+			}
+
+			switch (m_Parser.Current.Type) {
+				case TokenType::Var:
+				case TokenType::Fun:
+				case TokenType::If:
+				case TokenType::Dim:
+				case TokenType::Shape:
+				case TokenType::Sel:
+				case TokenType::Return:
+					return;
+			}
+		}
 	}
 
 	void Compiler::Error(Token* token, const char* msg) {

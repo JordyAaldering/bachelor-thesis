@@ -33,6 +33,12 @@ namespace Lang {
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:		Push(ReadConstant()); break;
+				case OpCode::SetLocal: {
+					break;
+				}
+				case OpCode::GetLocal: {
+					break;
+				}
 
 				case OpCode::Not:			UNARY_OP(!); break;
 				case OpCode::Equal:			BINARY_OP(==); break;
@@ -47,6 +53,8 @@ namespace Lang {
 				case OpCode::Subtract:		BINARY_OP(-); break;
 				case OpCode::Multiply:		BINARY_OP(*); break;
 				case OpCode::Divide:		BINARY_OP(/); break;
+
+				case OpCode::Pop:			Pop(); break;
 
 				case OpCode::Return:
 					Pop().PrintLn();

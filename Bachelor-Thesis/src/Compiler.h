@@ -19,7 +19,7 @@ namespace Lang {
 		bool InPanicMode;
 	};
 
-	typedef void (*ParseFn)();
+	typedef void (*ParseFn)(bool canAssign);
 	struct ParseRule {
 		ParseFn Prefix;
 		ParseFn Infix;
@@ -38,15 +38,19 @@ namespace Lang {
 		static void Consume(TokenType type, const char* msg);
 		static void ParsePrecedence(Precedence precedence);
 
-		static void Grouping();
+		static void Grouping(bool canAssign);
 		static void Declaration();
+		static void VarDeclaration();
 		static void Expression();
 		static void Statement();
 		static void ReturnStatement();
-		static void Vector();
-		static void Number();
-		static void Binary();
-		static void Unary();
+		static void ExpressionStatement();
+		static void Variable(bool canAssign);
+		static void NamedVariable(Token name, bool canAssign);
+		static void Vector(bool canAssign);
+		static void Number(bool canAssign);
+		static void Binary(bool canAssign);
+		static void Unary(bool canAssign);
 
 		static void EmitByte(uint16_t byte);
 		static void EmitBytes(uint16_t byte1, uint16_t byte2);
@@ -56,6 +60,7 @@ namespace Lang {
 		static std::shared_ptr<Chunk> GetCurrentChunk();
 		static ParseRule* GetRule(TokenType type);
 
+		static void Synchronize();
 		static void Error(Token* token, const char* msg);
 
 	private:
