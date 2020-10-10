@@ -7,8 +7,9 @@
 
 namespace Lang {
 
-	Runtime::Runtime()
-		: m_Chunk(), m_CodeIndex(0), m_Stack() {}
+	std::shared_ptr<Chunk> Runtime::m_Chunk;
+	uint16_t Runtime::m_CodeIndex;
+	std::stack<Value> Runtime::m_Stack;
 
 	InterpretResult Runtime::Interpret(const char* source) {
 		m_Chunk = std::make_shared<Chunk>();
@@ -17,12 +18,13 @@ namespace Lang {
 		}
 
 		m_CodeIndex = 0;
+		m_Stack = std::stack<Value>();
 		InterpretResult res = Run();
 		return res;
 	}
 
 	InterpretResult Runtime::Run() {
-		#define UNARY_OP(op) Push(op Pop());
+		#define UNARY_OP(op) Push(op Pop())
 		#define BINARY_OP(op) { Value r = Pop(); Push(Pop() op r); }
 
 		while (true) {
@@ -33,12 +35,8 @@ namespace Lang {
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:		Push(ReadConstant()); break;
-				case OpCode::SetLocal: {
-					break;
-				}
-				case OpCode::GetLocal: {
-					break;
-				}
+				case OpCode::SetLocal:		break;
+				case OpCode::GetLocal:		break;
 
 				case OpCode::Not:			UNARY_OP(!); break;
 				case OpCode::Equal:			BINARY_OP(==); break;
@@ -54,10 +52,10 @@ namespace Lang {
 				case OpCode::Multiply:		BINARY_OP(*); break;
 				case OpCode::Divide:		BINARY_OP(/); break;
 
-				case OpCode::Pop:			Pop().PrintLn(); break;
-
+				case OpCode::Pop:			Pop().Print(); break;
+					
 				case OpCode::Return:
-					Pop().PrintLn();
+					Pop().Print();
 					return InterpretResult::OK;
 
 				default:
@@ -70,12 +68,12 @@ namespace Lang {
 		#undef BINARY_OP
 	}
 
-	uint16_t Runtime::ReadByte() {
+	uint8_t Runtime::ReadByte() {
 		return m_Chunk->Code[m_CodeIndex++];
 	}
 
 	Value Runtime::ReadConstant() {
-		uint16_t index = ReadByte();
+		uint8_t index = ReadByte();
 		return m_Chunk->Constants[index];
 	}
 

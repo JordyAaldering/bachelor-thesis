@@ -3,7 +3,8 @@
 namespace Lang {
 
 	Scanner::Scanner(const char* source)
-		: m_Start(source), m_Current(source), m_Line(1) {}
+		: m_Start(source), m_Current(source), m_Line(1) {
+	}
 
 	Token Scanner::ScanToken() {
 		SkipWhitespace();
@@ -45,11 +46,11 @@ namespace Lang {
 	}
 
 	Token Scanner::MakeToken(TokenType type) {
-		return { type, m_Start, (uint16_t)(m_Current - m_Start), m_Line };
+		return { type, m_Start, (uint8_t)(m_Current - m_Start), m_Line };
 	}
 
 	Token Scanner::ErrorToken(const char* message) {
-		return { TokenType::Error, message, (uint16_t)strlen(message), m_Line };
+		return { TokenType::Error, message, (uint8_t)strlen(message), m_Line };
 	}
 
 	Token Scanner::MakeNumber() {
@@ -57,7 +58,7 @@ namespace Lang {
 			Advance();
 		}
 
-		if (Match('.') && IsDigit(Peek())) {
+		if (Match('.')) {
 			while (IsDigit(Peek())) {
 				Advance();
 			}
@@ -82,7 +83,6 @@ namespace Lang {
 		if (strncmp(m_Start, "dim", 3) == 0)		return TokenType::Dim;
 		if (strncmp(m_Start, "shape", 5) == 0)		return TokenType::Shape;
 		if (strncmp(m_Start, "sel", 3) == 0)		return TokenType::Sel;
-		if (strncmp(m_Start, "return", 6) == 0)		return TokenType::Return;
 
 		return TokenType::Identifier;
 	}
@@ -105,7 +105,6 @@ namespace Lang {
 		if (IsAtEnd() || *m_Current != expected) {
 			return false;
 		}
-		
 		m_Current++;
 		return true;
 	}
@@ -131,12 +130,10 @@ namespace Lang {
 				case '\t':
 					Advance();
 					break;
-
 				case '\n':
 					m_Line++;
 					Advance();
 					break;
-
 				default:
 					return;
 			}

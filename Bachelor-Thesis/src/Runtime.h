@@ -11,24 +11,23 @@ namespace Lang {
 
 	class Runtime {
 	public:
-		Runtime();
-		InterpretResult Interpret(const char* source);
+		static InterpretResult Interpret(const char* source);
 
 	private:
-		InterpretResult Run();
+		static InterpretResult Run();
 
-		uint16_t ReadByte();
-		Value ReadConstant();
+		static uint8_t ReadByte();
+		static Value ReadConstant();
 
-		void Push(Value value);
-		Value Pop();
+		static void Push(Value value);
+		static Value Pop();
 
-		void RuntimeError(const char* format, ...);
+		static void RuntimeError(const char* format, ...);
 
 	private:
-		std::shared_ptr<Chunk> m_Chunk;
-		uint16_t m_CodeIndex;
-		std::stack<Value> m_Stack;
+		static std::shared_ptr<Chunk> m_Chunk;
+		static uint16_t m_CodeIndex;
+		static std::stack<Value> m_Stack;
 	};
 
 }

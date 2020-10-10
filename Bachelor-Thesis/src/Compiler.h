@@ -38,42 +38,35 @@ namespace Lang {
 		static void Consume(TokenType type, const char* msg);
 		static void ParsePrecedence(Precedence precedence);
 
-		static void Grouping(bool canAssign);
 		static void Declaration();
 		static void VarDeclaration();
 		static void Expression();
 		static void Statement();
-		static void ReturnStatement();
-		static void ExpressionStatement();
+
+		static void Grouping(bool canAssign);
 		static void Variable(bool canAssign);
 		static void NamedVariable(Token name, bool canAssign);
+
 		static void Vector(bool canAssign);
 		static void Number(bool canAssign);
 		static void Binary(bool canAssign);
 		static void Unary(bool canAssign);
 
-		static void EmitByte(uint16_t byte);
-		static void EmitBytes(uint16_t byte1, uint16_t byte2);
+		static void EmitByte(uint8_t byte);
+		static void EmitBytes(uint8_t byte1, uint8_t byte2);
 		static void EmitConstant(Value value);
-		static uint16_t MakeConstant(Value value);
+		static uint8_t MakeConstant(Value value);
 
 		static std::shared_ptr<Chunk> GetCurrentChunk();
 		static ParseRule* GetRule(TokenType type);
 
-		static void Synchronize();
 		static void Error(Token* token, const char* msg);
+		static void Synchronize();
 
 	private:
 		static Scanner m_Scanner;
 		static std::shared_ptr<Chunk> m_CompilingChunk;
 		static Parser m_Parser;
-
-		typedef struct {
-			Token Name;
-			int Depth;
-		} m_Locals[UINT8_MAX + 1];
-		static int m_LocalCount;
-		static int m_ScopeDepth;
 
 		static ParseRule m_Rules[];
 	};

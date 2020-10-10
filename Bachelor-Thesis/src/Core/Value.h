@@ -5,16 +5,16 @@
 namespace Lang {
 
 	struct Value {
-		uint16_t Dim;
+		uint8_t Dim;
 		std::vector<uint16_t> Shape;
 		std::vector<double> Values;
 
 		Value(double value);
-		Value(uint16_t dim, std::vector<uint16_t> shape, std::vector<double> values);
+		Value(uint8_t dim, std::vector<uint16_t> shape, std::vector<double> values);
 
 		Value operator!();
-		Value operator!=(Value other);
 		Value operator==(Value other);
+		Value operator!=(Value other);
 		Value operator>(Value other);
 		Value operator>=(Value other);
 		Value operator<(Value other);
@@ -27,7 +27,6 @@ namespace Lang {
 		Value operator/(Value other);
 
 		void Print();
-		void PrintLn();
 	};
 
 }

@@ -3,28 +3,29 @@
 namespace Lang {
 
 	Value::Value(double value)
-		: Dim(0), Shape({}), Values({ value }) {}
+		: Dim(0), Shape({}), Values({ value }) {
+	}
 
-	Value::Value(uint16_t dim, std::vector<uint16_t> shape, std::vector<double> values)
-		: Dim(dim), Shape(shape), Values(values) {}
+	Value::Value(uint8_t dim, std::vector<uint16_t> shape, std::vector<double> values)
+		: Dim(dim), Shape(shape), Values(values) {
+	}
 
 #define EQUALITY_OP(op) \
 	Value Value::operator op(Value other) { \
-		for (int i = 0; i < Values.size(); i++) { \
-			if (!(Values[i] op other.Values[i])) return 0; \
-		} \
+		for (int i = 0; i < Values.size(); i++) \
+			if (!(Values[i] op other.Values[i])) \
+				return 0; \
 		return 1; \
 	}
 
 	Value Value::operator!() {
-		for (double v : Values) {
+		for (double v : Values)
 			if (v != 0) return 0;
-		}
 		return 1;
 	}
 
-	EQUALITY_OP(!=)
 	EQUALITY_OP(==)
+	EQUALITY_OP(!=)
 	EQUALITY_OP(>)
 	EQUALITY_OP(>=)
 	EQUALITY_OP(<)
@@ -35,19 +36,17 @@ namespace Lang {
 	Value Value::operator op(Value other) { \
 		std::vector<double> v; \
 		v.reserve(Values.size()); \
-		for (int i = 0; i < Values.size(); i++) { \
+		for (int i = 0; i < Values.size(); i++) \
 			v.push_back(Values[i] op other.Values[i]); \
-		} \
 		return Value(Dim, Shape, v); \
 	}
 
 	Value Value::operator-() {
-		std::vector<double> neg;
-		neg.reserve(Values.size());
-		for (double v : Values) {
-			neg.push_back(-v);
-		}
-		return Value(Dim, Shape, neg);
+		std::vector<double> v;
+		v.reserve(Values.size());
+		for (double x : Values)
+			v.push_back(-x);
+		return Value(Dim, Shape, v);
 	}
 
 	ARITH_OP(+)
@@ -70,12 +69,7 @@ namespace Lang {
 		for (double v : Values) {
 			printf("%f,", v);
 		}
-		printf("]>");
-	}
-
-	void Value::PrintLn() {
-		Print();
-		printf("\n");
+		printf("]>\n");
 	}
 
 }
