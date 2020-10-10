@@ -68,6 +68,13 @@ namespace Lang {
 		static std::shared_ptr<Chunk> m_CompilingChunk;
 		static Parser m_Parser;
 
+		typedef struct {
+			Token Name;
+			int Depth;
+		} m_Locals[UINT8_MAX + 1];
+		static int m_LocalCount;
+		static int m_ScopeDepth;
+
 		static ParseRule m_Rules[];
 	};
 

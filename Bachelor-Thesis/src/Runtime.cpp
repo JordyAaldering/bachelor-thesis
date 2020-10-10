@@ -54,7 +54,7 @@ namespace Lang {
 				case OpCode::Multiply:		BINARY_OP(*); break;
 				case OpCode::Divide:		BINARY_OP(/); break;
 
-				case OpCode::Pop:			Pop(); break;
+				case OpCode::Pop:			Pop().PrintLn(); break;
 
 				case OpCode::Return:
 					Pop().PrintLn();
