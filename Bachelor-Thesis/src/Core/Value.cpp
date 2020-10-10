@@ -5,7 +5,7 @@ namespace Lang {
 	Value::Value(double value)
 		: Dim(0), Shape({}), Values({ value }) {}
 
-	Value::Value(uint8_t dim, std::vector<uint8_t> shape, std::vector<double> values)
+	Value::Value(uint16_t dim, std::vector<uint16_t> shape, std::vector<double> values)
 		: Dim(dim), Shape(shape), Values(values) {}
 
 #define EQUALITY_OP(op) \
@@ -63,7 +63,7 @@ namespace Lang {
 		}
 
 		printf("<%d, [", Dim);
-		for (uint8_t s : Shape) {
+		for (uint16_t s : Shape) {
 			printf("%d,", s);
 		}
 		printf("], [");

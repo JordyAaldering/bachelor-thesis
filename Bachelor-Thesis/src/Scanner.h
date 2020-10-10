@@ -18,13 +18,13 @@ namespace Lang {
 		Number, Identifier,
 		Var, Fun, If, Else,
 		Dim, Shape, Sel,
-		Error, Eof,
+		Return, Error, Eof,
 	};
 
 	struct Token {
 		TokenType Type;
 		const char* Start;
-		uint8_t Length;
+		uint16_t Length;
 		uint16_t Line;
 	};
 

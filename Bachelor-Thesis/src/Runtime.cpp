@@ -62,12 +62,12 @@ namespace Lang {
 		#undef BINARY_OP
 	}
 
-	uint8_t Runtime::ReadByte() {
+	uint16_t Runtime::ReadByte() {
 		return m_Chunk->Code[m_CodeIndex++];
 	}
 
 	Value Runtime::ReadConstant() {
-		uint8_t index = ReadByte();
+		uint16_t index = ReadByte();
 		return m_Chunk->Constants[index];
 	}
 

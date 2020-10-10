@@ -29,24 +29,29 @@ namespace Lang {
 	class Compiler {
 	public:
 		static bool Compile(const char* source, std::shared_ptr<Chunk> chunk);
-		static bool EndCompiler();
+		static void EndCompiler();
 
 	private:
 		static void Advance();
+		static bool Check(TokenType type);
+		static bool Match(TokenType type);
 		static void Consume(TokenType type, const char* msg);
 		static void ParsePrecedence(Precedence precedence);
 
 		static void Grouping();
+		static void Declaration();
 		static void Expression();
+		static void Statement();
+		static void ReturnStatement();
 		static void Vector();
 		static void Number();
 		static void Binary();
 		static void Unary();
 
-		static void EmitByte(uint8_t byte);
-		static void EmitBytes(uint8_t byte1, uint8_t byte2);
+		static void EmitByte(uint16_t byte);
+		static void EmitBytes(uint16_t byte1, uint16_t byte2);
 		static void EmitConstant(Value value);
-		static uint8_t MakeConstant(Value value);
+		static uint16_t MakeConstant(Value value);
 
 		static std::shared_ptr<Chunk> GetCurrentChunk();
 		static ParseRule* GetRule(TokenType type);

@@ -17,7 +17,7 @@ namespace Lang {
 	private:
 		InterpretResult Run();
 
-		uint8_t ReadByte();
+		uint16_t ReadByte();
 		Value ReadConstant();
 
 		void Push(Value value);
@@ -27,7 +27,7 @@ namespace Lang {
 
 	private:
 		std::shared_ptr<Chunk> m_Chunk;
-		uint8_t m_CodeIndex;
+		uint16_t m_CodeIndex;
 		std::stack<Value> m_Stack;
 	};
 

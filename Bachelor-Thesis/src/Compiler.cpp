@@ -44,6 +44,7 @@ namespace Lang {
 		{ NULL,		NULL,	Precedence::None },			// Dim
 		{ NULL,		NULL,	Precedence::None },			// Shape
 		{ NULL,		NULL,	Precedence::None },			// Sel
+		{ NULL,		NULL,	Precedence::None },			// Return
 		{ NULL,		NULL,	Precedence::None },			// Error
 		{ NULL,		NULL,	Precedence::None },			// Eof
 	};
@@ -55,20 +56,21 @@ namespace Lang {
 		m_Parser.InPanicMode = false;
 
 		Advance();
-		Expression();
-		Consume(TokenType::Eof, "Expected end of file");
+		while (!Match(TokenType::Eof)) {
+			Declaration();
+		}
 
-		return EndCompiler();
+		EndCompiler();
+		return !m_Parser.HadError;
 	}
 
-	bool Compiler::EndCompiler() {
-		EmitByte((uint8_t)OpCode::Return);
+	void Compiler::EndCompiler() {
+		EmitByte((uint16_t)OpCode::Return);
 		#ifdef DEBUG
 		if (!m_Parser.HadError) {
 			Disassembler::Disassemble(GetCurrentChunk(), "Code");
 		}
 		#endif
-		return !m_Parser.HadError;
 	}
 
 	void Compiler::Advance() {
@@ -83,8 +85,18 @@ namespace Lang {
 		}
 	}
 
+	bool Compiler::Check(TokenType type) {
+		return m_Parser.Current.Type == type;
+	}
+
+	bool Compiler::Match(TokenType type) {
+		if (!Check(type)) return false;
+		Advance();
+		return true;
+	}
+
 	void Compiler::Consume(TokenType type, const char* msg) {
-		if (m_Parser.Current.Type == type) {
+		if (Check(type)) {
 			Advance();
 			return;
 		}
@@ -115,24 +127,37 @@ namespace Lang {
 		Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
+	void Compiler::Declaration() {
+		Statement();
+	}
+
 	void Compiler::Expression() {
 		ParsePrecedence(Precedence::Assignment);
 	}
 
+	void Compiler::Statement() {
+		if (Match(TokenType::Return)) {
+			ReturnStatement();
+		}
+	}
+
+	void Compiler::ReturnStatement() {
+		Expression();
+		Consume(TokenType::Semicolon, "Expect `;' after value");
+		EmitByte((uint8_t)OpCode::Return);
+	}
+
 	void Compiler::Vector() {
-		std::vector<double> v;
-		while (m_Parser.Current.Type == TokenType::Number) {
-			Advance();
-			v.push_back(strtod(m_Parser.Previous.Start, NULL));
-			if (m_Parser.Current.Type != TokenType::Comma) {
+		std::vector<double> values;
+		while (Match(TokenType::Number)) {
+			values.push_back(strtod(m_Parser.Previous.Start, NULL));
+			if (!Match(TokenType::Comma)) {
 				break;
 			}
-
-			Advance();
 		}
 
 		Consume(TokenType::RightSquare, "Expect `]' after vector");
-		EmitConstant({ 1, { (uint8_t)v.size() }, v });
+		EmitConstant({ 1, { (uint16_t)values.size() }, values });
 	}
 
 	void Compiler::Number() {
@@ -146,16 +171,16 @@ namespace Lang {
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
 
 		switch (operatorType) {
-			case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
-			case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
-			case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
-			case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
-			case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
-			case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
-			case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
-			case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
-			case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
-			case TokenType::Slash:			EmitByte((uint8_t)OpCode::Divide); break;
+			case TokenType::EqualEqual:		EmitByte((uint16_t)OpCode::Equal); break;
+			case TokenType::BangEqual:		EmitByte((uint16_t)OpCode::NotEqual); break;
+			case TokenType::Greater:		EmitByte((uint16_t)OpCode::Greater); break;
+			case TokenType::GreaterEqual:	EmitByte((uint16_t)OpCode::GreaterEqual); break;
+			case TokenType::Less:			EmitByte((uint16_t)OpCode::Less); break;
+			case TokenType::LessEqual:		EmitByte((uint16_t)OpCode::LessEqual); break;
+			case TokenType::Plus:			EmitByte((uint16_t)OpCode::Add); break;
+			case TokenType::Minus:			EmitByte((uint16_t)OpCode::Subtract); break;
+			case TokenType::Star:			EmitByte((uint16_t)OpCode::Multiply); break;
+			case TokenType::Slash:			EmitByte((uint16_t)OpCode::Divide); break;
 
 			default:
 				fprintf(stderr, "Invalid operator `%d'", operatorType);
@@ -169,8 +194,8 @@ namespace Lang {
 		ParsePrecedence(Precedence::Unary);
 
 		switch (operatorType) {
-			case TokenType::Bang:	EmitByte((uint8_t)OpCode::Not); break;
-			case TokenType::Minus:	EmitByte((uint8_t)OpCode::Negate); break;
+			case TokenType::Bang:	EmitByte((uint16_t)OpCode::Not); break;
+			case TokenType::Minus:	EmitByte((uint16_t)OpCode::Negate); break;
 
 			default:
 				fprintf(stderr, "Invalid operator `%d'", operatorType);
@@ -178,20 +203,20 @@ namespace Lang {
 		}
 	}
 
-	void Compiler::EmitByte(uint8_t byte) {
+	void Compiler::EmitByte(uint16_t byte) {
 		GetCurrentChunk()->Write(byte, m_Parser.Previous.Line);
 	}
 
-	void Compiler::EmitBytes(uint8_t byte1, uint8_t byte2) {
+	void Compiler::EmitBytes(uint16_t byte1, uint16_t byte2) {
 		EmitByte(byte1);
 		EmitByte(byte2);
 	}
 
 	void Compiler::EmitConstant(Value value) {
-		EmitBytes((uint8_t)OpCode::Constant, MakeConstant(value));
+		EmitBytes((uint16_t)OpCode::Constant, MakeConstant(value));
 	}
 
-	uint8_t Compiler::MakeConstant(Value value) {
+	uint16_t Compiler::MakeConstant(Value value) {
 		return GetCurrentChunk()->AddConstant(value);
 	}
 
@@ -200,7 +225,7 @@ namespace Lang {
 	}
 
 	ParseRule* Compiler::GetRule(TokenType type) {
-		return &m_Rules[(uint8_t)type];
+		return &m_Rules[(uint16_t)type];
 	}
 
 	void Compiler::Error(Token* token, const char* msg) {
