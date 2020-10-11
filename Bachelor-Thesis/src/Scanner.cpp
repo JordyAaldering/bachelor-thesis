@@ -14,7 +14,7 @@ namespace Lang {
 
 		char c = Advance();
 		if (IsDigit(c)) return MakeNumber();
-		if (IsAlpha(c)) return MakeIdentifier();
+		if (IsLetter(c)) return MakeIdentifier();
 
 		switch (c) {
 			case '(': return MakeToken(TokenType::LeftParen);
@@ -33,8 +33,8 @@ namespace Lang {
 			case '*': return MakeToken(TokenType::Star);
 			case '/': return MakeToken(TokenType::Slash);
 
-			case '!': return MakeToken(Match('=') ? TokenType::BangEqual	: TokenType::Bang);
 			case '=': return MakeToken(Match('=') ? TokenType::EqualEqual	: TokenType::Equal);
+			case '!': return MakeToken(Match('=') ? TokenType::BangEqual	: TokenType::Bang);
 			case '>': return MakeToken(Match('=') ? TokenType::GreaterEqual : TokenType::Greater);
 			case '<': return MakeToken(Match('=') ? TokenType::LessEqual	: TokenType::Less);
 
@@ -49,8 +49,8 @@ namespace Lang {
 		return { type, m_Start, (uint8_t)(m_Current - m_Start), m_Line };
 	}
 
-	Token Scanner::ErrorToken(const char* message) {
-		return { TokenType::Error, message, (uint8_t)strlen(message), m_Line };
+	Token Scanner::ErrorToken(const char* msg) {
+		return { TokenType::Error, msg, (uint8_t)strlen(msg), m_Line };
 	}
 
 	Token Scanner::MakeNumber() {
@@ -68,7 +68,7 @@ namespace Lang {
 	}
 
 	Token Scanner::MakeIdentifier() {
-		while (IsAlpha(Peek()) || IsDigit(Peek())) {
+		while (IsLetter(Peek()) || IsDigit(Peek())) {
 			Advance();
 		}
 
@@ -76,14 +76,11 @@ namespace Lang {
 	}
 
 	TokenType Scanner::GetIdentifierType() {
-		if (strncmp(m_Start, "var", 3) == 0)		return TokenType::Var;
-		if (strncmp(m_Start, "function", 8) == 0)	return TokenType::Fun;
-		if (strncmp(m_Start, "if", 2) == 0)			return TokenType::If;
-		if (strncmp(m_Start, "else", 4) == 0)		return TokenType::Else;
+		if (strncmp(m_Start, "function", 8) == 0)	return TokenType::Function;
+		if (strncmp(m_Start, "main", 4) == 0)		return TokenType::Main;
 		if (strncmp(m_Start, "dim", 3) == 0)		return TokenType::Dim;
 		if (strncmp(m_Start, "shape", 5) == 0)		return TokenType::Shape;
 		if (strncmp(m_Start, "sel", 3) == 0)		return TokenType::Sel;
-
 		return TokenType::Identifier;
 	}
 
@@ -102,9 +99,10 @@ namespace Lang {
 	}
 
 	bool Scanner::Match(char expected) {
-		if (IsAtEnd() || *m_Current != expected) {
+		if (IsAtEnd() || Peek() != expected) {
 			return false;
 		}
+
 		m_Current++;
 		return true;
 	}
@@ -113,12 +111,12 @@ namespace Lang {
 		return c >= '0' && c <= '9';
 	}
 
-	bool Scanner::IsAlpha(char c) {
-		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_';
+	bool Scanner::IsLetter(char c) {
+		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	}
 
 	bool Scanner::IsAtEnd() {
-		return *m_Current == '\0';
+		return Peek() == '\0';
 	}
 
 	void Scanner::SkipWhitespace() {

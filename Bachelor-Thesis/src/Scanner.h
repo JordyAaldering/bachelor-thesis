@@ -10,13 +10,13 @@ namespace Lang {
 		LeftSquare, RightSquare,
 		Dot, Comma, Semicolon,
 		Plus, Minus, Star, Slash,
-		Bang, Equal,
-		EqualEqual, BangEqual,
+		Equal, EqualEqual,
+		Bang, BangEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
 		And, Or,
 		Number, Identifier,
-		Var, Fun, If, Else,
+		Function, Main,
 		Dim, Shape, Sel,
 		Error, Eof,
 	};
@@ -35,7 +35,7 @@ namespace Lang {
 
 	private:
 		Token MakeToken(TokenType type);
-		Token ErrorToken(const char* message);
+		Token ErrorToken(const char* msg);
 		Token MakeNumber();
 		Token MakeIdentifier();
 		TokenType GetIdentifierType();
@@ -45,7 +45,7 @@ namespace Lang {
 		char Advance();
 		bool Match(char expected);
 		bool IsDigit(char c);
-		bool IsAlpha(char c);
+		bool IsLetter(char c);
 		bool IsAtEnd();
 
 		void SkipWhitespace();

@@ -11,7 +11,7 @@ namespace Lang {
 	std::shared_ptr<Chunk> Compiler::m_CompilingChunk;
 	Parser Compiler::m_Parser;
 
-	ParseRule Compiler::m_Rules[] = {
+	ParseRule Compiler::m_ParseRules[] = {
 		{ Grouping,	NULL,	Precedence::None },			// LeftParen
 		{ NULL,		NULL,	Precedence::None },			// RightParen
 		{ NULL,		NULL,	Precedence::None },			// LeftBrace
@@ -25,9 +25,9 @@ namespace Lang {
 		{ Unary,	Binary,	Precedence::Term },			// Minus
 		{ NULL,		Binary,	Precedence::Factor },		// Star
 		{ NULL,		Binary,	Precedence::Factor },		// Slash
-		{ Unary,	NULL,	Precedence::None },			// Bang
 		{ NULL,		NULL,	Precedence::None },			// Equal
 		{ NULL,		Binary,	Precedence::Equality },		// EqualEqual
+		{ Unary,	NULL,	Precedence::None },			// Bang
 		{ NULL,		Binary,	Precedence::Equality },		// BangEqual
 		{ NULL,		Binary,	Precedence::Comparison },	// Greater
 		{ NULL,		Binary,	Precedence::Comparison },	// GreaterEqual
@@ -37,14 +37,11 @@ namespace Lang {
 		{ NULL,		NULL,	Precedence::None },			// Or
 		{ Number,	NULL,	Precedence::None },			// Number
 		{ Variable,	NULL,	Precedence::None },			// Identifier
-		{ NULL,		NULL,	Precedence::None },			// Var
-		{ NULL,		NULL,	Precedence::None },			// Fun
-		{ NULL,		NULL,	Precedence::None },			// If
-		{ NULL,		NULL,	Precedence::None },			// Else
+		{ NULL,		NULL,	Precedence::None },			// Function
+		{ NULL,		NULL,	Precedence::None },			// Main
 		{ NULL,		NULL,	Precedence::None },			// Dim
 		{ NULL,		NULL,	Precedence::None },			// Shape
 		{ NULL,		NULL,	Precedence::None },			// Sel
-		{ NULL,		NULL,	Precedence::None },			// Return
 		{ NULL,		NULL,	Precedence::None },			// Error
 		{ NULL,		NULL,	Precedence::None },			// Eof
 	};
@@ -75,13 +72,11 @@ namespace Lang {
 
 	void Compiler::Advance() {
 		m_Parser.Previous = m_Parser.Current;
-		while (true) {
-			m_Parser.Current = m_Scanner.ScanToken();
-			if (m_Parser.Current.Type != TokenType::Error) {
-				break;
-			}
+		m_Parser.Current = m_Scanner.ScanToken();
 
+		while (Check(TokenType::Error)) {
 			Error(&m_Parser.Current, m_Parser.Current.Start);
+			m_Parser.Current = m_Scanner.ScanToken();
 		}
 	}
 
@@ -96,11 +91,7 @@ namespace Lang {
 	}
 
 	void Compiler::Consume(TokenType type, const char* msg) {
-		if (Check(type)) {
-			Advance();
-			return;
-		}
-
+		if (Match(type)) return;
 		Error(&m_Parser.Current, msg);
 	}
 
@@ -128,19 +119,11 @@ namespace Lang {
 	}
 
 	void Compiler::Declaration() {
-		if (Match(TokenType::Var)) {
-			VarDeclaration();
-		} else {
-			Statement();
-		}
+		Statement();
 
 		if (m_Parser.InPanicMode) {
 			Synchronize();
 		}
-	}
-
-	void Compiler::VarDeclaration() {
-
 	}
 
 	void Compiler::Expression() {
@@ -250,7 +233,7 @@ namespace Lang {
 	}
 
 	ParseRule* Compiler::GetRule(TokenType type) {
-		return &m_Rules[(uint8_t)type];
+		return &m_ParseRules[(uint8_t)type];
 	}
 
 	void Compiler::Error(Token* token, const char* msg) {
@@ -273,9 +256,6 @@ namespace Lang {
 				return;
 
 			switch (m_Parser.Current.Type) {
-				case TokenType::Var:
-				case TokenType::Fun:
-				case TokenType::If:
 				case TokenType::Dim:
 				case TokenType::Shape:
 				case TokenType::Sel:

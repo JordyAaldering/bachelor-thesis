@@ -39,7 +39,6 @@ namespace Lang {
 		static void ParsePrecedence(Precedence precedence);
 
 		static void Declaration();
-		static void VarDeclaration();
 		static void Expression();
 		static void Statement();
 
@@ -68,7 +67,7 @@ namespace Lang {
 		static std::shared_ptr<Chunk> m_CompilingChunk;
 		static Parser m_Parser;
 
-		static ParseRule m_Rules[];
+		static ParseRule m_ParseRules[];
 	};
 
 }
