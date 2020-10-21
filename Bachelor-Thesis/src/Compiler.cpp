@@ -66,7 +66,7 @@ namespace Lang {
 	}
 
 	void Compiler::Declaration() {
-		Statement();
+		Expression();
 
 		if (m_Parser.InPanicMode) {
 			Synchronize();
@@ -75,11 +75,6 @@ namespace Lang {
 
 	void Compiler::Expression() {
 		ParsePrecedence(Precedence::Assignment);
-	}
-
-	void Compiler::Statement() {
-		Expression();
-		EmitByte((uint8_t)OpCode::Pop);
 	}
 
 	void Compiler::Grouping(bool canAssign) {

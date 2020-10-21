@@ -34,7 +34,6 @@ namespace Lang {
 	private:
 		static void Declaration();
 		static void Expression();
-		static void Statement();
 
 		static void Grouping(bool canAssign);
 		static void Variable(bool canAssign);
