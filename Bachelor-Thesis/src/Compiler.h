@@ -32,12 +32,6 @@ namespace Lang {
 		static void EndCompiler();
 
 	private:
-		static void Advance();
-		static bool Check(TokenType type);
-		static bool Match(TokenType type);
-		static void Consume(TokenType type, const char* msg);
-		static void ParsePrecedence(Precedence precedence);
-
 		static void Declaration();
 		static void Expression();
 		static void Statement();
@@ -50,6 +44,12 @@ namespace Lang {
 		static void Number(bool canAssign);
 		static void Binary(bool canAssign);
 		static void Unary(bool canAssign);
+
+		static void Advance();
+		static bool Check(TokenType type);
+		static bool Match(TokenType type);
+		static void Consume(TokenType type, const char* msg);
+		static void ParsePrecedence(Precedence precedence);
 
 		static void EmitByte(uint8_t byte);
 		static void EmitBytes(uint8_t byte1, uint8_t byte2);

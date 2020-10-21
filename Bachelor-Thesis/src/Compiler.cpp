@@ -29,8 +29,8 @@ namespace Lang {
 		{ NULL,		Binary,	Precedence::Comparison },	// GreaterEqual
 		{ NULL,		Binary,	Precedence::Comparison },	// Less
 		{ NULL,		Binary,	Precedence::Comparison },	// LessEqual
-		{ NULL,		NULL,	Precedence::None },			// And
-		{ NULL,		NULL,	Precedence::None },			// Or
+		{ NULL,		Binary,	Precedence::Comparison },	// And
+		{ NULL,		Binary,	Precedence::Comparison },	// Or
 		{ Number,	NULL,	Precedence::None },			// Number
 		{ Variable,	NULL,	Precedence::None },			// Identifier
 		{ NULL,		NULL,	Precedence::None },			// Function
@@ -63,54 +63,6 @@ namespace Lang {
 			Disassembler::Disassemble(GetCurrentChunk(), "Code");
 		}
 		#endif
-	}
-
-	void Compiler::Advance() {
-		m_Parser.Previous = m_Parser.Current;
-		m_Parser.Current = m_Scanner.ScanToken();
-
-		while (Check(TokenType::Error)) {
-			Error(&m_Parser.Current, m_Parser.Current.Start);
-			m_Parser.Current = m_Scanner.ScanToken();
-		}
-	}
-
-	bool Compiler::Check(TokenType type) {
-		return m_Parser.Current.Type == type;
-	}
-
-	bool Compiler::Match(TokenType type) {
-		if (!Check(type)) return false;
-		Advance();
-		return true;
-	}
-
-	void Compiler::Consume(TokenType type, const char* msg) {
-		if (Match(type)) return;
-		Error(&m_Parser.Current, msg);
-	}
-
-	void Compiler::ParsePrecedence(Precedence precedence) {
-		Advance();
-
-		ParseFn prefixRule = GetRule(m_Parser.Previous.Type)->Prefix;
-		if (prefixRule == NULL) {
-			Error(&m_Parser.Previous, "Expect expression");
-			return;
-		}
-
-		bool canAssign = precedence <= Precedence::Assignment;
-		prefixRule(canAssign);
-
-		while (precedence <= GetRule(m_Parser.Current.Type)->Precedence) {
-			Advance();
-			ParseFn infixRule = GetRule(m_Parser.Previous.Type)->Infix;
-			infixRule(canAssign);
-		}
-
-		if (canAssign && Match(TokenType::Equal)) {
-			Error(&m_Parser.Previous, "Invalid assignment target");
-		}
 	}
 
 	void Compiler::Declaration() {
@@ -179,6 +131,8 @@ namespace Lang {
 			case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
 			case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
 			case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
+			case TokenType::And:			EmitByte((uint8_t)OpCode::And); break;
+			case TokenType::Or:				EmitByte((uint8_t)OpCode::Or); break;
 			case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
 			case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
 			case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
@@ -202,6 +156,54 @@ namespace Lang {
 			default:
 				fprintf(stderr, "Invalid operator `%d'", operatorType);
 				return;
+		}
+	}
+
+	void Compiler::Advance() {
+		m_Parser.Previous = m_Parser.Current;
+		m_Parser.Current = m_Scanner.ScanToken();
+
+		while (Check(TokenType::Error)) {
+			Error(&m_Parser.Current, m_Parser.Current.Start);
+			m_Parser.Current = m_Scanner.ScanToken();
+		}
+	}
+
+	bool Compiler::Check(TokenType type) {
+		return m_Parser.Current.Type == type;
+	}
+
+	bool Compiler::Match(TokenType type) {
+		if (!Check(type)) return false;
+		Advance();
+		return true;
+	}
+
+	void Compiler::Consume(TokenType type, const char* msg) {
+		if (Match(type)) return;
+		Error(&m_Parser.Current, msg);
+	}
+
+	void Compiler::ParsePrecedence(Precedence precedence) {
+		Advance();
+
+		ParseFn prefixRule = GetRule(m_Parser.Previous.Type)->Prefix;
+		if (prefixRule == NULL) {
+			Error(&m_Parser.Previous, "Expect expression");
+			return;
+		}
+
+		bool canAssign = precedence <= Precedence::Assignment;
+		prefixRule(canAssign);
+
+		while (precedence <= GetRule(m_Parser.Current.Type)->Precedence) {
+			Advance();
+			ParseFn infixRule = GetRule(m_Parser.Previous.Type)->Infix;
+			infixRule(canAssign);
+		}
+
+		if (canAssign && Match(TokenType::Equal)) {
+			Error(&m_Parser.Previous, "Invalid assignment target");
 		}
 	}
 

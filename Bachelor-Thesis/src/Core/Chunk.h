@@ -11,6 +11,7 @@ namespace Lang {
 		Not, Equal, NotEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
+		And, Or,
 		Negate, Add, Subtract,
 		Multiply, Divide,
 		Pop, Return,
