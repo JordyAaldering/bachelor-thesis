@@ -18,6 +18,7 @@ namespace Lang {
 
 		static uint8_t ReadByte();
 		static Value ReadConstant();
+		static std::string ReadVariable();
 
 		static void Push(Value value);
 		static Value Pop();
@@ -27,6 +28,7 @@ namespace Lang {
 	private:
 		static std::shared_ptr<Chunk> m_Chunk;
 		static uint16_t m_CodeIndex;
+		static std::list<std::pair<std::string, Value>> m_Variables;
 		static std::stack<Value> m_Stack;
 	};
 

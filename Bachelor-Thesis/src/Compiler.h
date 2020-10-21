@@ -34,9 +34,10 @@ namespace Lang {
 	private:
 		static void Expression();
 		static void Grouping(bool canAssign);
-		static void Variable(bool canAssign);
-		static void NamedVariable(Token name, bool canAssign);
+		static void LetExpression(bool canAssign);
+		static void IfExpression(bool canAssign);
 
+		static void Variable(bool canAssign);
 		static void Vector(bool canAssign);
 		static void Number(bool canAssign);
 		static void Binary(bool canAssign);

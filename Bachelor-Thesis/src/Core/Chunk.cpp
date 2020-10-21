@@ -12,4 +12,18 @@ namespace Lang {
 		return (uint8_t)(Constants.size() - 1);
 	}
 
+	uint8_t Chunk::AddVariable(std::string name) {
+		Variables.push_back(name);
+		return (uint8_t)(Variables.size() - 1);
+	}
+
+	uint8_t Chunk::GetVariable(std::string name) {
+		for (int i = Variables.size() - 1; i >= 0; i++) {
+			if (Variables[i] == name) {
+				return i;
+			}
+		}
+		return 0;
+	}
+
 }

@@ -7,13 +7,21 @@ namespace Lang {
 
 	enum class OpCode {
 		Constant,
-		SetVariable, GetVariable,
-		Not, Equal, NotEqual,
+		
+		SetVariable,
+		GetVariable,
+		PopVariable,
+
+		Not,
+		Equal, NotEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,
 		And, Or,
-		Negate, Add, Subtract,
+
+		Negate,
+		Add, Subtract,
 		Multiply, Divide,
+
 		Pop, Return,
 	};
 
@@ -21,6 +29,7 @@ namespace Lang {
 		std::vector<uint8_t> Code;
 		std::vector<uint16_t> Lines;
 		std::vector<Value> Constants;
+		std::vector<std::string> Variables;
 
 		/// <summary>Writes a byte to the bytcode.</summary>
 		void Write(uint8_t byte, uint16_t line);
@@ -28,6 +37,9 @@ namespace Lang {
 		/// <summary>Adds a new value to the constants array.</summary>
 		/// <returns>The index at which the value was added.</returns>
 		uint8_t AddConstant(Value value);
+
+		uint8_t AddVariable(std::string name);
+		uint8_t GetVariable(std::string name);
 	};
 
 }

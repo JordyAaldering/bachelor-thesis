@@ -23,8 +23,10 @@ namespace Lang {
 		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
 			case OpCode::Constant:		return ConstantInstruction("Constant", chunk, offset);
-			case OpCode::SetVariable:	return ConstantInstruction("Set Variable", chunk, offset);
-			case OpCode::GetVariable:	return ConstantInstruction("Get Variable", chunk, offset);
+
+			case OpCode::SetVariable:	return VariableInstruction("Set Variable", chunk, offset);
+			case OpCode::GetVariable:	return VariableInstruction("Get Variable", chunk, offset);
+			case OpCode::PopVariable:	return SimpleInstruction("Pop Variable", offset);
 
 			case OpCode::Not:			return SimpleInstruction("Not", offset);
 			case OpCode::Equal:			return SimpleInstruction("Equal", offset);
@@ -55,6 +57,12 @@ namespace Lang {
 		uint16_t index = chunk->Code[offset + 1];
 		printf("%-12s %4d ", name, index);
 		chunk->Constants[index].Print();
+		return offset + 2;
+	}
+
+	int Disassembler::VariableInstruction(const char* name, std::shared_ptr<Chunk> chunk, uint32_t offset) {
+		uint16_t index = chunk->Code[offset + 1];
+		printf("%-12s %4d %s\n", name, index, chunk->Variables[index].c_str());
 		return offset + 2;
 	}
 

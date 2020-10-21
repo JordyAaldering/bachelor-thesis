@@ -4,7 +4,6 @@
 #include "Debug/Disassembler.h"
 #endif
 
-
 namespace Lang {
 
 	Scanner Compiler::m_Scanner = nullptr;
@@ -12,38 +11,38 @@ namespace Lang {
 	Parser Compiler::m_Parser;
 
 	ParseRule Compiler::m_ParseRules[] = {
-		{ Grouping,	NULL,	Precedence::None },			// LeftParen
-		{ NULL,		NULL,	Precedence::None },			// RightParen
-		{ Vector,	NULL,	Precedence::None },			// LeftSquare
-		{ NULL,		NULL,	Precedence::None },			// RightSquare
-		{ NULL,		NULL,	Precedence::None },			// Comma
-		{ NULL,		Binary,	Precedence::Term },			// Plus
-		{ Unary,	Binary,	Precedence::Term },			// Minus
-		{ NULL,		Binary,	Precedence::Factor },		// Star
-		{ NULL,		Binary,	Precedence::Factor },		// Slash
-		{ NULL,		NULL,	Precedence::None },			// Equal
-		{ NULL,		Binary,	Precedence::Equality },		// EqualEqual
-		{ Unary,	NULL,	Precedence::None },			// Bang
-		{ NULL,		Binary,	Precedence::Equality },		// BangEqual
-		{ NULL,		Binary,	Precedence::Comparison },	// Greater
-		{ NULL,		Binary,	Precedence::Comparison },	// GreaterEqual
-		{ NULL,		Binary,	Precedence::Comparison },	// Less
-		{ NULL,		Binary,	Precedence::Comparison },	// LessEqual
-		{ NULL,		Binary,	Precedence::Comparison },	// And
-		{ NULL,		Binary,	Precedence::Comparison },	// Or
-		{ Number,	NULL,	Precedence::None },			// Number
-		{ Variable,	NULL,	Precedence::None },			// Identifier
-		{ NULL,		NULL,	Precedence::None },			// Function
-		{ NULL,		NULL,	Precedence::None },			// Dim
-		{ NULL,		NULL,	Precedence::None },			// Shape
-		{ NULL,		NULL,	Precedence::None },			// Sel
-		{ NULL,		NULL,	Precedence::None },			// Let
-		{ NULL,		NULL,	Precedence::None },			// In
-		{ NULL,		NULL,	Precedence::None },			// If
-		{ NULL,		NULL,	Precedence::None },			// Then
-		{ NULL,		NULL,	Precedence::None },			// Else
-		{ NULL,		NULL,	Precedence::None },			// Error
-		{ NULL,		NULL,	Precedence::None },			// Eof
+		{ Grouping,		NULL,	Precedence::None },			// LeftParen
+		{ NULL,			NULL,	Precedence::None },			// RightParen
+		{ Vector,		NULL,	Precedence::None },			// LeftSquare
+		{ NULL,			NULL,	Precedence::None },			// RightSquare
+		{ NULL,			NULL,	Precedence::None },			// Comma
+		{ NULL,			Binary,	Precedence::Term },			// Plus
+		{ Unary,		Binary,	Precedence::Term },			// Minus
+		{ NULL,			Binary,	Precedence::Factor },		// Star
+		{ NULL,			Binary,	Precedence::Factor },		// Slash
+		{ NULL,			NULL,	Precedence::None },			// Equal
+		{ NULL,			Binary,	Precedence::Equality },		// EqualEqual
+		{ Unary,		NULL,	Precedence::None },			// Bang
+		{ NULL,			Binary,	Precedence::Equality },		// BangEqual
+		{ NULL,			Binary,	Precedence::Comparison },	// Greater
+		{ NULL,			Binary,	Precedence::Comparison },	// GreaterEqual
+		{ NULL,			Binary,	Precedence::Comparison },	// Less
+		{ NULL,			Binary,	Precedence::Comparison },	// LessEqual
+		{ NULL,			Binary,	Precedence::Comparison },	// And
+		{ NULL,			Binary,	Precedence::Comparison },	// Or
+		{ Number,		NULL,	Precedence::None },			// Number
+		{ Variable,		NULL,	Precedence::None },			// Identifier
+		{ NULL,			NULL,	Precedence::None },			// Function
+		{ NULL,			NULL,	Precedence::None },			// Dim
+		{ NULL,			NULL,	Precedence::None },			// Shape
+		{ NULL,			NULL,	Precedence::None },			// Sel
+		{ LetExpression,NULL,	Precedence::None },			// Let
+		{ NULL,			NULL,	Precedence::None },			// In
+		{ IfExpression,	NULL,	Precedence::None },			// If
+		{ NULL,			NULL,	Precedence::None },			// Then
+		{ NULL,			NULL,	Precedence::None },			// Else
+		{ NULL,			NULL,	Precedence::None },			// Error
+		{ NULL,			NULL,	Precedence::None },			// Eof
 	};
 
 	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
@@ -70,7 +69,6 @@ namespace Lang {
 
 	void Compiler::Expression() {
 		ParsePrecedence(Precedence::Assignment);
-
 		if (m_Parser.InPanicMode) {
 			Synchronize();
 		}
@@ -81,18 +79,34 @@ namespace Lang {
 		Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
-	void Compiler::Variable(bool canAssign) {
-		NamedVariable(m_Parser.Previous, canAssign);
+	void Compiler::LetExpression(bool canAssign) {
+		Advance();
+		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
+		uint8_t index = m_CompilingChunk->AddVariable(name);
+		Consume(TokenType::Equal, "Expect `=' in let expression");
+
+		Expression();
+		EmitBytes((uint8_t)OpCode::SetVariable, index);
+
+		Consume(TokenType::In, "Expect `in' after let expression");
+		Expression();
+		EmitByte((uint8_t)OpCode::PopVariable);
 	}
 
-	void Compiler::NamedVariable(Token name, bool canAssign) {
-		uint8_t arg = 0;
-		if (canAssign && Match(TokenType::Equal)) {
-			Expression();
-			EmitBytes((uint8_t)OpCode::SetVariable, arg);
-		} else {
-			EmitByte((uint8_t)OpCode::GetVariable);
-		}
+	void Compiler::IfExpression(bool canAssign) {
+		// expression
+
+		// then
+		// expresssion
+
+		// else
+		// expression
+	}
+
+	void Compiler::Variable(bool canAssign) {
+		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
+		uint8_t index = m_CompilingChunk->GetVariable(name);
+		EmitBytes((uint8_t)OpCode::GetVariable, index);
 	}
 
 	void Compiler::Vector(bool canAssign) {

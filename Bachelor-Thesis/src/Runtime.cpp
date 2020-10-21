@@ -9,6 +9,7 @@ namespace Lang {
 
 	std::shared_ptr<Chunk> Runtime::m_Chunk;
 	uint16_t Runtime::m_CodeIndex;
+	std::list<std::pair<std::string, Value>> Runtime::m_Variables;
 	std::stack<Value> Runtime::m_Stack;
 
 	InterpretResult Runtime::Interpret(const char* source) {
@@ -35,8 +36,28 @@ namespace Lang {
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:		Push(ReadConstant()); break;
-				case OpCode::SetVariable:	break;
-				case OpCode::GetVariable:	break;
+
+				case OpCode::SetVariable: {
+					std::string name = ReadVariable();
+					Value value = m_Stack.top();
+					m_Variables.push_front(std::make_pair(name, value));
+					break;
+				}
+				case OpCode::GetVariable: {
+					std::string name = ReadVariable();
+					bool found = false;
+					for (auto var : m_Variables) {
+						if (name == var.first) {
+							Push(var.second);
+							found = true;
+							break;
+						}
+					}
+					if (found) break;
+					RuntimeError("Undefined variable `%s'", name.c_str());
+					return InterpretResult::RuntimeError;
+				}
+				case OpCode::PopVariable: m_Variables.erase(m_Variables.begin()); break;
 
 				case OpCode::Not:			UNARY_OP(!); break;
 				case OpCode::Equal:			BINARY_OP(==); break;
@@ -75,6 +96,11 @@ namespace Lang {
 	Value Runtime::ReadConstant() {
 		uint8_t index = ReadByte();
 		return m_Chunk->Constants[index];
+	}
+
+	std::string Runtime::ReadVariable() {
+		uint8_t index = ReadByte();
+		return m_Chunk->Variables[index];
 	}
 
 	void Runtime::Push(Value value) {

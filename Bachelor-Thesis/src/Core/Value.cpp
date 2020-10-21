@@ -57,7 +57,7 @@ namespace Lang {
 
 	void Value::Print() {
 		if (Dim == 0) {
-			printf("<0, [], %f>", Values[0]);
+			printf("<0, [], %f>\n", Values[0]);
 			return;
 		}
 
