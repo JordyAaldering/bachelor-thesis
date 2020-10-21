@@ -32,9 +32,8 @@ namespace Lang {
 			case '!': return MakeToken(Match('=') ? TokenType::BangEqual	: TokenType::Bang);
 			case '>': return MakeToken(Match('=') ? TokenType::GreaterEqual : TokenType::Greater);
 			case '<': return MakeToken(Match('=') ? TokenType::LessEqual	: TokenType::Less);
-
 			case '&': return Match('&') ? MakeToken(TokenType::And) : ErrorToken("Expected `&&'");
-			case '|': return Match('|') ? MakeToken(TokenType::Or) : ErrorToken("Expected `||'");
+			case '|': return Match('|') ? MakeToken(TokenType::Or) :  ErrorToken("Expected `||'");
 		}
 
 		return ErrorToken("Unexpected character");
@@ -75,6 +74,11 @@ namespace Lang {
 		if (strncmp(m_Start, "dim", 3) == 0)		return TokenType::Dim;
 		if (strncmp(m_Start, "shape", 5) == 0)		return TokenType::Shape;
 		if (strncmp(m_Start, "sel", 3) == 0)		return TokenType::Sel;
+		if (strncmp(m_Start, "let", 3) == 0)		return TokenType::Let;
+		if (strncmp(m_Start, "in", 2) == 0)			return TokenType::In;
+		if (strncmp(m_Start, "if", 2) == 0)			return TokenType::If;
+		if (strncmp(m_Start, "then", 4) == 0)		return TokenType::Then;
+		if (strncmp(m_Start, "else", 4) == 0)		return TokenType::Else;
 		return TokenType::Identifier;
 	}
 

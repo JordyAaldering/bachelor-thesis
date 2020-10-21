@@ -37,6 +37,11 @@ namespace Lang {
 		{ NULL,		NULL,	Precedence::None },			// Dim
 		{ NULL,		NULL,	Precedence::None },			// Shape
 		{ NULL,		NULL,	Precedence::None },			// Sel
+		{ NULL,		NULL,	Precedence::None },			// Let
+		{ NULL,		NULL,	Precedence::None },			// In
+		{ NULL,		NULL,	Precedence::None },			// If
+		{ NULL,		NULL,	Precedence::None },			// Then
+		{ NULL,		NULL,	Precedence::None },			// Else
 		{ NULL,		NULL,	Precedence::None },			// Error
 		{ NULL,		NULL,	Precedence::None },			// Eof
 	};
@@ -48,9 +53,7 @@ namespace Lang {
 		m_Parser.InPanicMode = false;
 
 		Advance();
-		while (!Match(TokenType::Eof)) {
-			Declaration();
-		}
+		Expression();
 
 		EndCompiler();
 		return !m_Parser.HadError;
@@ -65,16 +68,12 @@ namespace Lang {
 		#endif
 	}
 
-	void Compiler::Declaration() {
-		Expression();
+	void Compiler::Expression() {
+		ParsePrecedence(Precedence::Assignment);
 
 		if (m_Parser.InPanicMode) {
 			Synchronize();
 		}
-	}
-
-	void Compiler::Expression() {
-		ParsePrecedence(Precedence::Assignment);
 	}
 
 	void Compiler::Grouping(bool canAssign) {
@@ -97,16 +96,21 @@ namespace Lang {
 	}
 
 	void Compiler::Vector(bool canAssign) {
+		uint8_t dim = 1;
+		std::vector<uint16_t> shape = { 0 };
 		std::vector<double> values;
+
 		while (Match(TokenType::Number)) {
+			shape[0]++;
 			values.push_back(strtod(m_Parser.Previous.Start, NULL));
+
 			if (!Match(TokenType::Comma)) {
 				break;
 			}
 		}
 
 		Consume(TokenType::RightSquare, "Expect `]' after vector");
-		EmitConstant({ 1, { (uint16_t)values.size() }, values });
+		EmitConstant({ dim, shape, values });
 	}
 
 	void Compiler::Number(bool canAssign) {

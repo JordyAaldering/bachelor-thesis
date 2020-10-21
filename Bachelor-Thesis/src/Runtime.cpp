@@ -35,8 +35,8 @@ namespace Lang {
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
 				case OpCode::Constant:		Push(ReadConstant()); break;
-				case OpCode::SetVariable:		break;
-				case OpCode::GetVariable:		break;
+				case OpCode::SetVariable:	break;
+				case OpCode::GetVariable:	break;
 
 				case OpCode::Not:			UNARY_OP(!); break;
 				case OpCode::Equal:			BINARY_OP(==); break;

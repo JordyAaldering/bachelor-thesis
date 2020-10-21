@@ -32,9 +32,7 @@ namespace Lang {
 		static void EndCompiler();
 
 	private:
-		static void Declaration();
 		static void Expression();
-
 		static void Grouping(bool canAssign);
 		static void Variable(bool canAssign);
 		static void NamedVariable(Token name, bool canAssign);
