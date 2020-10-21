@@ -7,7 +7,7 @@ namespace Lang {
 
 	enum class OpCode {
 		Constant,
-		SetLocal, GetLocal,
+		SetVariable, GetVariable,
 		Not, Equal, NotEqual,
 		Greater, GreaterEqual,
 		Less, LessEqual,

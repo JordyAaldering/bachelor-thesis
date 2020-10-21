@@ -23,8 +23,8 @@ namespace Lang {
 		OpCode instruction = (OpCode)chunk->Code[offset];
 		switch (instruction) {
 			case OpCode::Constant:		return ConstantInstruction("Constant", chunk, offset);
-			case OpCode::SetLocal:		return ConstantInstruction("Set Local", chunk, offset);
-			case OpCode::GetLocal:		return ConstantInstruction("Get Local", chunk, offset);
+			case OpCode::SetVariable:		return ConstantInstruction("Set Local", chunk, offset);
+			case OpCode::GetVariable:		return ConstantInstruction("Get Local", chunk, offset);
 
 			case OpCode::Not:			return SimpleInstruction("Not", offset);
 			case OpCode::Equal:			return SimpleInstruction("Equal", offset);

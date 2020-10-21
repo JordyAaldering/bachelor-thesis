@@ -14,13 +14,9 @@ namespace Lang {
 	ParseRule Compiler::m_ParseRules[] = {
 		{ Grouping,	NULL,	Precedence::None },			// LeftParen
 		{ NULL,		NULL,	Precedence::None },			// RightParen
-		{ NULL,		NULL,	Precedence::None },			// LeftBrace
-		{ NULL,		NULL,	Precedence::None },			// RightBrace
 		{ Vector,	NULL,	Precedence::None },			// LeftSquare
 		{ NULL,		NULL,	Precedence::None },			// RightSquare
-		{ NULL,		NULL,	Precedence::None },			// Dot
 		{ NULL,		NULL,	Precedence::None },			// Comma
-		{ NULL,		NULL,	Precedence::None },			// Semicolon
 		{ NULL,		Binary,	Precedence::Term },			// Plus
 		{ Unary,	Binary,	Precedence::Term },			// Minus
 		{ NULL,		Binary,	Precedence::Factor },		// Star
@@ -38,7 +34,6 @@ namespace Lang {
 		{ Number,	NULL,	Precedence::None },			// Number
 		{ Variable,	NULL,	Precedence::None },			// Identifier
 		{ NULL,		NULL,	Precedence::None },			// Function
-		{ NULL,		NULL,	Precedence::None },			// Main
 		{ NULL,		NULL,	Precedence::None },			// Dim
 		{ NULL,		NULL,	Precedence::None },			// Shape
 		{ NULL,		NULL,	Precedence::None },			// Sel
@@ -132,7 +127,6 @@ namespace Lang {
 
 	void Compiler::Statement() {
 		Expression();
-		Consume(TokenType::Semicolon, "Expect `;' after expression");
 		EmitByte((uint8_t)OpCode::Pop);
 	}
 
@@ -149,9 +143,9 @@ namespace Lang {
 		uint8_t arg = 0;
 		if (canAssign && Match(TokenType::Equal)) {
 			Expression();
-			EmitBytes((uint8_t)OpCode::SetLocal, arg);
+			EmitBytes((uint8_t)OpCode::SetVariable, arg);
 		} else {
-			EmitByte((uint8_t)OpCode::GetLocal);
+			EmitByte((uint8_t)OpCode::GetVariable);
 		}
 	}
 
@@ -252,10 +246,8 @@ namespace Lang {
 	void Compiler::Synchronize() {
 		m_Parser.InPanicMode = false;
 		while (Check(TokenType::Eof)) {
-			if (m_Parser.Previous.Type == TokenType::Semicolon)
-				return;
-
 			switch (m_Parser.Current.Type) {
+				case TokenType::Function:
 				case TokenType::Dim:
 				case TokenType::Shape:
 				case TokenType::Sel:

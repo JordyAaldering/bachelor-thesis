@@ -6,9 +6,7 @@ namespace Lang {
 
 	enum class TokenType {
 		LeftParen, RightParen,
-		LeftBrace, RightBrace,
-		LeftSquare, RightSquare,
-		Dot, Comma, Semicolon,
+		LeftSquare, RightSquare, Comma,
 		Plus, Minus, Star, Slash,
 		Equal, EqualEqual,
 		Bang, BangEqual,
@@ -16,8 +14,7 @@ namespace Lang {
 		Less, LessEqual,
 		And, Or,
 		Number, Identifier,
-		Function, Main,
-		Dim, Shape, Sel,
+		Function, Dim, Shape, Sel,
 		Error, Eof,
 	};
 

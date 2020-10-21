@@ -19,14 +19,9 @@ namespace Lang {
 		switch (c) {
 			case '(': return MakeToken(TokenType::LeftParen);
 			case ')': return MakeToken(TokenType::RightParen);
-			case '{': return MakeToken(TokenType::LeftBrace);
-			case '}': return MakeToken(TokenType::RightBrace);
 			case '[': return MakeToken(TokenType::LeftSquare);
 			case ']': return MakeToken(TokenType::RightSquare);
-
-			case '.': return MakeToken(TokenType::Dot);
 			case ',': return MakeToken(TokenType::Comma);
-			case ';': return MakeToken(TokenType::Semicolon);
 
 			case '+': return MakeToken(TokenType::Plus);
 			case '-': return MakeToken(TokenType::Minus);
@@ -38,8 +33,8 @@ namespace Lang {
 			case '>': return MakeToken(Match('=') ? TokenType::GreaterEqual : TokenType::Greater);
 			case '<': return MakeToken(Match('=') ? TokenType::LessEqual	: TokenType::Less);
 
-			case '&': if (Match('&')) return MakeToken(TokenType::And); break;
-			case '|': if (Match('|')) return MakeToken(TokenType::Or); break;
+			case '&': return Match('&') ? MakeToken(TokenType::And) : ErrorToken("Expected `&&'");
+			case '|': return Match('|') ? MakeToken(TokenType::Or) : ErrorToken("Expected `||'");
 		}
 
 		return ErrorToken("Unexpected character");
@@ -77,7 +72,6 @@ namespace Lang {
 
 	TokenType Scanner::GetIdentifierType() {
 		if (strncmp(m_Start, "function", 8) == 0)	return TokenType::Function;
-		if (strncmp(m_Start, "main", 4) == 0)		return TokenType::Main;
 		if (strncmp(m_Start, "dim", 3) == 0)		return TokenType::Dim;
 		if (strncmp(m_Start, "shape", 5) == 0)		return TokenType::Shape;
 		if (strncmp(m_Start, "sel", 3) == 0)		return TokenType::Sel;
