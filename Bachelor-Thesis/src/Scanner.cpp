@@ -79,6 +79,7 @@ namespace Lang {
 		if (strncmp(m_Start, "if", 2) == 0)			return TokenType::If;
 		if (strncmp(m_Start, "then", 4) == 0)		return TokenType::Then;
 		if (strncmp(m_Start, "else", 4) == 0)		return TokenType::Else;
+
 		return TokenType::Identifier;
 	}
 

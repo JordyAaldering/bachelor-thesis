@@ -22,7 +22,7 @@ namespace Lang {
 		Add, Subtract,
 		Multiply, Divide,
 
-		Pop, Return,
+		Return,
 	};
 
 	struct Chunk {
@@ -38,7 +38,11 @@ namespace Lang {
 		/// <returns>The index at which the value was added.</returns>
 		uint8_t AddConstant(Value value);
 
+		/// <summary>Adds a new variable name to the variables array.</summary>
+		/// <returns>The index at which the variable was added.</returns>
 		uint8_t AddVariable(std::string name);
+
+		/// <summary>Gets the first index of the given variable name.</summary>
 		uint8_t GetVariable(std::string name);
 	};
 

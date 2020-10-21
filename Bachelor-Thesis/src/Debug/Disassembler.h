@@ -8,12 +8,12 @@ namespace Lang {
 	class Disassembler {
 	public:
 		static void Disassemble(std::shared_ptr<Chunk> chunk, const char* name);
-		static int DisassembleInstruction(std::shared_ptr<Chunk> chunk, uint32_t offset);
+		static int DisassembleInstruction(std::shared_ptr<Chunk> chunk, int offset);
 
 	private:
-		static int ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, uint32_t offset);
-		static int VariableInstruction(const char* name, std::shared_ptr<Chunk> chunk, uint32_t offset);
-		static int SimpleInstruction(const char* name, uint32_t offset);
+		static int ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, int offset);
+		static int VariableInstruction(const char* name, std::shared_ptr<Chunk> chunk, int offset);
+		static int SimpleInstruction(const char* name, int offset);
 	};
 
 }

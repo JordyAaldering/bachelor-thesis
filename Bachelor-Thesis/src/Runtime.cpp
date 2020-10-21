@@ -35,27 +35,18 @@ namespace Lang {
 
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
-				case OpCode::Constant:		Push(ReadConstant()); break;
+				case OpCode::Constant: Push(ReadConstant()); break;
 
 				case OpCode::SetVariable: {
 					std::string name = ReadVariable();
 					Value value = m_Stack.top();
-					m_Variables.push_front(std::make_pair(name, value));
+					m_Variables.emplace_front(name, value);
 					break;
 				}
 				case OpCode::GetVariable: {
 					std::string name = ReadVariable();
-					bool found = false;
-					for (auto var : m_Variables) {
-						if (name == var.first) {
-							Push(var.second);
-							found = true;
-							break;
-						}
-					}
-					if (found) break;
-					RuntimeError("Undefined variable `%s'", name.c_str());
-					return InterpretResult::RuntimeError;
+					Push(FindVariable(name));
+					break;
 				}
 				case OpCode::PopVariable: m_Variables.erase(m_Variables.begin()); break;
 
@@ -73,8 +64,6 @@ namespace Lang {
 				case OpCode::Multiply:		BINARY_OP(*); break;
 				case OpCode::Divide:		BINARY_OP(/); break;
 
-				case OpCode::Pop:			Pop().Print(); break;
-					
 				case OpCode::Return:
 					Pop().Print();
 					return InterpretResult::OK;
@@ -101,6 +90,15 @@ namespace Lang {
 	std::string Runtime::ReadVariable() {
 		uint8_t index = ReadByte();
 		return m_Chunk->Variables[index];
+	}
+
+	Value Runtime::FindVariable(std::string name) {
+		for (auto var : m_Variables) {
+			if (name == var.first) {
+				return var.second;
+			}
+		}
+		return 0;
 	}
 
 	void Runtime::Push(Value value) {

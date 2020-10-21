@@ -18,9 +18,9 @@ namespace Lang {
 	}
 
 	uint8_t Chunk::GetVariable(std::string name) {
-		for (int i = Variables.size() - 1; i >= 0; i++) {
+		for (int i = Variables.size() - 1; i >= 0; i--) {
 			if (Variables[i] == name) {
-				return i;
+				return (uint8_t)i;
 			}
 		}
 		return 0;

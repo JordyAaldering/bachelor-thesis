@@ -19,6 +19,7 @@ namespace Lang {
 		static uint8_t ReadByte();
 		static Value ReadConstant();
 		static std::string ReadVariable();
+		static Value FindVariable(std::string name);
 
 		static void Push(Value value);
 		static Value Pop();
