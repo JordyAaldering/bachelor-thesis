@@ -57,7 +57,7 @@ namespace Lang {
 				}
 				case OpCode::JumpIfFalse: {
 					uint16_t offset = ReadShort();
-					if (!m_Stack.top()) m_CodeIndex += offset;
+					if (!(bool)m_Stack.top()) m_CodeIndex += offset;
 					break;
 				}
 

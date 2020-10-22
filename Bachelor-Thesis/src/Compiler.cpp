@@ -96,9 +96,13 @@ namespace Lang {
 	void Compiler::IfExpression(bool canAssign) {
 		Expression();
 
+		Consume(TokenType::Then, "Expect `then' in if expression");
+
 		int thenJump = EmitJump(OpCode::JumpIfFalse);
 		EmitByte((uint8_t)OpCode::Pop);
 		Expression();
+
+		Consume(TokenType::Else, "Expect `else' in if expression");
 
 		int elseJump = EmitJump(OpCode::Jump);
 		PatchJump(thenJump);
@@ -250,7 +254,7 @@ namespace Lang {
 	}
 
 	void Compiler::PatchJump(int offset) {
-		int jump = GetCurrentChunk()->Code.size() - 2;
+		int jump = GetCurrentChunk()->Code.size() - offset - 2;
 		if (jump > UINT16_MAX) {
 			Error(&m_Parser.Previous, "Expression is too large to jump over.");
 		}
