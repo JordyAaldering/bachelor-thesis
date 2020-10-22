@@ -97,13 +97,11 @@ namespace Lang {
 		Expression();
 
 		Consume(TokenType::Then, "Expect `then' in if expression");
-
 		int thenJump = EmitJump(OpCode::JumpIfFalse);
 		EmitByte((uint8_t)OpCode::Pop);
 		Expression();
 
 		Consume(TokenType::Else, "Expect `else' in if expression");
-
 		int elseJump = EmitJump(OpCode::Jump);
 		PatchJump(thenJump);
 		EmitByte((uint8_t)OpCode::Pop);
@@ -126,7 +124,6 @@ namespace Lang {
 		while (Match(TokenType::Number)) {
 			shape[0]++;
 			values.push_back(strtod(m_Parser.Previous.Start, NULL));
-
 			if (!Match(TokenType::Comma)) {
 				break;
 			}

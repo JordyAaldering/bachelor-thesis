@@ -7,7 +7,6 @@ namespace Lang {
 
 	enum class OpCode {
 		Constant,
-		
 		SetVariable,
 		GetVariable,
 		PopVariable,

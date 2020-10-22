@@ -35,8 +35,9 @@ namespace Lang {
 
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
-				case OpCode::Constant: Push(ReadConstant()); break;
-
+				case OpCode::Constant:
+					Push(ReadConstant());
+					break;
 				case OpCode::SetVariable: {
 					std::string name = ReadVariable();
 					Value value = m_Stack.top();
@@ -48,7 +49,9 @@ namespace Lang {
 					Push(FindVariable(name));
 					break;
 				}
-				case OpCode::PopVariable: m_Variables.erase(m_Variables.begin()); break;
+				case OpCode::PopVariable:
+					m_Variables.erase(m_Variables.begin());
+					break;
 
 				case OpCode::Jump: {
 					uint16_t offset = ReadShort();
