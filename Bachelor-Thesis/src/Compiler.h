@@ -39,9 +39,11 @@ namespace Lang {
 	private:
 		static void Expression();
 		static void Grouping(bool canAssign);
+		static void FunDeclaration(bool canAssign);
 		static void LetExpression(bool canAssign);
 		static void IfExpression(bool canAssign);
 
+		static void MakeFunction(FunctionType type);
 		static void Variable(bool canAssign);
 		static void Vector(bool canAssign);
 		static void Number(bool canAssign);
@@ -58,6 +60,7 @@ namespace Lang {
 		static void EmitBytes(uint8_t byte1, uint8_t byte2);
 		static void EmitConstant(Value value);
 		static uint8_t MakeConstant(Value value);
+		static uint8_t MakeVariable(const char* value);
 
 		static int EmitJump(OpCode opCode);
 		static void PatchJump(int offset);

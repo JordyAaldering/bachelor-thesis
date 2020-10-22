@@ -7,19 +7,25 @@
 
 namespace Lang {
 
-	std::shared_ptr<Chunk> Runtime::m_Chunk;
-	uint16_t Runtime::m_CodeIndex;
-	std::list<std::pair<std::string, Value>> Runtime::m_Variables;
 	std::stack<Value> Runtime::m_Stack;
+	std::list<std::pair<const char*, Function>> Runtime::m_Functions;
+	CallFrame Runtime::m_Frames[FRAMES_MAX];
+	int Runtime::m_FrameCount;
 
 	InterpretResult Runtime::Interpret(const char* source) {
-		m_Chunk = std::make_shared<Chunk>();
-		if (!Compiler::Compile(source, m_Chunk)) {
+		auto function = Compiler::Compile(source, FunctionType::Script);
+		if (function == nullptr) {
 			return InterpretResult::CompileError;
 		}
 
-		m_CodeIndex = 0;
+		m_Functions.emplace_back(function->name, function);
+		CallFrame* frame = &m_Frames[m_FrameCount++];
+		frame->function = function;
+		frame->codeIndex = 0;
+
 		m_Stack = std::stack<Value>();
+		m_FrameCount = 0;
+
 		InterpretResult res = Run();
 		return res;
 	}
@@ -28,39 +34,42 @@ namespace Lang {
 		#define UNARY_OP(op) Push(op Pop())
 		#define BINARY_OP(op) { Value r = Pop(); Push(Pop() op r); }
 
+		std::shared_ptr<CallFrame> frame(&m_Frames[m_FrameCount - 1]);
+
 		while (true) {
 			#ifdef DEBUG
-			Disassembler::DisassembleInstruction(m_Chunk, m_CodeIndex);
+			Disassembler::DisassembleInstruction(
+				std::shared_ptr<Chunk>(&frame->function->chunk), frame->codeIndex);
 			#endif
 
-			OpCode instruction = (OpCode)ReadByte();
+			OpCode instruction = (OpCode)ReadByte(frame);
 			switch (instruction) {
 				case OpCode::Constant:
-					Push(ReadConstant());
+					Push(ReadConstant(frame));
 					break;
 				case OpCode::SetVariable: {
-					std::string name = ReadVariable();
+					std::string name = ReadVariable(frame);
 					Value value = m_Stack.top();
-					m_Variables.emplace_front(name, value);
+					frame->variables.emplace_front(name, value);
 					break;
 				}
 				case OpCode::GetVariable: {
-					std::string name = ReadVariable();
-					Push(FindVariable(name));
+					std::string name = ReadVariable(frame);
+					Push(FindVariable(name, frame));
 					break;
 				}
 				case OpCode::PopVariable:
-					m_Variables.erase(m_Variables.begin());
+					frame->variables.erase(frame->variables.begin());
 					break;
 
 				case OpCode::Jump: {
-					uint16_t offset = ReadShort();
-					m_CodeIndex += offset;
+					uint16_t offset = ReadShort(frame);
+					frame->codeIndex += offset;
 					break;
 				}
 				case OpCode::JumpIfFalse: {
-					uint16_t offset = ReadShort();
-					if (!(bool)m_Stack.top()) m_CodeIndex += offset;
+					uint16_t offset = ReadShort(frame);
+					if (!(bool)m_Stack.top()) frame->codeIndex += offset;
 					break;
 				}
 
@@ -93,29 +102,29 @@ namespace Lang {
 		#undef BINARY_OP
 	}
 
-	uint8_t Runtime::ReadByte() {
-		return m_Chunk->Code[m_CodeIndex++];
+	uint8_t Runtime::ReadByte(std::shared_ptr<CallFrame> frame) {
+		return frame->function->chunk.Code[frame->codeIndex++];
 	}
 
-	uint16_t Runtime::ReadShort() {
-		uint8_t hi = m_Chunk->Code[m_CodeIndex] << 8;
-		uint8_t lo = m_Chunk->Code[m_CodeIndex + 1];
-		m_CodeIndex += 2;
+	uint16_t Runtime::ReadShort(std::shared_ptr<CallFrame> frame) {
+		uint8_t hi = frame->function->chunk.Code[frame->codeIndex] << 8;
+		uint8_t lo = frame->function->chunk.Code[frame->codeIndex + 1];
+		frame->codeIndex += 2;
 		return (uint16_t)(hi | lo);
 	}
 
-	Value Runtime::ReadConstant() {
-		uint8_t index = ReadByte();
-		return m_Chunk->Constants[index];
+	Value Runtime::ReadConstant(std::shared_ptr<CallFrame> frame) {
+		uint8_t index = ReadByte(frame);
+		return frame->function->chunk.Constants[index];
 	}
 
-	std::string Runtime::ReadVariable() {
-		uint8_t index = ReadByte();
-		return m_Chunk->Variables[index];
+	std::string Runtime::ReadVariable(std::shared_ptr<CallFrame> frame) {
+		uint8_t index = ReadByte(frame);
+		return frame->function->chunk.Variables[index];
 	}
 
-	Value Runtime::FindVariable(std::string name) {
-		for (auto var : m_Variables) {
+	Value Runtime::FindVariable(std::string name, std::shared_ptr<CallFrame> frame) {
+		for (auto var : frame->variables) {
 			if (name == var.first) {
 				return var.second;
 			}
@@ -140,7 +149,8 @@ namespace Lang {
 		va_end(args);
 		fputs("\n", stderr);
 
-		int line = m_Chunk->Lines[m_CodeIndex];
+		CallFrame* frame = &m_Frames[m_FrameCount - 1];
+		uint16_t line = frame->function->chunk.Lines[frame->codeIndex];
 		fprintf(stderr, "[line %d] in script\n", line);
 	}
 

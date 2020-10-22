@@ -32,11 +32,11 @@ namespace Lang {
 		{ NULL,			Binary,	Precedence::Comparison },	// Or
 		{ Number,		NULL,	Precedence::None },			// Number
 		{ Variable,		NULL,	Precedence::None },			// Identifier
-		{ NULL,			NULL,	Precedence::None },			// Function
+		{ FunDeclaration, NULL,	Precedence::None },			// Function
 		{ NULL,			NULL,	Precedence::None },			// Dim
 		{ NULL,			NULL,	Precedence::None },			// Shape
 		{ NULL,			NULL,	Precedence::None },			// Sel
-		{ LetExpression,NULL,	Precedence::None },			// Let
+		{ LetExpression, NULL,	Precedence::None },			// Let
 		{ NULL,			NULL,	Precedence::None },			// In
 		{ IfExpression,	NULL,	Precedence::None },			// If
 		{ NULL,			NULL,	Precedence::None },			// Then
@@ -86,6 +86,13 @@ namespace Lang {
 		Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
+	void Compiler::FunDeclaration(bool canAssign) {
+		Advance();
+		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
+		uint8_t index = m_CompilingChunk->AddVariable(name);
+		MakeFunction(FunctionType::Function);
+	}
+
 	void Compiler::LetExpression(bool canAssign) {
 		Advance();
 		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
@@ -115,6 +122,17 @@ namespace Lang {
 
 		Expression();
 		PatchJump(elseJump);
+	}
+
+	void Compiler::MakeFunction(FunctionType type) {
+		Compiler compiler();
+
+		Consume(TokenType::LeftParen, "Expect `(' after function name");
+		Consume(TokenType::RightParen, "Expect `)' after function parameters");
+
+		Expression();
+		auto function = EndCompiler();
+		EmitBytes((uint8_t)OpCode::Constant, MakeVariable(function->name));
 	}
 
 	void Compiler::Variable(bool canAssign) {
@@ -250,15 +268,19 @@ namespace Lang {
 		return GetCurrentChunk()->AddConstant(value);
 	}
 
+	uint8_t Compiler::MakeVariable(const char* name) {
+		return GetCurrentChunk()->AddVariable(name);
+	}
+
 	int Compiler::EmitJump(OpCode opCode) {
 		EmitByte((uint8_t)opCode);
 		EmitByte(0xff);
 		EmitByte(0xff);
-		return GetCurrentChunk()->Code.size() - 2;
+		return (int)GetCurrentChunk()->Code.size() - 2;
 	}
 
 	void Compiler::PatchJump(int offset) {
-		int jump = GetCurrentChunk()->Code.size() - offset - 2;
+		int jump = (int)GetCurrentChunk()->Code.size() - offset - 2;
 		if (jump > UINT16_MAX) {
 			Error(&m_Parser.Previous, "Expression is too large to jump over.");
 		}
