@@ -45,26 +45,33 @@ namespace Lang {
 		{ NULL,			NULL,	Precedence::None },			// Eof
 	};
 
-	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
+	std::shared_ptr<Function> Compiler::Compile(const char* source, FunctionType type) {
 		m_Scanner = Scanner(source);
-		m_CompilingChunk = chunk;
+		m_Function = std::make_shared<Function>();
+		m_FunctionType = type;
+
 		m_Parser.HadError = false;
 		m_Parser.InPanicMode = false;
 
 		Advance();
 		Expression();
 
-		EndCompiler();
-		return !m_Parser.HadError;
+		std::shared_ptr<Function> function = EndCompiler();
+		return m_Parser.HadError ? nullptr : function;
 	}
 
-	void Compiler::EndCompiler() {
+	std::shared_ptr<Function> Compiler::EndCompiler() {
 		EmitByte((uint8_t)OpCode::Return);
+		std::shared_ptr<Function> function = m_Function;
+
 		#ifdef DEBUG
 		if (!m_Parser.HadError) {
-			Disassembler::Disassemble(GetCurrentChunk(), "Code");
+			Disassembler::Disassemble(GetCurrentChunk(),
+				function->name != nullptr ? function->name : "<script>");
 		}
 		#endif
+
+		return function;
 	}
 
 	void Compiler::Expression() {
@@ -261,7 +268,7 @@ namespace Lang {
 	}
 
 	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {
-		return m_CompilingChunk;
+		return std::shared_ptr<Chunk>(&m_Function->chunk);
 	}
 
 	ParseRule* Compiler::GetRule(TokenType type) {

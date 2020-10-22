@@ -3,6 +3,7 @@
 #include "Base.h"
 #include "Scanner.h"
 #include "Core/Chunk.h"
+#include "Core/Function.h"
 
 namespace Lang {
 
@@ -10,6 +11,10 @@ namespace Lang {
 		None, Assignment, Or, And,
 		Equality, Comparison, Term,
 		Factor, Unary, Call, Primary
+	};
+
+	enum class FunctionType {
+		Function, Script,
 	};
 
 	struct Parser {
@@ -28,8 +33,8 @@ namespace Lang {
 
 	class Compiler {
 	public:
-		static bool Compile(const char* source, std::shared_ptr<Chunk> chunk);
-		static void EndCompiler();
+		static std::shared_ptr<Function> Compile(const char* source, FunctionType type);
+		static std::shared_ptr<Function> EndCompiler();
 
 	private:
 		static void Expression();
@@ -67,6 +72,9 @@ namespace Lang {
 		static Scanner m_Scanner;
 		static std::shared_ptr<Chunk> m_CompilingChunk;
 		static Parser m_Parser;
+
+		static std::shared_ptr<Function> m_Function;
+		static FunctionType m_FunctionType;
 
 		static ParseRule m_ParseRules[];
 	};
