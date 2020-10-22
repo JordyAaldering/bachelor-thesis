@@ -28,6 +28,9 @@ namespace Lang {
 			case OpCode::GetVariable:	return VariableInstruction("Get Variable", chunk, offset);
 			case OpCode::PopVariable:	return SimpleInstruction("Pop Variable", offset);
 
+			case OpCode::Jump:			return JumpInstruction("Jump", 1, chunk, offset);
+			case OpCode::JumpIfFalse:	return JumpInstruction("Jump If False", 1, chunk, offset);
+
 			case OpCode::Not:			return SimpleInstruction("Not", offset);
 			case OpCode::Equal:			return SimpleInstruction("Equal", offset);
 			case OpCode::NotEqual:		return SimpleInstruction("Not Equal", offset);
@@ -44,12 +47,21 @@ namespace Lang {
 			case OpCode::Multiply:		return SimpleInstruction("Multiply", offset);
 			case OpCode::Divide:		return SimpleInstruction("Divide", offset);
 
+			case OpCode::Pop:			return SimpleInstruction("Pop", offset);
 			case OpCode::Return:		return SimpleInstruction("Return", offset);
 
 			default:
 				fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
 				return offset + 1;
 		}
+	}
+
+	int Disassembler::JumpInstruction(const char* name, int sign, std::shared_ptr<Chunk> chunk, int offset) {
+		uint8_t hi = chunk->Code[offset + 1] << 8;
+		uint8_t lo = chunk->Code[offset + 2];
+		uint16_t jump = (uint16_t)(hi | lo);
+		printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
+		return offset + 3;
 	}
 
 	int Disassembler::ConstantInstruction(const char* name, std::shared_ptr<Chunk> chunk, int offset) {

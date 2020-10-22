@@ -96,12 +96,16 @@ namespace Lang {
 	void Compiler::IfExpression(bool canAssign) {
 		Expression();
 
-		int thenJump = EmitJump(OpCode::IfJumpFalse);
+		int thenJump = EmitJump(OpCode::JumpIfFalse);
+		EmitByte((uint8_t)OpCode::Pop);
 		Expression();
-		PatchJump(thenJump);
 
-		// else
-		// expression
+		int elseJump = EmitJump(OpCode::Jump);
+		PatchJump(thenJump);
+		EmitByte((uint8_t)OpCode::Pop);
+
+		Expression();
+		PatchJump(elseJump);
 	}
 
 	void Compiler::Variable(bool canAssign) {

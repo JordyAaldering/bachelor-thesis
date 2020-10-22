@@ -12,8 +12,8 @@ namespace Lang {
 		GetVariable,
 		PopVariable,
 
-		IfJumpTrue,
-		IfJumpFalse,
+		Jump,
+		JumpIfFalse,
 
 		Not,
 		Equal, NotEqual,
@@ -25,7 +25,7 @@ namespace Lang {
 		Add, Subtract,
 		Multiply, Divide,
 
-		Return,
+		Pop, Return,
 	};
 
 	struct Chunk {

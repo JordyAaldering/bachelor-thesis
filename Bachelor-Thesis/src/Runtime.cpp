@@ -50,12 +50,14 @@ namespace Lang {
 				}
 				case OpCode::PopVariable: m_Variables.erase(m_Variables.begin()); break;
 
-				case OpCode::IfJumpTrue: {
+				case OpCode::Jump: {
+					uint16_t offset = ReadShort();
+					m_CodeIndex += offset;
 					break;
 				}
-				case OpCode::IfJumpFalse: {
+				case OpCode::JumpIfFalse: {
 					uint16_t offset = ReadShort();
-					if (m_Stack.top()) m_CodeIndex += offset;
+					if (!m_Stack.top()) m_CodeIndex += offset;
 					break;
 				}
 
@@ -72,7 +74,8 @@ namespace Lang {
 				case OpCode::Subtract:		BINARY_OP(-); break;
 				case OpCode::Multiply:		BINARY_OP(*); break;
 				case OpCode::Divide:		BINARY_OP(/); break;
-
+					
+				case OpCode::Pop: Pop(); break;
 				case OpCode::Return:
 					Pop().Print();
 					return InterpretResult::OK;
