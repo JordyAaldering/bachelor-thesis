@@ -17,6 +17,7 @@ namespace Lang {
 		static InterpretResult Run();
 
 		static uint8_t ReadByte();
+		static uint16_t ReadShort();
 		static Value ReadConstant();
 		static std::string ReadVariable();
 		static Value FindVariable(std::string name);

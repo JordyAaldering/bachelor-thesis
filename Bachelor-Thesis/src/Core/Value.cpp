@@ -10,6 +10,12 @@ namespace Lang {
 		: Dim(dim), Shape(shape), Values(values) {
 	}
 
+	Value::operator bool() const {
+		for (double v : Values)
+			if (v != 0) return true;
+		return false;
+	}
+
 #define EQUALITY_OP(op) \
 	Value Value::operator op(Value other) { \
 		for (int i = 0; i < Values.size(); i++) \
@@ -19,9 +25,7 @@ namespace Lang {
 	}
 
 	Value Value::operator!() {
-		for (double v : Values)
-			if (v != 0) return 0;
-		return 1;
+		return !((bool)this);
 	}
 
 	EQUALITY_OP(==)

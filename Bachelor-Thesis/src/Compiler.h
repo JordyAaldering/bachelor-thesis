@@ -54,6 +54,9 @@ namespace Lang {
 		static void EmitConstant(Value value);
 		static uint8_t MakeConstant(Value value);
 
+		static int EmitJump(OpCode opCode);
+		static void PatchJump(int offset);
+
 		static std::shared_ptr<Chunk> GetCurrentChunk();
 		static ParseRule* GetRule(TokenType type);
 

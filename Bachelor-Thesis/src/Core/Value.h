@@ -12,6 +12,8 @@ namespace Lang {
 		Value(double value);
 		Value(uint8_t dim, std::vector<uint16_t> shape, std::vector<double> values);
 
+		operator bool() const;
+
 		Value operator!();
 		Value operator==(Value other);
 		Value operator!=(Value other);

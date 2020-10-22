@@ -94,10 +94,11 @@ namespace Lang {
 	}
 
 	void Compiler::IfExpression(bool canAssign) {
-		// expression
+		Expression();
 
-		// then
-		// expresssion
+		int thenJump = EmitJump(OpCode::IfJumpFalse);
+		Expression();
+		PatchJump(thenJump);
 
 		// else
 		// expression
@@ -235,6 +236,23 @@ namespace Lang {
 
 	uint8_t Compiler::MakeConstant(Value value) {
 		return GetCurrentChunk()->AddConstant(value);
+	}
+
+	int Compiler::EmitJump(OpCode opCode) {
+		EmitByte((uint8_t)opCode);
+		EmitByte(0xff);
+		EmitByte(0xff);
+		return GetCurrentChunk()->Code.size() - 2;
+	}
+
+	void Compiler::PatchJump(int offset) {
+		int jump = GetCurrentChunk()->Code.size() - 2;
+		if (jump > UINT16_MAX) {
+			Error(&m_Parser.Previous, "Expression is too large to jump over.");
+		}
+
+		GetCurrentChunk()->Code[offset] = (jump >> 8) & 0xff;
+		GetCurrentChunk()->Code[offset + 1] = jump & 0xff;
 	}
 
 	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {

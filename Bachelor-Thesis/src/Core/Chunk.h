@@ -12,6 +12,9 @@ namespace Lang {
 		GetVariable,
 		PopVariable,
 
+		IfJumpTrue,
+		IfJumpFalse,
+
 		Not,
 		Equal, NotEqual,
 		Greater, GreaterEqual,

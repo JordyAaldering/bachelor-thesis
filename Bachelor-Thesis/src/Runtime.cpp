@@ -50,6 +50,15 @@ namespace Lang {
 				}
 				case OpCode::PopVariable: m_Variables.erase(m_Variables.begin()); break;
 
+				case OpCode::IfJumpTrue: {
+					break;
+				}
+				case OpCode::IfJumpFalse: {
+					uint16_t offset = ReadShort();
+					if (m_Stack.top()) m_CodeIndex += offset;
+					break;
+				}
+
 				case OpCode::Not:			UNARY_OP(!); break;
 				case OpCode::Equal:			BINARY_OP(==); break;
 				case OpCode::NotEqual:		BINARY_OP(!=); break;
@@ -80,6 +89,13 @@ namespace Lang {
 
 	uint8_t Runtime::ReadByte() {
 		return m_Chunk->Code[m_CodeIndex++];
+	}
+
+	uint16_t Runtime::ReadShort() {
+		uint8_t hi = m_Chunk->Code[m_CodeIndex] << 8;
+		uint8_t lo = m_Chunk->Code[m_CodeIndex + 1];
+		m_CodeIndex += 2;
+		return (uint16_t)(hi | lo);
 	}
 
 	Value Runtime::ReadConstant() {
