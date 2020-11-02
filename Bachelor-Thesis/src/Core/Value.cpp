@@ -10,6 +10,34 @@ namespace Lang {
 		: Dim(dim), Shape(shape), Values(values) {
 	}
 
+	Value Value::DimExpr() {
+		return { 0, {}, {(double)Dim} };
+	}
+
+	Value Value::ShapeExpr() {
+		std::vector<double> shape;
+		shape.reserve(Shape.size());
+		for (uint16_t s : Shape) {
+			shape.push_back((double)s);
+		}
+
+		return { 1, {Dim}, shape };
+	}
+
+	Value Value::SelExpr(Value pos) {
+		uint32_t index = 0;
+		for (int i = 0; i < Dim; i++) {
+			uint32_t offset = 1;
+			for (int j = i + 1; j < Dim; j++) {
+				offset *= (uint32_t)Shape[j];
+			}
+
+			index += offset * (uint32_t)pos.Values[i];
+		}
+
+		return { 0, {}, {Values[index]} };
+	}
+
 	Value::operator bool() const {
 		for (double v : Values)
 			if (v != 0) return true;

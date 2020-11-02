@@ -27,6 +27,10 @@ namespace Lang {
 			case OpCode::GetVariable:	return VariableInstruction("Get Variable", chunk, offset);
 			case OpCode::PopVariable:	return SimpleInstruction("Pop Variable", offset);
 
+			case OpCode::Dim:			return SimpleInstruction("Dim", offset);
+			case OpCode::Shape:			return SimpleInstruction("Shape", offset);
+			case OpCode::Sel:			return SimpleInstruction("Sel", offset);
+
 			case OpCode::Jump:			return JumpInstruction("Jump", 1, chunk, offset);
 			case OpCode::JumpIfFalse:	return JumpInstruction("Jump If False", 1, chunk, offset);
 

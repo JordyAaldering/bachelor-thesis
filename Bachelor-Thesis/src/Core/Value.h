@@ -12,6 +12,10 @@ namespace Lang {
 		Value(double value);
 		Value(uint8_t dim, std::vector<uint16_t> shape, std::vector<double> values);
 
+		Value DimExpr();
+		Value ShapeExpr();
+		Value SelExpr(Value pos);
+
 		operator bool() const;
 
 		Value operator!();

@@ -33,12 +33,12 @@ namespace Lang {
 		{ Number,		NULL,	Precedence::None },			// Number
 		{ Variable,		NULL,	Precedence::None },			// Identifier
 		{ NULL,			NULL,	Precedence::None },			// Function
-		{ NULL,			NULL,	Precedence::None },			// Dim
-		{ NULL,			NULL,	Precedence::None },			// Shape
-		{ NULL,			NULL,	Precedence::None },			// Sel
-		{ LetExpression,NULL,	Precedence::None },			// Let
+		{ DimExpr,		NULL,	Precedence::None },			// Dim
+		{ ShapeExpr,	NULL,	Precedence::None },			// Shape
+		{ SelExpr,		NULL,	Precedence::None },			// Sel
+		{ LetExpr,		NULL,	Precedence::None },			// Let
 		{ NULL,			NULL,	Precedence::None },			// In
-		{ IfExpression,	NULL,	Precedence::None },			// If
+		{ IfExpr,		NULL,	Precedence::None },			// If
 		{ NULL,			NULL,	Precedence::None },			// Then
 		{ NULL,			NULL,	Precedence::None },			// Else
 		{ NULL,			NULL,	Precedence::None },			// Error
@@ -79,7 +79,34 @@ namespace Lang {
 		Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
-	void Compiler::LetExpression(bool canAssign) {
+	void Compiler::DimExpr(bool canAssign) {
+		Consume(TokenType::LeftParen, "Expect `(' after dim expression");
+		Expression();
+
+		Consume(TokenType::RightParen, "Expect `)' after dim arguments");
+		EmitByte((uint8_t)OpCode::Dim);
+	}
+
+	void Compiler::ShapeExpr(bool canAssign) {
+		Consume(TokenType::LeftParen, "Expect `(' after shape expression");
+		Expression();
+
+		Consume(TokenType::RightParen, "Expect `)' after shape arguments");
+		EmitByte((uint8_t)OpCode::Shape);
+	}
+
+	void Compiler::SelExpr(bool canAssign) {
+		Consume(TokenType::LeftParen, "Expect `(' after sel expression");
+		Expression();
+
+		Consume(TokenType::Comma, "Expect `,' after first sel argument");
+		Expression();
+
+		Consume(TokenType::RightParen, "Expect `)' after sel arguments");
+		EmitByte((uint8_t)OpCode::Sel);
+	}
+
+	void Compiler::LetExpr(bool canAssign) {
 		Advance();
 		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
 		uint8_t index = m_Chunk->AddVariable(name);
@@ -93,7 +120,7 @@ namespace Lang {
 		EmitByte((uint8_t)OpCode::PopVariable);
 	}
 
-	void Compiler::IfExpression(bool canAssign) {
+	void Compiler::IfExpr(bool canAssign) {
 		Expression();
 
 		Consume(TokenType::Then, "Expect `then' in if expression");
@@ -257,7 +284,7 @@ namespace Lang {
 		}
 
 		m_Chunk->Code[offset] = (jump >> 8) & 0xff;
-		m_Chunk ->Code[offset + 1] = jump & 0xff;
+		m_Chunk->Code[offset + 1] = jump & 0xff;
 	}
 
 	ParseRule* Compiler::GetRule(TokenType type) {
