@@ -32,11 +32,11 @@ namespace Lang {
 		{ NULL,			Binary,	Precedence::Comparison },	// Or
 		{ Number,		NULL,	Precedence::None },			// Number
 		{ Variable,		NULL,	Precedence::None },			// Identifier
-		{ FunDeclaration, NULL,	Precedence::None },			// Function
+		{ NULL,			NULL,	Precedence::None },			// Function
 		{ NULL,			NULL,	Precedence::None },			// Dim
 		{ NULL,			NULL,	Precedence::None },			// Shape
 		{ NULL,			NULL,	Precedence::None },			// Sel
-		{ LetExpression, NULL,	Precedence::None },			// Let
+		{ LetExpression,NULL,	Precedence::None },			// Let
 		{ NULL,			NULL,	Precedence::None },			// In
 		{ IfExpression,	NULL,	Precedence::None },			// If
 		{ NULL,			NULL,	Precedence::None },			// Then
@@ -45,33 +45,26 @@ namespace Lang {
 		{ NULL,			NULL,	Precedence::None },			// Eof
 	};
 
-	std::shared_ptr<Function> Compiler::Compile(const char* source, FunctionType type) {
+	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
 		m_Scanner = Scanner(source);
-		m_Function = std::make_shared<Function>();
-		m_FunctionType = type;
-
+		m_CompilingChunk = chunk;
 		m_Parser.HadError = false;
 		m_Parser.InPanicMode = false;
 
 		Advance();
 		Expression();
 
-		std::shared_ptr<Function> function = EndCompiler();
-		return m_Parser.HadError ? nullptr : function;
+		EndCompiler();
+		return !m_Parser.HadError;
 	}
 
-	std::shared_ptr<Function> Compiler::EndCompiler() {
+	void Compiler::EndCompiler() {
 		EmitByte((uint8_t)OpCode::Return);
-		std::shared_ptr<Function> function = m_Function;
-
-		#ifdef DEBUG
+#ifdef DEBUG
 		if (!m_Parser.HadError) {
-			Disassembler::Disassemble(GetCurrentChunk(),
-				function->name != nullptr ? function->name : "<script>");
+			Disassembler::Disassemble(GetCurrentChunk(), "Code");
 		}
-		#endif
-
-		return function;
+#endif
 	}
 
 	void Compiler::Expression() {
@@ -84,13 +77,6 @@ namespace Lang {
 	void Compiler::Grouping(bool canAssign) {
 		Expression();
 		Consume(TokenType::RightParen, "Expect `)' after expression");
-	}
-
-	void Compiler::FunDeclaration(bool canAssign) {
-		Advance();
-		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
-		uint8_t index = m_CompilingChunk->AddVariable(name);
-		MakeFunction(FunctionType::Function);
 	}
 
 	void Compiler::LetExpression(bool canAssign) {
@@ -122,17 +108,6 @@ namespace Lang {
 
 		Expression();
 		PatchJump(elseJump);
-	}
-
-	void Compiler::MakeFunction(FunctionType type) {
-		Compiler compiler();
-
-		Consume(TokenType::LeftParen, "Expect `(' after function name");
-		Consume(TokenType::RightParen, "Expect `)' after function parameters");
-
-		Expression();
-		auto function = EndCompiler();
-		EmitBytes((uint8_t)OpCode::Constant, MakeVariable(function->name));
 	}
 
 	void Compiler::Variable(bool canAssign) {
@@ -169,22 +144,22 @@ namespace Lang {
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
 
 		switch (operatorType) {
-			case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
-			case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
-			case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
-			case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
-			case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
-			case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
-			case TokenType::And:			EmitByte((uint8_t)OpCode::And); break;
-			case TokenType::Or:				EmitByte((uint8_t)OpCode::Or); break;
-			case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
-			case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
-			case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
-			case TokenType::Slash:			EmitByte((uint8_t)OpCode::Divide); break;
+		case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
+		case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
+		case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
+		case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
+		case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
+		case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
+		case TokenType::And:			EmitByte((uint8_t)OpCode::And); break;
+		case TokenType::Or:				EmitByte((uint8_t)OpCode::Or); break;
+		case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
+		case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
+		case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
+		case TokenType::Slash:			EmitByte((uint8_t)OpCode::Divide); break;
 
-			default:
-				fprintf(stderr, "Invalid operator `%d'", operatorType);
-				return;
+		default:
+			fprintf(stderr, "Invalid operator `%d'", operatorType);
+			return;
 		}
 	}
 
@@ -194,12 +169,12 @@ namespace Lang {
 		ParsePrecedence(Precedence::Unary);
 
 		switch (operatorType) {
-			case TokenType::Bang:	EmitByte((uint8_t)OpCode::Not); break;
-			case TokenType::Minus:	EmitByte((uint8_t)OpCode::Negate); break;
+		case TokenType::Bang:	EmitByte((uint8_t)OpCode::Not); break;
+		case TokenType::Minus:	EmitByte((uint8_t)OpCode::Negate); break;
 
-			default:
-				fprintf(stderr, "Invalid operator `%d'", operatorType);
-				return;
+		default:
+			fprintf(stderr, "Invalid operator `%d'", operatorType);
+			return;
 		}
 	}
 
@@ -268,19 +243,15 @@ namespace Lang {
 		return GetCurrentChunk()->AddConstant(value);
 	}
 
-	uint8_t Compiler::MakeVariable(const char* name) {
-		return GetCurrentChunk()->AddVariable(name);
-	}
-
 	int Compiler::EmitJump(OpCode opCode) {
 		EmitByte((uint8_t)opCode);
 		EmitByte(0xff);
 		EmitByte(0xff);
-		return (int)GetCurrentChunk()->Code.size() - 2;
+		return GetCurrentChunk()->Code.size() - 2;
 	}
 
 	void Compiler::PatchJump(int offset) {
-		int jump = (int)GetCurrentChunk()->Code.size() - offset - 2;
+		int jump = GetCurrentChunk()->Code.size() - offset - 2;
 		if (jump > UINT16_MAX) {
 			Error(&m_Parser.Previous, "Expression is too large to jump over.");
 		}
@@ -290,7 +261,7 @@ namespace Lang {
 	}
 
 	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {
-		return std::shared_ptr<Chunk>(&m_Function->chunk);
+		return m_CompilingChunk;
 	}
 
 	ParseRule* Compiler::GetRule(TokenType type) {
@@ -305,7 +276,8 @@ namespace Lang {
 		fprintf(stderr, "[line %d] Error", token->Line);
 		if (token->Type == TokenType::Eof) {
 			fprintf(stderr, " at end: %s\n", msg);
-		} else if (token->Type != TokenType::Error) {
+		}
+		else if (token->Type != TokenType::Error) {
 			fprintf(stderr, " at `%.*s': %s\n", token->Length, token->Start, msg);
 		}
 	}
@@ -314,11 +286,11 @@ namespace Lang {
 		m_Parser.InPanicMode = false;
 		while (Check(TokenType::Eof)) {
 			switch (m_Parser.Current.Type) {
-				case TokenType::Function:
-				case TokenType::Dim:
-				case TokenType::Shape:
-				case TokenType::Sel:
-					return;
+			case TokenType::Function:
+			case TokenType::Dim:
+			case TokenType::Shape:
+			case TokenType::Sel:
+				return;
 			}
 		}
 	}

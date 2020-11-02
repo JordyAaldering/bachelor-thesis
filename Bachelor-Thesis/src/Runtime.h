@@ -2,18 +2,11 @@
 
 #include "Base.h"
 #include "Core/Chunk.h"
-#include "Core/Function.h"
 
 namespace Lang {
 
 	enum class InterpretResult {
 		OK, CompileError, RuntimeError
-	};
-
-	struct CallFrame {
-		std::shared_ptr<Function> function;
-		uint8_t codeIndex;
-		std::list<std::pair<std::string, Value>> variables;
 	};
 
 	class Runtime {
@@ -23,11 +16,11 @@ namespace Lang {
 	private:
 		static InterpretResult Run();
 
-		static uint8_t ReadByte(std::shared_ptr<CallFrame> frame);
-		static uint16_t ReadShort(std::shared_ptr<CallFrame> frame);
-		static Value ReadConstant(std::shared_ptr<CallFrame> frame);
-		static std::string ReadVariable(std::shared_ptr<CallFrame> frame);
-		static Value FindVariable(std::string name, std::shared_ptr<CallFrame> frame);
+		static uint8_t ReadByte();
+		static uint16_t ReadShort();
+		static Value ReadConstant();
+		static std::string ReadVariable();
+		static Value FindVariable(std::string name);
 
 		static void Push(Value value);
 		static Value Pop();
@@ -35,10 +28,10 @@ namespace Lang {
 		static void RuntimeError(const char* format, ...);
 
 	private:
+		static std::shared_ptr<Chunk> m_Chunk;
+		static uint16_t m_CodeIndex;
+		static std::list<std::pair<std::string, Value>> m_Variables;
 		static std::stack<Value> m_Stack;
-		static std::list<std::pair<const char*, Function>> m_Functions;
-		static CallFrame m_Frames[FRAMES_MAX];
-		static int m_FrameCount;
 	};
 
 }
