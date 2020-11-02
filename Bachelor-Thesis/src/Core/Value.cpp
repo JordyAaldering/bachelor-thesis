@@ -93,13 +93,13 @@ namespace Lang {
 			return;
 		}
 
-		printf("<%d, [", Dim);
-		for (uint16_t s : Shape) {
-			printf("%d,", s);
+		printf("<%d, [%d", Dim, Shape[0]);
+		for (int i = 1; i < Dim; i++) {
+			printf(", %d", Shape[i]);
 		}
-		printf("], [");
-		for (double v : Values) {
-			printf("%f,", v);
+		printf("], [%f", Values[0]);
+		for (int i = 1; i < Values.size(); i++) {
+			printf(", %f", Values[i]);
 		}
 		printf("]>\n");
 	}
