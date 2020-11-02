@@ -1,12 +1,9 @@
 #include "Runtime.h"
-#include "Debug/Disassembler.h"
 
 using namespace Lang;
 
 static void Repl() {
-	Runtime vm;
 	char line[1024];
-
 	while (true) {
 		printf("> ");
 
@@ -15,7 +12,7 @@ static void Repl() {
 			break;
 		}
 
-		vm.Interpret(line);
+		Runtime::Interpret(line);
 	}
 }
 
@@ -48,13 +45,9 @@ static char* ReadFile(char* path) {
 }
 
 static void RunFile(char* path) {
-	Runtime vm;
 	char* source = ReadFile(path);
-	InterpretResult result = vm.Interpret(source);
-	free(source);
-
-	if (result == InterpretResult::CompileError) exit(65);
-	if (result == InterpretResult::RuntimeError) exit(70);
+	auto result = Runtime::Interpret(source);
+	exit((int)result);
 }
 
 int main(int argc, char* argv[]) {

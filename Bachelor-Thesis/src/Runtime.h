@@ -6,7 +6,9 @@
 namespace Lang {
 
 	enum class InterpretResult {
-		OK, CompileError, RuntimeError
+		OK = 0,
+		CompileError = 65,
+		RuntimeError = 70,
 	};
 
 	class Runtime {
