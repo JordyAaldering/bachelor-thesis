@@ -7,7 +7,7 @@
 namespace Lang {
 
 	Scanner Compiler::m_Scanner = nullptr;
-	std::shared_ptr<Chunk> Compiler::m_CompilingChunk;
+	std::shared_ptr<Chunk> Compiler::m_Chunk;
 	Parser Compiler::m_Parser;
 
 	ParseRule Compiler::m_ParseRules[] = {
@@ -47,7 +47,7 @@ namespace Lang {
 
 	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
 		m_Scanner = Scanner(source);
-		m_CompilingChunk = chunk;
+		m_Chunk = chunk;
 		m_Parser.HadError = false;
 		m_Parser.InPanicMode = false;
 
@@ -62,7 +62,7 @@ namespace Lang {
 		EmitByte((uint8_t)OpCode::Return);
 #ifdef DEBUG
 		if (!m_Parser.HadError) {
-			Disassembler::Disassemble(GetCurrentChunk(), "Code");
+			Disassembler::Disassemble(m_Chunk, "Code");
 		}
 #endif
 	}
@@ -82,7 +82,7 @@ namespace Lang {
 	void Compiler::LetExpression(bool canAssign) {
 		Advance();
 		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
-		uint8_t index = m_CompilingChunk->AddVariable(name);
+		uint8_t index = m_Chunk->AddVariable(name);
 		Consume(TokenType::Equal, "Expect `=' in let expression");
 
 		Expression();
@@ -112,7 +112,7 @@ namespace Lang {
 
 	void Compiler::Variable(bool canAssign) {
 		std::string name(m_Parser.Previous.Start, m_Parser.Previous.Length);
-		uint8_t index = m_CompilingChunk->GetVariable(name);
+		uint8_t index = m_Chunk->GetVariable(name);
 		EmitBytes((uint8_t)OpCode::GetVariable, index);
 	}
 
@@ -227,7 +227,7 @@ namespace Lang {
 	}
 
 	void Compiler::EmitByte(uint8_t byte) {
-		GetCurrentChunk()->Write(byte, m_Parser.Previous.Line);
+		m_Chunk->Write(byte, m_Parser.Previous.Line);
 	}
 
 	void Compiler::EmitBytes(uint8_t byte1, uint8_t byte2) {
@@ -240,28 +240,24 @@ namespace Lang {
 	}
 
 	uint8_t Compiler::MakeConstant(Value value) {
-		return GetCurrentChunk()->AddConstant(value);
+		return m_Chunk->AddConstant(value);
 	}
 
 	int Compiler::EmitJump(OpCode opCode) {
 		EmitByte((uint8_t)opCode);
 		EmitByte(0xff);
 		EmitByte(0xff);
-		return GetCurrentChunk()->Code.size() - 2;
+		return m_Chunk->Code.size() - 2;
 	}
 
 	void Compiler::PatchJump(int offset) {
-		int jump = GetCurrentChunk()->Code.size() - offset - 2;
+		int jump = m_Chunk->Code.size() - offset - 2;
 		if (jump > UINT16_MAX) {
 			Error(&m_Parser.Previous, "Expression is too large to jump over.");
 		}
 
-		GetCurrentChunk()->Code[offset] = (jump >> 8) & 0xff;
-		GetCurrentChunk()->Code[offset + 1] = jump & 0xff;
-	}
-
-	std::shared_ptr<Chunk> Compiler::GetCurrentChunk() {
-		return m_CompilingChunk;
+		m_Chunk->Code[offset] = (jump >> 8) & 0xff;
+		m_Chunk ->Code[offset + 1] = jump & 0xff;
 	}
 
 	ParseRule* Compiler::GetRule(TokenType type) {

@@ -57,7 +57,6 @@ namespace Lang {
 		static int EmitJump(OpCode opCode);
 		static void PatchJump(int offset);
 
-		static std::shared_ptr<Chunk> GetCurrentChunk();
 		static ParseRule* GetRule(TokenType type);
 
 		static void Error(Token* token, const char* msg);
@@ -65,7 +64,7 @@ namespace Lang {
 
 	private:
 		static Scanner m_Scanner;
-		static std::shared_ptr<Chunk> m_CompilingChunk;
+		static std::shared_ptr<Chunk> m_Chunk;
 		static Parser m_Parser;
 
 		static ParseRule m_ParseRules[];
