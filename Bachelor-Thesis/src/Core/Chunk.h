@@ -11,12 +11,12 @@ namespace Lang {
 		GetVariable,
 		PopVariable,
 
+		Jump,
+		JumpIfFalse,
+
 		Dim,
 		Shape,
 		Sel,
-
-		Jump,
-		JumpIfFalse,
 
 		Not,
 		Equal, NotEqual,

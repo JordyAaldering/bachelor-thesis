@@ -27,12 +27,12 @@ namespace Lang {
 			case OpCode::GetVariable:	return VariableInstruction("Get Variable", chunk, offset);
 			case OpCode::PopVariable:	return SimpleInstruction("Pop Variable", offset);
 
+			case OpCode::Jump:			return JumpInstruction("Jump", 1, chunk, offset);
+			case OpCode::JumpIfFalse:	return JumpInstruction("Jump If False", 1, chunk, offset);
+
 			case OpCode::Dim:			return SimpleInstruction("Dim", offset);
 			case OpCode::Shape:			return SimpleInstruction("Shape", offset);
 			case OpCode::Sel:			return SimpleInstruction("Sel", offset);
-
-			case OpCode::Jump:			return JumpInstruction("Jump", 1, chunk, offset);
-			case OpCode::JumpIfFalse:	return JumpInstruction("Jump If False", 1, chunk, offset);
 
 			case OpCode::Not:			return SimpleInstruction("Not", offset);
 			case OpCode::Equal:			return SimpleInstruction("Equal", offset);
@@ -52,11 +52,10 @@ namespace Lang {
 
 			case OpCode::Pop:			return SimpleInstruction("Pop", offset);
 			case OpCode::Return:		return SimpleInstruction("Return", offset);
-
-			default:
-				fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
-				return offset + 1;
 		}
+
+		fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
+		return offset + 1;
 	}
 
 	int Disassembler::JumpInstruction(const char* name, int sign, std::shared_ptr<Chunk> chunk, int offset) {

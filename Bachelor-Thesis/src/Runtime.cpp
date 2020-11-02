@@ -53,16 +53,6 @@ namespace Lang {
 				m_Variables.erase(m_Variables.begin());
 				break;
 
-			case OpCode::Dim:
-				Push(Pop().DimExpr());
-				break;
-			case OpCode::Shape:
-				Push(Pop().ShapeExpr());
-				break;
-			case OpCode::Sel:
-				Push(Pop().SelExpr(Pop()));
-				break;
-
 			case OpCode::Jump: {
 				uint16_t offset = ReadShort();
 				m_CodeIndex += offset;
@@ -74,7 +64,11 @@ namespace Lang {
 				break;
 			}
 
-			case OpCode::Not:			UNARY_OP(!);   break;
+			case OpCode::Dim:	Push(Pop().DimExpr()); break;
+			case OpCode::Shape:	Push(Pop().ShapeExpr()); break;
+			case OpCode::Sel:	Push(Pop().SelExpr(Pop())); break;
+
+			case OpCode::Not:			UNARY_OP(!); break;
 			case OpCode::Equal:			BINARY_OP(==); break;
 			case OpCode::NotEqual:		BINARY_OP(!=); break;
 			case OpCode::Greater:		BINARY_OP(>);  break;
@@ -82,7 +76,7 @@ namespace Lang {
 			case OpCode::Less:			BINARY_OP(<);  break;
 			case OpCode::LessEqual:		BINARY_OP(<=); break;
 
-			case OpCode::Negate:		UNARY_OP(-);  break;
+			case OpCode::Negate:		UNARY_OP(-); break;
 			case OpCode::Add:			BINARY_OP(+); break;
 			case OpCode::Subtract:		BINARY_OP(-); break;
 			case OpCode::Multiply:		BINARY_OP(*); break;
