@@ -69,7 +69,6 @@ namespace Lang {
 	}
 
 	void Compiler::Expression() {
-		m_Parser->Advance();
 		ParsePrecedence(Precedence::Assignment);
 		m_Parser->Synchronize();
 	}
@@ -168,22 +167,22 @@ namespace Lang {
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
 
 		switch (operatorType) {
-		case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
-		case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
-		case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
-		case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
-		case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
-		case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
-		case TokenType::And:			EmitByte((uint8_t)OpCode::And); break;
-		case TokenType::Or:				EmitByte((uint8_t)OpCode::Or); break;
-		case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
-		case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
-		case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
-		case TokenType::Slash:			EmitByte((uint8_t)OpCode::Divide); break;
+			case TokenType::EqualEqual:		EmitByte((uint8_t)OpCode::Equal); break;
+			case TokenType::BangEqual:		EmitByte((uint8_t)OpCode::NotEqual); break;
+			case TokenType::Greater:		EmitByte((uint8_t)OpCode::Greater); break;
+			case TokenType::GreaterEqual:	EmitByte((uint8_t)OpCode::GreaterEqual); break;
+			case TokenType::Less:			EmitByte((uint8_t)OpCode::Less); break;
+			case TokenType::LessEqual:		EmitByte((uint8_t)OpCode::LessEqual); break;
+			case TokenType::And:			EmitByte((uint8_t)OpCode::And); break;
+			case TokenType::Or:				EmitByte((uint8_t)OpCode::Or); break;
+			case TokenType::Plus:			EmitByte((uint8_t)OpCode::Add); break;
+			case TokenType::Minus:			EmitByte((uint8_t)OpCode::Subtract); break;
+			case TokenType::Star:			EmitByte((uint8_t)OpCode::Multiply); break;
+			case TokenType::Slash:			EmitByte((uint8_t)OpCode::Divide); break;
 
-		default:
-			fprintf(stderr, "Invalid operator `%d'", operatorType);
-			return;
+			default:
+				fprintf(stderr, "Invalid operator `%d'", operatorType);
+				return;
 		}
 	}
 
@@ -203,6 +202,8 @@ namespace Lang {
 	}
 
 	void Compiler::ParsePrecedence(Precedence precedence) {
+		m_Parser->Advance();
+
 		ParseFn prefixRule = GetRule(m_Parser->Peek().Type)->Prefix;
 		if (prefixRule == NULL) {
 			m_Parser->Error(&m_Parser->Peek(), "Expect expression");
