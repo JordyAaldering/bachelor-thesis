@@ -7,3 +7,5 @@
 #include <vector>
 #include <list>
 #include <stack>
+
+#include "Types/TokenType.h"

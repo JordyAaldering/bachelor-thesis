@@ -8,14 +8,15 @@ namespace Lang {
 
 	bool Parser::Parse() {
 		Token token;
-		while ((token = m_Scanner.ScanToken()).Type != TokenType::Eof) {
+		do {
+			token = m_Scanner.ScanToken();
 			while (token.Type == TokenType::Error) {
 				Error(&token, token.Start);
 				token = m_Scanner.ScanToken();
 			}
 			
 			m_Tokens.push_back(token);
-		}
+		} while (token.Type != TokenType::Eof);
 
 		return !m_HadError;
 	}
@@ -77,7 +78,7 @@ namespace Lang {
 
 	void Parser::Print() {
 		for (Token t : m_Tokens) {
-			printf("%d, %.*s, %d\n", (int)t.Type, t.Length, t.Start, t.Line);
+			printf("%-12s %.*s\n", ToString(t.Type), t.Length, t.Start);
 		}
 	}
 
