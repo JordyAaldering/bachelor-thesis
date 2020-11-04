@@ -15,6 +15,10 @@ namespace Lang {
 	}
 
 	Value Value::ShapeExpr() {
+		if (Dim == 0) {
+			return { 0, {}, {0} };
+		}
+
 		std::vector<double> shape;
 		shape.reserve(Shape.size());
 		for (uint16_t s : Shape) {

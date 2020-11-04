@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Base.h"
-#include "Scanner.h"
+#include "Parser.h"
 #include "Core/Chunk.h"
 
 namespace Lang {
@@ -10,13 +10,6 @@ namespace Lang {
 		None, Assignment, Or, And,
 		Equality, Comparison, Term,
 		Factor, Unary, Call, Primary
-	};
-
-	struct Parser {
-		Token Current;
-		Token Previous;
-		bool HadError;
-		bool InPanicMode;
 	};
 
 	typedef void (*ParseFn)(bool canAssign);
@@ -32,9 +25,8 @@ namespace Lang {
 		static void EndCompiler();
 
 	private:
-		static void Expression();
 		static void Grouping(bool canAssign);
-
+		static void Expression();
 		static void DimExpr(bool canAssign);
 		static void ShapeExpr(bool canAssign);
 		static void SelExpr(bool canAssign);
@@ -47,11 +39,12 @@ namespace Lang {
 		static void Binary(bool canAssign);
 		static void Unary(bool canAssign);
 
+		static void ParsePrecedence(Precedence precedence);
+
 		static void Advance();
 		static bool Check(TokenType type);
 		static bool Match(TokenType type);
 		static void Consume(TokenType type, const char* msg);
-		static void ParsePrecedence(Precedence precedence);
 
 		static void EmitByte(uint8_t byte);
 		static void EmitBytes(uint8_t byte1, uint8_t byte2);
@@ -67,9 +60,10 @@ namespace Lang {
 		static void Synchronize();
 
 	private:
-		static Scanner m_Scanner;
-		static std::shared_ptr<Chunk> m_Chunk;
 		static Parser m_Parser;
+		static std::shared_ptr<Chunk> m_Chunk;
+		static bool m_InPanicMode;
+		static int m_ParserIndex;
 
 		static ParseRule m_ParseRules[];
 	};
