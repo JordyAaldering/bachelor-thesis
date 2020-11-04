@@ -7,15 +7,29 @@ namespace Lang {
 
 	class Parser {
 	public:
-		bool Parse(const char* source);
+		Parser(const char* source);
+		bool Parse();
+
+		Token Peek();
+		Token PeekNext();
+		Token Advance();
+		bool Check(TokenType type);
+		bool Match(TokenType type);
+		void Consume(TokenType type, const char* msg);
+		
 		void Error(Token* token, const char* msg);
+		void Synchronize();
 		void Print();
-		Token Get(int index) { return m_Tokens[index]; }
-		bool HadError() { return m_HadError; }
 
 	private:
+
+	private:
+		Scanner m_Scanner;
 		std::vector<Token> m_Tokens;
+		int m_ReadIndex = -1;
+
 		bool m_HadError = false;
+		bool m_InPanicMode = false;
 	};
 
 }

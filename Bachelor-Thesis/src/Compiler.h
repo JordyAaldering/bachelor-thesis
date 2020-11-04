@@ -41,11 +41,6 @@ namespace Lang {
 
 		static void ParsePrecedence(Precedence precedence);
 
-		static void Advance();
-		static bool Check(TokenType type);
-		static bool Match(TokenType type);
-		static void Consume(TokenType type, const char* msg);
-
 		static void EmitByte(uint8_t byte);
 		static void EmitBytes(uint8_t byte1, uint8_t byte2);
 		static void EmitConstant(Value value);
@@ -56,15 +51,9 @@ namespace Lang {
 
 		static ParseRule* GetRule(TokenType type);
 
-		static void Error(Token* token, const char* msg);
-		static void Synchronize();
-
 	private:
-		static Parser m_Parser;
+		static std::shared_ptr<Parser> m_Parser;
 		static std::shared_ptr<Chunk> m_Chunk;
-		static bool m_InPanicMode;
-		static int m_ParserIndex;
-
 		static ParseRule m_ParseRules[];
 	};
 

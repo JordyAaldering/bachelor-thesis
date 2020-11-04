@@ -6,10 +6,8 @@
 
 namespace Lang {
 
-	Parser Compiler::m_Parser;
+	std::shared_ptr<Parser> Compiler::m_Parser;
 	std::shared_ptr<Chunk> Compiler::m_Chunk;
-	bool Compiler::m_InPanicMode;
-	int Compiler::m_ParserIndex;
 
 	ParseRule Compiler::m_ParseRules[] = {
 		{ Grouping,		NULL,	Precedence::None },			// LeftParen
@@ -47,18 +45,14 @@ namespace Lang {
 	};
 
 	bool Compiler::Compile(const char* source, std::shared_ptr<Chunk> chunk) {
-		m_Parser = Parser();
-		m_Parser.Parse(source);
-		if (m_Parser.HadError()) return false;
-		m_Parser.Print();
+		m_Parser = std::make_shared<Parser>(source);
+		if (!m_Parser->Parse()) return false;
+		m_Parser->Print();
 
 		m_Chunk = chunk;
-		m_InPanicMode = false;
-		m_ParserIndex = -1;
-
 		Expression();
-
 		EndCompiler();
+
 		return true;
 	}
 
@@ -71,55 +65,53 @@ namespace Lang {
 
 	void Compiler::Grouping(bool canAssign) {
 		Expression();
-		Consume(TokenType::RightParen, "Expect `)' after expression");
+		m_Parser->Consume(TokenType::RightParen, "Expect `)' after expression");
 	}
 
 	void Compiler::Expression() {
-		Advance();
+		m_Parser->Advance();
 		ParsePrecedence(Precedence::Assignment);
-		if (m_InPanicMode) {
-			Synchronize();
-		}
+		m_Parser->Synchronize();
 	}
 
 	void Compiler::DimExpr(bool canAssign) {
-		Consume(TokenType::LeftParen, "Expect `(' after dim expression");
+		m_Parser->Consume(TokenType::LeftParen, "Expect `(' after dim expression");
 		Expression();
 
-		Consume(TokenType::RightParen, "Expect `)' after dim arguments");
+		m_Parser->Consume(TokenType::RightParen, "Expect `)' after dim arguments");
 		EmitByte((uint8_t)OpCode::Dim);
 	}
 
 	void Compiler::ShapeExpr(bool canAssign) {
-		Consume(TokenType::LeftParen, "Expect `(' after shape expression");
+		m_Parser->Consume(TokenType::LeftParen, "Expect `(' after shape expression");
 		Expression();
 
-		Consume(TokenType::RightParen, "Expect `)' after shape arguments");
+		m_Parser->Consume(TokenType::RightParen, "Expect `)' after shape arguments");
 		EmitByte((uint8_t)OpCode::Shape);
 	}
 
 	void Compiler::SelExpr(bool canAssign) {
-		Consume(TokenType::LeftParen, "Expect `(' after sel expression");
+		m_Parser->Consume(TokenType::LeftParen, "Expect `(' after sel expression");
 		Expression();
 
-		Consume(TokenType::Comma, "Expect `,' after first sel argument");
+		m_Parser->Consume(TokenType::Comma, "Expect `,' after first sel argument");
 		Expression();
 
-		Consume(TokenType::RightParen, "Expect `)' after sel arguments");
+		m_Parser->Consume(TokenType::RightParen, "Expect `)' after sel arguments");
 		EmitByte((uint8_t)OpCode::Sel);
 	}
 
 	void Compiler::LetExpr(bool canAssign) {
-		Advance();
-		Token token = m_Parser.Get(m_ParserIndex);
+		Token token = m_Parser->Advance();
 		std::string name(token.Start, token.Length);
 		uint8_t index = m_Chunk->AddVariable(name);
-		Consume(TokenType::Equal, "Expect `=' in let expression");
+
+		m_Parser->Consume(TokenType::Equal, "Expect `=' in let expression");
 
 		Expression();
 		EmitBytes((uint8_t)OpCode::SetVariable, index);
 
-		Consume(TokenType::In, "Expect `in' after let expression");
+		m_Parser->Consume(TokenType::In, "Expect `in' after let expression");
 		Expression();
 		EmitByte((uint8_t)OpCode::PopVariable);
 	}
@@ -127,12 +119,12 @@ namespace Lang {
 	void Compiler::IfExpr(bool canAssign) {
 		Expression();
 
-		Consume(TokenType::Then, "Expect `then' in if expression");
+		m_Parser->Consume(TokenType::Then, "Expect `then' in if expression");
 		int thenJump = EmitJump(OpCode::JumpIfFalse);
 		EmitByte((uint8_t)OpCode::Pop);
 		Expression();
 
-		Consume(TokenType::Else, "Expect `else' in if expression");
+		m_Parser->Consume(TokenType::Else, "Expect `else' in if expression");
 		int elseJump = EmitJump(OpCode::Jump);
 		PatchJump(thenJump);
 		EmitByte((uint8_t)OpCode::Pop);
@@ -142,7 +134,7 @@ namespace Lang {
 	}
 
 	void Compiler::Variable(bool canAssign) {
-		Token token = m_Parser.Get(m_ParserIndex);
+		Token token = m_Parser->Peek();
 		std::string name(token.Start, token.Length);
 		uint8_t index = m_Chunk->GetVariable(name);
 		EmitBytes((uint8_t)OpCode::GetVariable, index);
@@ -153,25 +145,25 @@ namespace Lang {
 		std::vector<uint16_t> shape = { 0 };
 		std::vector<double> values;
 
-		while (Match(TokenType::Number)) {
+		while (m_Parser->Match(TokenType::Number)) {
 			shape[0]++;
-			values.push_back(strtod(m_Parser.Get(m_ParserIndex).Start, NULL));
-			if (!Match(TokenType::Comma)) {
+			values.push_back(strtod(m_Parser->Peek().Start, NULL));
+			if (!m_Parser->Match(TokenType::Comma)) {
 				break;
 			}
 		}
 
-		Consume(TokenType::RightSquare, "Expect `]' after vector");
+		m_Parser->Consume(TokenType::RightSquare, "Expect `]' after vector");
 		EmitConstant({ dim, shape, values });
 	}
 
 	void Compiler::Number(bool canAssign) {
-		double value = strtod(m_Parser.Get(m_ParserIndex).Start, NULL);
+		double value = strtod(m_Parser->Peek().Start, NULL);
 		EmitConstant(value);
 	}
 
 	void Compiler::Binary(bool canAssign) {
-		TokenType operatorType = m_Parser.Get(m_ParserIndex).Type;
+		TokenType operatorType = m_Parser->Peek().Type;
 		ParseRule* rule = GetRule(operatorType);
 		ParsePrecedence((Precedence)((int)rule->Precedence + 1));
 
@@ -196,7 +188,7 @@ namespace Lang {
 	}
 
 	void Compiler::Unary(bool canAssign) {
-		TokenType operatorType = m_Parser.Get(m_ParserIndex).Type;
+		TokenType operatorType = m_Parser->Peek().Type;
 		Expression();
 		ParsePrecedence(Precedence::Unary);
 
@@ -211,50 +203,28 @@ namespace Lang {
 	}
 
 	void Compiler::ParsePrecedence(Precedence precedence) {
-		//Advance();
-
-		Token token = m_Parser.Get(m_ParserIndex);
-		ParseFn prefixRule = GetRule(token.Type)->Prefix;
+		ParseFn prefixRule = GetRule(m_Parser->Peek().Type)->Prefix;
 		if (prefixRule == NULL) {
-			Error(&token, "Expect expression");
+			m_Parser->Error(&m_Parser->Peek(), "Expect expression");
 			return;
 		}
 
 		bool canAssign = precedence <= Precedence::Assignment;
 		prefixRule(canAssign);
 
-		while (precedence <= GetRule(m_Parser.Get(m_ParserIndex + 1).Type)->Precedence) {
-			Advance();
-			ParseFn infixRule = GetRule(m_Parser.Get(m_ParserIndex).Type)->Infix;
+		while (precedence <= GetRule(m_Parser->PeekNext().Type)->Precedence) {
+			m_Parser->Advance();
+			ParseFn infixRule = GetRule(m_Parser->Peek().Type)->Infix;
 			infixRule(canAssign);
 		}
 
-		if (canAssign && Match(TokenType::Equal)) {
-			Error(&m_Parser.Get(m_ParserIndex), "Invalid assignment target");
+		if (canAssign && m_Parser->Match(TokenType::Equal)) {
+			m_Parser->Error(&m_Parser->Peek(), "Invalid assignment target");
 		}
 	}
 
-	void Compiler::Advance() {
-		m_ParserIndex++;
-	}
-
-	bool Compiler::Check(TokenType type) {
-		return m_Parser.Get(m_ParserIndex + 1).Type == type;
-	}
-
-	bool Compiler::Match(TokenType type) {
-		if (!Check(type)) return false;
-		Advance();
-		return true;
-	}
-
-	void Compiler::Consume(TokenType type, const char* msg) {
-		if (Match(type)) return;
-		Error(&m_Parser.Get(m_ParserIndex + 1), msg);
-	}
-
 	void Compiler::EmitByte(uint8_t byte) {
-		m_Chunk->Write(byte, m_Parser.Get(m_ParserIndex).Line);
+		m_Chunk->Write(byte, m_Parser->Peek().Line);
 	}
 
 	void Compiler::EmitBytes(uint8_t byte1, uint8_t byte2) {
@@ -274,13 +244,13 @@ namespace Lang {
 		EmitByte((uint8_t)opCode);
 		EmitByte(0xff);
 		EmitByte(0xff);
-		return m_Chunk->Code.size() - 2;
+		return (int)m_Chunk->Code.size() - 2;
 	}
 
 	void Compiler::PatchJump(int offset) {
-		int jump = m_Chunk->Code.size() - offset - 2;
+		int jump = (int)m_Chunk->Code.size() - offset - 2;
 		if (jump > UINT16_MAX) {
-			Error(&m_Parser.Get(m_ParserIndex), "Expression is too large to jump over.");
+			m_Parser->Error(&m_Parser->Peek(), "Expression too large to jump over");
 		}
 
 		m_Chunk->Code[offset] = (jump >> 8) & 0xff;
@@ -289,32 +259,6 @@ namespace Lang {
 
 	ParseRule* Compiler::GetRule(TokenType type) {
 		return &m_ParseRules[(uint8_t)type];
-	}
-
-	void Compiler::Error(Token* token, const char* msg) {
-		if (m_InPanicMode) return;
-		m_InPanicMode = true;
-
-		fprintf(stderr, "[line %d] Error", token->Line);
-		if (token->Type == TokenType::Eof) {
-			fprintf(stderr, " at end: %s\n", msg);
-		}
-		else if (token->Type != TokenType::Error) {
-			fprintf(stderr, " at `%.*s': %s\n", token->Length, token->Start, msg);
-		}
-	}
-
-	void Compiler::Synchronize() {
-		m_InPanicMode = false;
-		while (Check(TokenType::Eof)) {
-			switch (m_Parser.Get(m_ParserIndex + 1).Type) {
-				case TokenType::Function:
-				case TokenType::Dim:
-				case TokenType::Shape:
-				case TokenType::Sel:
-					return;
-			}
-		}
 	}
 
 }
