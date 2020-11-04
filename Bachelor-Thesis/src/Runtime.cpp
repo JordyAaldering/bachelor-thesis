@@ -35,66 +35,66 @@ namespace Lang {
 
 			OpCode instruction = (OpCode)ReadByte();
 			switch (instruction) {
-			case OpCode::Constant:
-				Push(ReadConstant());
-				break;
-			case OpCode::SetVariable: {
-				std::string name = ReadVariable();
-				Value value = m_Stack.top();
-				m_Variables.emplace_front(name, value);
-				break;
-			}
-			case OpCode::GetVariable: {
-				std::string name = ReadVariable();
-				Push(FindVariable(name));
-				break;
-			}
-			case OpCode::PopVariable:
-				m_Variables.erase(m_Variables.begin());
-				break;
+				case OpCode::Constant:
+					Push(ReadConstant());
+					break;
+				case OpCode::SetVariable: {
+					std::string name = ReadVariable();
+					Value value = m_Stack.top();
+					m_Variables.emplace_front(name, value);
+					break;
+				}
+				case OpCode::GetVariable: {
+					std::string name = ReadVariable();
+					Push(FindVariable(name));
+					break;
+				}
+				case OpCode::PopVariable:
+					m_Variables.erase(m_Variables.begin());
+					break;
 
-			case OpCode::Jump: {
-				uint16_t offset = ReadShort();
-				m_CodeIndex += offset;
-				break;
-			}
-			case OpCode::JumpIfFalse: {
-				uint16_t offset = ReadShort();
-				if (!(bool)m_Stack.top()) m_CodeIndex += offset;
-				break;
-			}
+				case OpCode::Jump: {
+					uint16_t offset = ReadShort();
+					m_CodeIndex += offset;
+					break;
+				}
+				case OpCode::JumpIfFalse: {
+					uint16_t offset = ReadShort();
+					if (!(bool)m_Stack.top()) m_CodeIndex += offset;
+					break;
+				}
 
-			case OpCode::Dim:	Push(Pop().DimExpr()); break;
-			case OpCode::Shape:	Push(Pop().ShapeExpr()); break;
-			case OpCode::Sel:	Push(Pop().SelExpr(Pop())); break;
+				case OpCode::Dim:	Push(Pop().DimExpr()); break;
+				case OpCode::Shape:	Push(Pop().ShapeExpr()); break;
+				case OpCode::Sel:	Push(Pop().SelExpr(Pop())); break;
 
-			case OpCode::Not:			UNARY_OP(!); break;
-			case OpCode::Equal:			BINARY_OP(==); break;
-			case OpCode::NotEqual:		BINARY_OP(!=); break;
-			case OpCode::Greater:		BINARY_OP(>);  break;
-			case OpCode::GreaterEqual:	BINARY_OP(>=); break;
-			case OpCode::Less:			BINARY_OP(<);  break;
-			case OpCode::LessEqual:		BINARY_OP(<=); break;
+				case OpCode::Not:			UNARY_OP(!); break;
+				case OpCode::Equal:			BINARY_OP(==); break;
+				case OpCode::NotEqual:		BINARY_OP(!=); break;
+				case OpCode::Greater:		BINARY_OP(>);  break;
+				case OpCode::GreaterEqual:	BINARY_OP(>=); break;
+				case OpCode::Less:			BINARY_OP(<);  break;
+				case OpCode::LessEqual:		BINARY_OP(<=); break;
 
-			case OpCode::Negate:		UNARY_OP(-); break;
-			case OpCode::Add:			BINARY_OP(+); break;
-			case OpCode::Subtract:		BINARY_OP(-); break;
-			case OpCode::Multiply:		BINARY_OP(*); break;
-			case OpCode::Divide:		BINARY_OP(/); break;
+				case OpCode::Negate:		UNARY_OP(-); break;
+				case OpCode::Add:			BINARY_OP(+); break;
+				case OpCode::Subtract:		BINARY_OP(-); break;
+				case OpCode::Multiply:		BINARY_OP(*); break;
+				case OpCode::Divide:		BINARY_OP(/); break;
 
-			case OpCode::Pop: Pop(); break;
-			case OpCode::Return:
-				Pop().Print();
-				return InterpretResult::OK;
+				case OpCode::Pop: Pop(); break;
+				case OpCode::Return:
+					Pop().Print();
+					return InterpretResult::OK;
 
-			default:
-				fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
-				return InterpretResult::RuntimeError;
+				default:
+					fprintf(stderr, "Unknown OpCode `%d'\n", instruction);
+					return InterpretResult::RuntimeError;
 			}
 		}
 
-#undef UNARY_OP
-#undef BINARY_OP
+		#undef UNARY_OP
+		#undef BINARY_OP
 	}
 
 	uint8_t Runtime::ReadByte() {

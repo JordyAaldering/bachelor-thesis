@@ -60,11 +60,11 @@ namespace Lang {
 
 	void Compiler::EndCompiler() {
 		EmitByte((uint8_t)OpCode::Return);
-#ifdef DEBUG
+		#ifdef DEBUG
 		if (!m_Parser.HadError) {
 			Disassembler::Disassemble(m_Chunk, "Code");
 		}
-#endif
+		#endif
 	}
 
 	void Compiler::Expression() {
