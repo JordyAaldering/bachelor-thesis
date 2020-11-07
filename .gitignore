@@ -1,2 +1,6 @@
 # IDE generated files
 .vscode/
+
+# Build results
+_build/
+*.native
