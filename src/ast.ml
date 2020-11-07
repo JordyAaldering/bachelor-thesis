@@ -8,16 +8,16 @@ type expr = {
 and expr_kind =
     | ETrue
     | EFalse
-    | ENum of float
+    | ENum of int
     | EVar of string
     | EArray of expr list
 
     | EBinary of binop * expr * expr
     | EUnary of unaryop * expr
 
-    | ELambda of string * expr
     | EApply of expr * expr
     | ELetIn of string * expr * expr
+    | EIfThenElse of expr * expr * expr
 
     | ESel of expr * expr
     | EShape of expr
@@ -54,22 +54,16 @@ let mk_earray ?(loc=Loc.internal) xs = { loc=loc; expr_kind=EArray xs }
 let mk_ebinary op lhs rhs = let {loc=l} = lhs in { loc=l; expr_kind=EBinary (op, lhs, rhs) }
 let mk_eunary ?(loc=Loc.internal) op arg = { loc=loc; expr_kind=EUnary (op, arg) }
 
-let mk_elambda ?(loc=Loc.internal) x body = { loc=loc; expr_kind=ELambda (x, body) }
 let mk_eapply lhs rhs = let {loc=l} = lhs in { loc=l; expr_kind=EApply (lhs, rhs) }
+let mk_eletin ?(loc=Loc.internal) x e1 e2 = { loc=loc; expr_kind=ELetIn (x, e1, e2) }
+let mk_eifthenelse ?(loc=Loc.internal) p t f = { loc=loc; expr_kind=EIfThenElse (p, t, f) }
 
 let mk_esel iv v = let {loc=l} = iv in { loc=l; expr_kind=ESel (iv, v) }
 let mk_eshape ?(loc=Loc.internal) v = { loc=loc; expr_kind=EShape v }
 let mk_edim ?(loc=Loc.internal) v = { loc=loc; expr_kind=EDim v }
 
-let mk_eletin ?(loc=Loc.internal) x e1 e2 = { loc=loc; expr_kind=ELetIn (x, e1, e2) }
-
 
 (** Predicates **)
-
-let expr_is_lambda e =
-    match e with
-    | { expr_kind=ELambda (_, _) } -> true
-    | _ -> false
 
 let expr_get_var_name e =
     match e with
@@ -95,17 +89,6 @@ let rec cmp_ast_noloc e1 e2 =
         op1 = op2
         && cmp_ast_noloc x1 x2
 
-    | { expr_kind=ESel (x1, y1) }, { expr_kind=ESel (x2, y2) } ->
-        cmp_ast_noloc x1 x2
-        && cmp_ast_noloc y1 y2
-    | { expr_kind=EShape x }, { expr_kind=EShape y } ->
-        cmp_ast_noloc x y
-    | { expr_kind=EDim x }, { expr_kind=EDim y } ->
-        cmp_ast_noloc x y
-
-    | { expr_kind=ELambda (v1, e1) }, { expr_kind=ELambda (v2, e2) } ->
-        v1 = v2
-        && cmp_ast_noloc e1 e2
     | { expr_kind=EApply (x1, y1) }, { expr_kind=EApply (x2, y2) } ->
         cmp_ast_noloc x1 x2
         && cmp_ast_noloc y1 y2
@@ -113,5 +96,17 @@ let rec cmp_ast_noloc e1 e2 =
         v1 = v2
         && cmp_ast_noloc x1 x2
         && cmp_ast_noloc y1 y2
+    | { expr_kind=EIfThenElse (x1, y1, z1) }, { expr_kind=EIfThenElse (x2, y2, z2) } ->
+        cmp_ast_noloc x1 x2
+        && cmp_ast_noloc y1 y2
+        && cmp_ast_noloc z1 z2
+
+    | { expr_kind=ESel (x1, y1) }, { expr_kind=ESel (x2, y2) } ->
+        cmp_ast_noloc x1 x2
+        && cmp_ast_noloc y1 y2
+    | { expr_kind=EShape x }, { expr_kind=EShape y } ->
+        cmp_ast_noloc x y
+    | { expr_kind=EDim x }, { expr_kind=EDim y } ->
+        cmp_ast_noloc x y
 
     | _ -> false

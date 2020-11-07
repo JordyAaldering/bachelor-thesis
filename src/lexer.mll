@@ -3,91 +3,75 @@ open Lexing
 open Ast
 
 type token =
-    | UNDERSCORE
-    | TRUE
-    | THEN
-    | RSQUARE
-    | RPAREN
-    | PLUS
-    | OMEGA
-    | NE
-    | MULT
-    | MOD
-    | MINUS
-    | LT
-    | LSQUARE
-    | LPAREN
-    | LETREC
-    | LE
-    | LBRACE
-    | LAMBDA
-    | ISLIM
-    | INT of (int)
-    | IN
-    | IMAP
-    | IF
     | ID of (string)
+    | INT of (int)
+    | TRUE
+    | FALSE
+    | LET
+    | IN
+    | IF
+    | THEN
+    | ELSE
+    | PLUS
+    | MINUS
+    | MULT
+    | DIV
+    | MOD
+    | EQ
+    | NE
+    | LT
+    | LE
     | GT
     | GE
-    | FALSE
-    | EQ
-    | EOF
-    | ELSE
     | DOT
-    | DIV
     | COMMA
-    | COLON
-    | BAR
+    | LPAREN
+    | RPAREN
+    | LSQUARE
+    | RSQUARE
+    | EOF
 
 let tok_to_str = function
-    | UNDERSCORE -> "_"
-    | TRUE -> "true"
-    | THEN -> "then"
-    | RSQUARE -> "]"
-    | RPAREN -> ")"
-    | PLUS -> "+"
-    | OMEGA -> "ω"
-    | NE -> "<>"
-    | MULT -> "*"
-    | MOD -> "%"
-    | MINUS -> "-"
-    | LT -> "<"
-    | LSQUARE -> "["
-    | LPAREN -> "("
-    | LETREC -> "letrec"
-    | LE -> "<="
-    | LBRACE -> "{"
-    | LAMBDA -> "λ"
-    | ISLIM -> "islim"
+    | ID (x)  -> x
     | INT (x) -> string_of_int x
-    | IN -> "in"
-    | IMAP -> "imap"
-    | IF -> "if"
-    | ID (x) -> x
-    | GT -> ">"
-    | GE -> ">="
-    | FALSE -> "false"
-    | EQ -> "="
-    | EOF -> "EOF"
-    | ELSE -> "else"
-    | DOT -> "."
-    | DIV -> "/"
-    | COMMA -> ","
-    | COLON -> ":"
-    | BAR -> "|"
+    | TRUE    -> "true"
+    | FALSE   -> "false"
+    | LET     -> "let"
+    | IN      -> "in"
+    | IF      -> "if"
+    | THEN    -> "then"
+    | ELSE    -> "else"
+    | PLUS    -> "+"
+    | MINUS   -> "-"
+    | MULT    -> "*"
+    | DIV     -> "/"
+    | MOD     -> "%"
+    | NE      -> "!="
+    | EQ      -> "=="
+    | LT      -> "<"
+    | LE      -> "<="
+    | GT      -> ">"
+    | GE      -> ">="
+    | DOT     -> "."
+    | COMMA   -> ","
+    | LPAREN  -> "("
+    | RPAREN  -> ")"
+    | LSQUARE -> "["
+    | RSQUARE -> "]"
+    | EOF     -> "EOF"
 
-let is_op ?(no_relop=false) tok = match tok with
+let is_op tok = match tok with
     | EQ
     | NE
     | LT
+    | LE
     | GT
     | GE
     | PLUS
     | MINUS
     | MULT
     | DIV
-    | MOD  -> true
-    | LE -> not no_relop
+    | MOD -> true
     | _ -> false
 
 let op_to_binop tok = match tok with
@@ -96,63 +80,53 @@ let op_to_binop tok = match tok with
     | MULT  -> OpMult
     | DIV   -> OpDiv
     | MOD   -> OpMod
-    | LT    -> OpLt
-    | GT    -> OpGt
     | EQ    -> OpEq
     | NE    -> OpNe
-    | GE    -> OpGe
+    | LT    -> OpLt
     | LE    -> OpLe
+    | GT    -> OpGt
+    | GE    -> OpGe
     | _ -> raise (ImapFailure "op_to_binop: not a binary operation")
 }
 
-let white = [' ' '\t']+
+let white   = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
-
-let digit = ['0'-'9']
-let integer = digit+
-let alpha = ['A'-'Z' 'a'-'z']
-let ident = (alpha | '_') (alpha | digit | '_')*
 let comment = ';' [^ '\n']*
+
+let digit   = ['0'-'9']
+let integer = digit+
+let alpha   = ['A'-'Z' 'a'-'z']
+let ident   = (alpha | '_') (alpha | digit | '_')*
 
 rule token = parse
     | white      { token lexbuf }
-    | comment    { token lexbuf }
     | newline    { new_line lexbuf; token lexbuf }
+    | comment    { token lexbuf }
     | integer    { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | "true"     { TRUE }
     | "false"    { FALSE }
+    | "let"      { LET }
+    | "in"       { IN }
     | "if"       { IF }
     | "then"     { THEN }
     | "else"     { ELSE }
-    | "letrec"   { LETREC }
-    | "in"       { IN }
-    | "omega"    { OMEGA }
-    | "ω"        { OMEGA }
-    | "islim"    { ISLIM }
-    | "imap"     { IMAP }
-    | "λ"        { LAMBDA }
-    | "\\"       { LAMBDA }
     | "."        { DOT }
-    | "|"        { BAR }
+    | ","        { COMMA }
     | "+"        { PLUS }
     | "-"        { MINUS }
     | "*"        { MULT }
     | "/"        { DIV }
     | "%"        { MOD }
     | "="        { EQ }
-    | ">"        { GT }
-    | ">="       { GE }
+    | "!="       { NE }
     | "<"        { LT }
     | "<="       { LE }
-    | "<>"       { NE }
-    | "["        { LSQUARE }
-    | "]"        { RSQUARE }
+    | ">"        { GT }
+    | ">="       { GE }
     | "("        { LPAREN }
     | ")"        { RPAREN }
-    | "{"        { LBRACE }
-    | ":"        { COLON }
-    | ","        { COMMA }
-    | "_"        { UNDERSCORE }
+    | "["        { LSQUARE }
+    | "]"        { RSQUARE }
     | ident as i { ID i }
     | eof        { EOF }
     | _          { raise (ImapFailure "Lexing error") }
