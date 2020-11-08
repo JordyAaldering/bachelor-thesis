@@ -1,14 +1,15 @@
 open Ast
 open Lexer
+open Print
 open Printf
 
 let eval_prog e =
     let st, env, e = (Storage.st_new (), Env.env_new (), e) in
-        printf "%s\n" (Print.expr_to_str e);
+        printf "%s\n" (expr_to_str e);
         flush stdout;
         let st, p = Eval.eval st env e in
             printf "%s\n" (Storage.st_to_str st);
-            printf "res: %s = %s\n\n" p (Print.value_to_str (Storage.st_lookup st p))
+            printf "res: %s = %s\n\n" p (val_to_str (Storage.st_lookup st p))
 
 let main () =
     let fname = Sys.argv.(1) in

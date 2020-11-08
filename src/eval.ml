@@ -75,10 +75,10 @@ let ptr_binop st op p1 p2 loc1 loc2=
     let v2 = st_lookup st p2 in
     if not @@ value_is_num v1 then
         eval_err_loc loc1 @@ sprintf "attempt to perform binary operation `%s' on non-number lhs `%s'"
-                            (bop_to_str op) (value_to_str v1);
+                            (bop_to_str op) (val_to_str v1);
     if not @@ value_is_num v2 then
         eval_err_loc loc2 @@ sprintf "attempt to perform binary operation `%s' on non-number rhs `%s'"
-                            (bop_to_str op) (value_to_str v2);
+                            (bop_to_str op) (val_to_str v2);
     let o1 = value_num_to_int v1 in
     let o2 = value_num_to_int v2 in
     match op with
@@ -142,10 +142,10 @@ let part_intersect p1_lb p1_ub p2_lb p2_ub =
     let maxlb = vec_elem_max p1_lb p2_lb in
     let minub = vec_elem_min p1_ub p2_ub in
     (*printf "--[part_intersect] maxlb = [%s], minub = [%s]\n"
-           (val_lst_to_str maxlb) (val_lst_to_str minub) ;
+           (vals_to_str maxlb) (vals_to_str minub) ;
     printf "--[part_intersect] ([%s], [%s]) and ([%s], [%s]) "
-           (val_lst_to_str p1_lb) (val_lst_to_str p1_ub)
-           (val_lst_to_str p2_lb) (val_lst_to_str p2_ub);*)
+           (vals_to_str p1_lb) (vals_to_str p1_ub)
+           (vals_to_str p2_lb) (vals_to_str p2_ub);*)
     if value_num_vec_lt maxlb minub
        (* If the intersected area lies within both partitions.  *)
        && part_within_bounds p1_lb p1_ub maxlb minub
@@ -177,7 +177,7 @@ let part_split lb_vec ub_vec part_lb part_ub =
     let chk_empty s e =
         let chk = value_num_vec_lt s e in
         (* printf "---[chk_empty] [%s] < [%s] = [%s]\n"
-               (val_lst_to_str s) (val_lst_to_str e) (if chk then "true" else "false");*)
+               (vals_to_str s) (vals_to_str e) (if chk then "true" else "false");*)
         if chk then
             [(s, e)]
         else
@@ -193,7 +193,7 @@ let part_split lb_vec ub_vec part_lb part_ub =
         sprintf "--[update_imap_part] splitpos returns %s\n"
                 @@ String.concat ", " @@ List.map (fun x -> let l, b = x in
                                                    sprintf "([%s], [%s])"
-                                                   (val_lst_to_str l) (val_lst_to_str b))
+                                                   (vals_to_str l) (vals_to_str b))
                                          pb;
         pb*)
 
@@ -223,18 +223,18 @@ let check_parts_form_partition glb gub parts =
                              parts_to_cover
                     in
                     (*printf "--[_intersect] prt = ([%s], [%s]), parts_to_cover = %s\n"
-                           (val_lst_to_str lb) (val_lst_to_str ub)
+                           (vals_to_str lb) (vals_to_str ub)
                            (String.concat ", " @@ List.map (fun x -> let xlb, xub = x in
                                                             sprintf "([%s], [%s])"
-                                                                    (val_lst_to_str xlb)
-                                                                    (val_lst_to_str xub))
+                                                                    (vals_to_str xlb)
+                                                                    (vals_to_str xub))
                                                            parts_to_cover);*)
                     _intersect parts_to_cover tl
                 else
                     (* FIXME this error message needs location *)
                     eval_err @@ sprintf "partition ([%s], [%s]) is not within ([%s], [%s])"
-                                (val_lst_to_str lb) (val_lst_to_str ub)
-                                (val_lst_to_str glb) (val_lst_to_str gub)
+                                (vals_to_str lb) (vals_to_str ub)
+                                (vals_to_str glb) (vals_to_str gub)
     in
     let remaining_parts =
         (* For imaps that generate arrays of zero shape, we don't need
@@ -421,7 +421,7 @@ and eval st env e =
                 | VFalse -> eval st env e3
                 | _ -> eval_err_loc e2.loc
                                 @@ sprintf "condition predicate evaluates to `%s' (true/false expected)"
-                                           (value_to_str v)
+                                           (val_to_str v)
             end
 
     | { expr_kind = ELetIn (var, e1, e2) } ->
@@ -511,7 +511,7 @@ and force_obj_to_array st env p loc =
                 (* FIXME pass location throught the error message.  *)
                 let st, p_el = eval_obj_sel st env p p_idx
                                @@ sprintf "force_obj_to_array (%s).[%s] failed"
-                                  (value_to_str @@ st_lookup st p) (val_lst_to_str idx) in
+                                  (val_to_str @@ st_lookup st p) (vals_to_str idx) in
                 _force st (lexi_next idx_it lb ub) lb ub p ((st_lookup st p_el) :: res)
         in
 
@@ -537,11 +537,11 @@ and eval_gen_expr_lst st env idx_shp_vec ge_lst =
 
             if shp_p1 <> mk_vector idx_shp_vec then
                 eval_err_loc lb.loc @@ sprintf "wrong shape for the lower bound: %s-element vector expected"
-                                   (val_lst_to_str idx_shp_vec);
+                                   (vals_to_str idx_shp_vec);
 
             if shp_p2 <> mk_vector idx_shp_vec then
                 eval_err_loc ub.loc @@ sprintf "wrong shape for the upper bound: %s-element vector expected"
-                                   (val_lst_to_str idx_shp_vec);
+                                   (vals_to_str idx_shp_vec);
 
             (* Extract these values again, as we might have updated the pointers.  *)
             let v1 = st_lookup st p1 in
