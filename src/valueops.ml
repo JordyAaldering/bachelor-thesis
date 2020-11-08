@@ -55,16 +55,24 @@ let mk_empty_vector () = VArray ([mk_int_value 0], [])
 
 let mk_vector value_vec = VArray ([mk_int_value @@ List.length value_vec], value_vec)
 
-let value_num_add v1 v2 = v1 + v2
+let value_num_to_int v = match v with
+    | VNum x -> x
+    | _ -> value_err @@ sprintf "value_num_to_int called with `%s'" (value_to_str v)
 
-let value_num_mult v1 v2 = v1 * v2
+let value_num_add v1 v2 = match v1, v2 with
+    | VNum x, VNum y -> VNum (x + y)
+    | _ -> value_err @@ sprintf "value_num_add invalid parameters"
+
+let value_num_mult v1 v2 = match v1, v2 with
+    | VNum x, VNum y -> VNum (x * y)
+    | _ -> value_err @@ sprintf "value_num_mult invalid parameters"
 
 (* This function returns an integer. *)
 let value_num_compare v1 v2 = if v1 = v2 then 1 else 0
 
 let value_array_to_pair v = match v with
     | VArray (s, d) -> (s, d)
-    | _ -> value_err @@ sprintf "value_array_to_pair called with `%s'" @@ value_to_str v
+    | _ -> value_err @@ sprintf "value_array_to_pair called with `%s'" (value_to_str v)
 
 let value_num_vec_lt l r =
     List.fold_left2 (fun r x y ->

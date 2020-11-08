@@ -28,10 +28,6 @@ let rec topdown m e = match e with
         let m, e2' = topdown m e2 in
         (m, mk_ebinary op e1' e2')
 
-    | {expr_kind=EApply (e1, e2);} ->
-        let m, e1' = topdown m e1 in
-        let m, e2' = topdown m e2 in
-        (m, mk_eapply e1' e2')
     | {expr_kind=ELetIn (x, e1, e2); loc=l } ->
         let m, e1' = topdown m e1 in
         let m, e2' = topdown m e2 in
