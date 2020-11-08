@@ -105,8 +105,6 @@ let rec parse_primary lexbuf =
     let t = get_token lexbuf in
     let l = Tok.get_loc t in
     match Tok.get_tok t with
-    | TRUE ->  Some (mk_etrue () ~loc:l)
-    | FALSE -> Some (mk_efalse () ~loc:l)
     | ID x ->  Some (mk_evar x ~loc:l)
     | INT n -> Some (mk_enum n ~loc:l)
 

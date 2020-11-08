@@ -2,16 +2,6 @@ open Ast
 open Value
 open Printf
 
-let rec val_to_str v = match v with
-    | VTrue -> "vtrue"
-    | VFalse -> "vfalse"
-    | VNum i -> string_of_int i
-    | VArray (shp, data) ->
-        sprintf "<[%s], [%s]>" (vals_to_str shp) (vals_to_str data)
-
-and vals_to_str lst =
-    String.concat ", " (List.map val_to_str lst)
-
 and array_to_str e =
     String.concat ", " (List.map expr_to_str e)
 

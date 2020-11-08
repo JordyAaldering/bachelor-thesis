@@ -4,38 +4,20 @@ open Printf
 
 (** Predicates **)
 
-let value_is_true v = match v with
-    | VTrue -> true
+let value_is_const v = match v with
+    | { [], _ } -> true
     | _ -> false
 
-let value_is_false v = match v with
-    | VFalse -> true
+let value_is_vect v = match v with
+    | { x::xs, _ } -> true
     | _ -> false
-
-let value_is_num v = match v with
-    | VNum (o) -> true
-    | _ -> false
-
-let value_is_array v = match v with
-    | VArray (_, _) -> true
-    | _ -> false
-
-let value_is_selectable v = match v with
-    | VTrue
-    | VFalse
-    | VNum (_)
-    | VArray (_, _) -> true
 
 
 (** Constructors **)
 
-let mk_true_value = VTrue
+let mk_const_value x = { [], [x] }
 
-let mk_false_value = VFalse
-
-let mk_int_value n = VNum (n)
-
-let mk_array_value shp_vec data_vec =
+let mk_vect_value shp_vec data_vec =
     if not @@ List.for_all (fun x -> value_is_num x) shp_vec then
         value_err @@ sprintf "mk_array: invalid shape vector [%s]" (vals_to_str shp_vec);
     let elcount = List.fold_left (fun res x -> match x with

@@ -1,12 +1,10 @@
 {
-open Lexing
 open Ast
+open Lexing
 
 type token =
     | ID of (string)
     | INT of (int)
-    | TRUE
-    | FALSE
     | LET
     | IN
     | IF
@@ -32,10 +30,8 @@ type token =
     | EOF
 
 let tok_to_str = function
-    | ID (x)  -> x
-    | INT (x) -> string_of_int x
-    | TRUE    -> "true"
-    | FALSE   -> "false"
+    | ID x    -> x
+    | INT x   -> string_of_int x
     | LET     -> "let"
     | IN      -> "in"
     | IF      -> "if"
@@ -61,17 +57,17 @@ let tok_to_str = function
     | EOF     -> "EOF"
 
 let is_op tok = match tok with
+    | PLUS
+    | MINUS
+    | MULT
+    | DIV
+    | MOD
     | EQ
     | NE
     | LT
     | LE
     | GT
-    | GE
-    | PLUS
-    | MINUS
-    | MULT
-    | DIV
-    | MOD -> true
+    | GE -> true
     | _ -> false
 
 let op_to_binop tok = match tok with
@@ -94,8 +90,8 @@ let newline = '\r' | '\n' | "\r\n"
 let comment = '#' [^ '\n']*
 
 let digit   = ['0'-'9']
-let integer = digit+
 let alpha   = ['A'-'Z' 'a'-'z']
+let integer = digit+
 let ident   = (alpha | '_') (alpha | digit | '_')*
 
 rule token = parse
@@ -116,8 +112,6 @@ rule token = parse
     | ")"        { RPAREN }
     | "["        { LSQUARE }
     | "]"        { RSQUARE }
-    | "true"     { TRUE }
-    | "false"    { FALSE }
     | "let"      { LET }
     | "in"       { IN }
     | "if"       { IF }
