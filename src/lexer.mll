@@ -86,12 +86,12 @@ let op_to_binop tok = match tok with
     | LE    -> OpLe
     | GT    -> OpGt
     | GE    -> OpGe
-    | _ -> raise (ImapFailure "op_to_binop: not a binary operation")
+    | _ -> raise (ImapFailure "not a binary operation")
 }
 
 let white   = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
-let comment = ';' [^ '\n']*
+let comment = '#' [^ '\n']*
 
 let digit   = ['0'-'9']
 let integer = digit+
@@ -99,17 +99,6 @@ let alpha   = ['A'-'Z' 'a'-'z']
 let ident   = (alpha | '_') (alpha | digit | '_')*
 
 rule token = parse
-    | white      { token lexbuf }
-    | newline    { new_line lexbuf; token lexbuf }
-    | comment    { token lexbuf }
-    | integer    { INT (int_of_string (Lexing.lexeme lexbuf)) }
-    | "true"     { TRUE }
-    | "false"    { FALSE }
-    | "let"      { LET }
-    | "in"       { IN }
-    | "if"       { IF }
-    | "then"     { THEN }
-    | "else"     { ELSE }
     | "."        { DOT }
     | ","        { COMMA }
     | "+"        { PLUS }
@@ -127,6 +116,17 @@ rule token = parse
     | ")"        { RPAREN }
     | "["        { LSQUARE }
     | "]"        { RSQUARE }
+    | "true"     { TRUE }
+    | "false"    { FALSE }
+    | "let"      { LET }
+    | "in"       { IN }
+    | "if"       { IF }
+    | "then"     { THEN }
+    | "else"     { ELSE }
+    | white      { token lexbuf }
+    | newline    { new_line lexbuf; token lexbuf }
+    | comment    { token lexbuf }
+    | integer    { INT (int_of_string (Lexing.lexeme lexbuf)) }
     | ident as i { ID i }
     | eof        { EOF }
     | _          { raise (ImapFailure "Lexing error") }
