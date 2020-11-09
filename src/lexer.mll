@@ -5,6 +5,7 @@ open Lexing
 type token =
     | ID of string
     | INT of int
+    | FLOAT of float
     | LET
     | IN
     | IF
@@ -32,6 +33,7 @@ type token =
 let tok_to_str = function
     | ID x    -> x
     | INT x   -> string_of_int x
+    | FLOAT x -> string_of_float x
     | LET     -> "let"
     | IN      -> "in"
     | IF      -> "if"
@@ -82,7 +84,7 @@ let op_to_binop tok = match tok with
     | LE    -> OpLe
     | GT    -> OpGt
     | GE    -> OpGe
-    | _ -> raise (ImapFailure "not a binary operation")
+    | _ -> raise (ParseFailure "not a binary operation")
 }
 
 let white   = [' ' '\t']+
@@ -92,6 +94,7 @@ let comment = '#' [^ '\n']*
 let digit   = ['0'-'9']
 let alpha   = ['A'-'Z' 'a'-'z']
 let integer = digit+
+let decimal = digit+ '.' digit+
 let ident   = (alpha | '_') (alpha | digit | '_')*
 
 rule token = parse
@@ -121,6 +124,7 @@ rule token = parse
     | newline    { new_line lexbuf; token lexbuf }
     | comment    { token lexbuf }
     | integer    { INT (int_of_string (Lexing.lexeme lexbuf)) }
+    | decimal    { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
     | ident as i { ID i }
     | eof        { EOF }
-    | _          { raise (ImapFailure "Lexing error") }
+    | _          { raise (ParseFailure "Lexing error") }

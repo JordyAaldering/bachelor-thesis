@@ -1,6 +1,8 @@
 open Loc
 open Printf
 
+exception ParseFailure of string
+
 type expr = {
     loc: loc;
     kind: expr_kind
