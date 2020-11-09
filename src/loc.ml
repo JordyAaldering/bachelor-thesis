@@ -1,22 +1,16 @@
-type t =
+type loc =
     | Internal
     | Source of {
-        fname: string;
+        name: string;
         line: int;
-        col: int;
+        col: int
     }
 
-type 'a loc = {
-    value: 'a;
-    loc: t;
-}
+let mk_loc name l c =
+    Source { name=name; line=l; col=c }
 
-let mk fname l c = Source { fname=fname; line=l; col=c }
-
-let internal = Internal
-
-let to_str = function
+let loc_to_str loc = match loc with
     | Internal ->
         Printf.sprintf "<loc internal>"
-    | Source { fname=fname; line=l; col=c } ->
-        Printf.sprintf "%s:%d:%d" fname l c
+    | Source { name=name; line=l; col=c } ->
+        Printf.sprintf "%s:%d:%d" name l c

@@ -25,9 +25,9 @@ let value_to_str v = match v with
 
 (** Constructors **)
 
-let mk_const_value x = Const x
+let mk_value_const x = Const x
 
-let mk_vect_value shp data =
+let mk_value_vect shp data =
     if List.length shp = 0 then
         value_err @@ sprintf "Vector cannot have empty shape";
     let el_count = List.fold_left (fun res x -> res * x) 1 shp in
