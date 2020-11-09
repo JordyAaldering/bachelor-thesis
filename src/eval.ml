@@ -91,11 +91,15 @@ let rec eval st env e = match e with
         let v = ptr_unary st env op p in
         add_fresh_value st v
 
-    | { kind=ESel (iv, v) } ->
+    | { kind=ESel (e1, e2) } ->
         (st, "")
 
-    | { kind=EShape v } ->
-        (st, "")
+    | { kind=EShape e1 } ->
+        let (st, p) = eval st env e1 in
+        let v = value_shape @@ st_lookup st p in
+        add_fresh_value st v
 
-    | { kind=EDim v } ->
-        (st, "")
+    | { kind=EDim e1 } ->
+        let (st, p) = eval st env e1 in
+        let v = value_dim @@ st_lookup st p in
+        add_fresh_value st v
