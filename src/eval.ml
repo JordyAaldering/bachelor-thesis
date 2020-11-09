@@ -26,12 +26,13 @@ let get_iterator_idx it = match it with
 (* A global variable to generate unique names of pointers *)
 let ptr_count = ref 0
 
-let fresh_ptr_name () =
+let create_fresh_ptr () =
     ptr_count := !ptr_count + 1;
     sprintf "p%d" !ptr_count
 
-let add_fresh_val_as_result st v =
-    let p = fresh_ptr_name () in
+(* Creates a fresh variable and adds it to storage `st' with value `v' *)
+let add_fresh_value st v =
+    let p = create_fresh_ptr () in
     let st = st_add st p v in
     (st, p)
 
@@ -40,34 +41,34 @@ let add_fresh_val_as_result st v =
 
 let rec eval st env e = match e with
     | { kind=EVar x } ->
-        (st, e)
+        (st, (env_lookup env x))
 
     | { kind=EConst x } ->
-        (st, e)
+        add_fresh_value st x
 
     | { kind=EArray lst } ->
-        (st, e)
+        (st, "")
 
     | { kind = EApply (e1, e2) } ->
-        (st, e)
+        (st, "")
 
     | { kind=EIfThen (e1, e2, e3) } ->
-        (st, e)
+        (st, "")
 
     | { kind=ELetIn (var, e1, e2) } ->
-        (st, e)
+        (st, "")
 
     | { kind=EBinary (op, e1, e2) } ->
-        (st, e)
+        (st, "")
 
     | { kind=EUnary (op, e1) } ->
-        (st, e)
+        (st, "")
 
     | { kind=ESel (iv, v) } ->
-        (st, e)
+        (st, "")
 
     | { kind=EShape v } ->
-        (st, e)
+        (st, "")
 
     | { kind=EDim v } ->
-        (st, e)
+        (st, "")
