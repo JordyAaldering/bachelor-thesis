@@ -107,30 +107,30 @@ let rec parse_primary lexbuf =
     let t = get_token lexbuf in
     let l = Tok.get_loc t in
     match Tok.get_tok t with
-    | ID x ->  Some (mk_expr_var x ~loc:l)
-    | INT x -> Some (mk_expr_const (float_of_int x) ~loc:l)
-    | FLOAT x -> Some (mk_expr_const x ~loc:l)
+        | ID x ->  Some (mk_expr_var x ~loc:l)
+        | INT x -> Some (mk_expr_const (float_of_int x) ~loc:l)
+        | FLOAT x -> Some (mk_expr_const x ~loc:l)
 
-    | IF -> unget_tok t; parse_ifthen lexbuf
-    | LET -> unget_tok t; parse_letin lexbuf
+        | IF -> unget_tok t; parse_ifthen lexbuf
+        | LET -> unget_tok t; parse_letin lexbuf
 
-    | LSQUARE ->
-        let lst = if Tok.get_tok (peek_token lexbuf) = RSQUARE then
-                []
-            else
-                parse_generic_list lexbuf parse_expr
-                    ~msg:"array element definition is missing"
-        in let _ = expect_tok lexbuf RSQUARE in
-        Some (mk_expr_array (List.map opt_get lst) ~loc:l)
+        | LSQUARE ->
+            let lst = if Tok.get_tok (peek_token lexbuf) = RSQUARE then
+                    []
+                else
+                    parse_generic_list lexbuf parse_expr
+                        ~msg:"array element definition is missing"
+            in let _ = expect_tok lexbuf RSQUARE in
+            Some (mk_expr_array (List.map opt_get lst) ~loc:l)
 
-    | LPAREN ->
-        let e = parse_expr lexbuf in
-        if e = None then
-            parse_err (peek_loc lexbuf) "empty expression found";
-        let _ = expect_tok lexbuf RPAREN in
-        e
+        | LPAREN ->
+            let e = parse_expr lexbuf in
+            if e = None then
+                parse_err (peek_loc lexbuf) "empty expression found";
+            let _ = expect_tok lexbuf RPAREN in
+            e
 
-    | _ -> unget_tok t; None
+        | _ -> unget_tok t; None
 
 
 and parse_postfix lexbuf =
@@ -146,9 +146,9 @@ and parse_postfix lexbuf =
 
 and parse_application ?(e1=None) lexbuf  =
     match e1, parse_unary lexbuf with
-    | None, Some e2 -> parse_application lexbuf ~e1:(Some e2)
-    | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (mk_expr_apply e1 e2))
-    | _, None -> e1
+        | None, Some e2 -> parse_application lexbuf ~e1:(Some e2)
+        | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (mk_expr_apply e1 e2))
+        | _, None -> e1
 
 and parse_unary lexbuf =
     parse_postfix lexbuf
@@ -179,13 +179,12 @@ and parse_binary lexbuf =
             resolve_stack s (op_prec @@ Tok.get_tok t);
             let e2 = parse_application lexbuf in
             if e2 = None then
-                parse_err (peek_loc lexbuf)  @@ sprintf "expression expected after %s" (Tok.to_str t);
+                parse_err (peek_loc lexbuf) @@ sprintf "expression expected after %s" (Tok.to_str t);
             Stack.push (e2, Tok.get_tok t, (op_prec @@ Tok.get_tok t)) s;
         done;
         resolve_stack s 0;
         let e, op, prec = Stack.pop s in
         e
-
 
 and parse_expr lexbuf =
     parse_binary lexbuf
@@ -225,6 +224,6 @@ and parse_ifthen lexbuf =
 let prog lexbuf =
     tok_stack := [];
     match parse_expr lexbuf with
-    | Some e -> e
-    | None -> raise (ParseFailure (sprintf "parser returned None") )
+        | Some e -> e
+        | None -> raise @@ ParseFailure (sprintf "parser returned None")
  
