@@ -33,7 +33,7 @@ let create_fresh_ptr () =
 (* Creates a fresh variable and adds it to storage `st' with value `v' *)
 let add_fresh_value st v =
     let p = create_fresh_ptr () in
-    let st = st_add st p v in
+    let st = st_add st p (mk_value_const v) in
     (st, p)
 
 
