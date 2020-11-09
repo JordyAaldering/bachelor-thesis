@@ -1,4 +1,5 @@
 open Loc
+open Printf
 
 type expr = {
     loc: loc;
@@ -7,7 +8,7 @@ type expr = {
 
 and expr_kind =
     | EVar of string
-    | EConst of int
+    | EConst of float
     | EArray of expr list
 
     | EApply of expr * expr
@@ -120,3 +121,48 @@ let rec cmp_ast_noloc e1 e2 = match e1, e2 with
         cmp_ast_noloc x y
     
     | _ -> false
+
+
+(** Printing **)
+
+let rec expr_to_str e = match e with
+    | { kind=EVar x } -> sprintf "%s" x
+    | { kind=EConst x } -> string_of_float x
+    | { kind=EArray xs } -> sprintf "[%s]"
+        (String.concat ", " (List.map expr_to_str xs))
+
+    | { kind=EApply (e1, e2) } ->
+        sprintf "((%s) (%s))" (expr_to_str e1) (expr_to_str e2)
+    | { kind=ELetIn (x, e1, e2) } ->
+        sprintf "let %s = %s in %s" x (expr_to_str e1) (expr_to_str e2)
+    | { kind=EIfThen (e1, e2, e3) } ->
+        sprintf "if %s then %s else %s" (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
+
+    | { kind=EBinary (bop, e1, e2) } ->
+        sprintf "(%s) %s (%s)" (expr_to_str e1) (bop_to_str bop) (expr_to_str e2)
+    | { kind=EUnary (uop, e1) } ->
+        sprintf "%s(%s)" (uop_to_str uop) (expr_to_str e1)
+
+    | { kind=ESel (e1, e2) } ->
+        sprintf "sel(%s, %s)" (expr_to_str e1) (expr_to_str e2)
+    | { kind=EShape e1 } ->
+        sprintf "shape(%s)" (expr_to_str e1)
+    | { kind=EDim e1 } ->
+        sprintf "dim(%s)" (expr_to_str e1)
+
+and bop_to_str bop = match bop with
+    | OpPlus -> "+"
+    | OpMinus -> "-"
+    | OpMult -> "*"
+    | OpDiv -> "/"
+    | OpMod -> "%"
+    | OpEq -> "="
+    | OpNe -> "!="
+    | OpLt -> "<"
+    | OpLe -> "<="
+    | OpGt -> ">"
+    | OpGe -> ">="
+
+and uop_to_str uop = match uop with
+    | OpNeg -> "-"
+    | OpNot -> "!"
