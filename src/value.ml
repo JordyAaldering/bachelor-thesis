@@ -10,6 +10,7 @@ type expr_or_ptr =
     | EPptr of string
     | EPexpr of Ast.expr
 
+
 (* A shortcut for raising an exception *)
 let value_err msg = raise (ValueFailure msg)
 
@@ -37,15 +38,7 @@ let mk_value_vect shp data =
     Vect (shp, data)
 
 
-(** Predicates **)
-
-let value_is_const v = match v with
-    | Const _ -> true
-    | Vect _ -> false
-
-let value_is_vect v = match v with
-    | Const _ -> false
-    | Vect _ -> true
+(** Rewrites **)
 
 let value_to_pair v = match v with
     | Const x -> ([], [x])
