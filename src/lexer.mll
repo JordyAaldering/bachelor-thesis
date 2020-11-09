@@ -3,8 +3,8 @@ open Ast
 open Lexing
 
 type token =
-    | ID of (string)
-    | INT of (int)
+    | ID of string
+    | INT of int
     | LET
     | IN
     | IF
