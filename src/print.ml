@@ -2,15 +2,13 @@ open Ast
 open Value
 open Printf
 
-and array_to_str e =
-    String.concat ", " (List.map expr_to_str e)
-
-and expr_to_str e = match e with
+let rec expr_to_str e = match e with
     | { expr_kind = ETrue } -> "true"
     | { expr_kind = EFalse } -> "false"
     | { expr_kind = ENum x } -> string_of_int x
     | { expr_kind = EVar x } -> sprintf "%s" x
-    | { expr_kind = EArray x } -> sprintf "[%s]" (array_to_str x)
+    | { expr_kind = EArray x } -> sprintf "[%s]"
+        (String.concat ", " (List.map expr_to_str e))
 
     | { expr_kind = EApply (e1, e2) } ->
         sprintf "((%s) (%s))" (expr_to_str e1) (expr_to_str e2)
