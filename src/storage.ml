@@ -1,6 +1,5 @@
 open Ast
 open Value
-open Print
 open Printf
 
 exception StorageFailure of string
@@ -41,6 +40,6 @@ let st_lookup st p =
 
 let st_to_str st =
     Hashtbl.fold (fun k v tail_s ->
-        sprintf "%s |-> %s%s" k (val_to_str v)
+        sprintf "%s |-> %s%s" k (value_to_str v)
             (if tail_s = "" then "" else sprintf ", %s" tail_s)
     ) st ""

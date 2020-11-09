@@ -1,6 +1,5 @@
 open Ast
 open Lexer
-open Print
 open Printf
 
 let eval_prog e =
