@@ -39,26 +39,26 @@ let add_fresh_value st v =
 
 (** Evaluation **)
 
-let ptr_binary st op p1 p2 loc1 loc2 =
+let ptr_binary st op p1 p2 =
     let v1 = st_lookup st p1 in
     let v2 = st_lookup st p2 in
     match op with
-        | OpPlus -> v1
-        | OpMinus -> v1
-        | OpMult -> v1
-        | OpDiv -> v1
-        | OpMod -> v1
-        | OpEq -> v1
-        | OpNe -> v1
-        | OpLt -> v1
-        | OpLe -> v1
-        | OpGt -> v1
-        | OpGe -> v1
+        | OpPlus -> Vect ([], [0.])
+        | OpMinus -> Vect ([], [0.])
+        | OpMult -> Vect ([], [0.])
+        | OpDiv -> Vect ([], [0.])
+        | OpMod -> Vect ([], [0.])
+        | OpEq -> Vect ([], [0.])
+        | OpNe -> Vect ([], [0.])
+        | OpLt -> Vect ([], [0.])
+        | OpLe -> Vect ([], [0.])
+        | OpGt -> Vect ([], [0.])
+        | OpGe -> Vect ([], [0.])
 
 let ptr_unary st env op p =
     let v = st_lookup st p in
     match op with
-        | OpNeg -> value_negate v
+        | OpNeg -> value_neg v
         | OpNot -> value_not v
 
 let rec eval st env e = match e with

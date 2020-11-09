@@ -3,7 +3,6 @@ open Printf
 exception ValueFailure of string
 
 type value =
-    | Const of float
     | Vect of int list * float list
 
 type expr_or_ptr =
@@ -19,14 +18,14 @@ let shp_to_str shp = String.concat ", " (List.map string_of_int shp)
 let data_to_str data = String.concat ", " (List.map string_of_float data)
 
 let value_to_str v = match v with
-    | Const x -> string_of_float x
     | Vect (shp, data) -> sprintf "<[%s], [%s]>"
         (shp_to_str shp) (data_to_str data)
 
 
 (** Constructors **)
 
-let mk_value_const x = Const x
+let mk_value_const x =
+    Vect ([], [x])
 
 let mk_value_vect shp data =
     if List.length shp = 0 then
@@ -37,9 +36,10 @@ let mk_value_vect shp data =
             (shp_to_str shp) (data_to_str data);
     Vect (shp, data)
 
+(** Predicates **)
 
-(** Rewrites **)
+let value_neg v = match v with
+    | Vect (shp, data) -> Vect (shp, List.map (fun x -> -.x) data)
 
-let value_to_pair v = match v with
-    | Const x -> ([], [x])
-    | Vect (shp, data) -> (shp, data)
+let value_not v = match v with
+    | Vect (shp, data) -> Vect (shp, List.map (fun x -> if x = 0. then 0. else 1.) data)
