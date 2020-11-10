@@ -52,3 +52,6 @@ let value_shape v = match v with
 
 let value_dim v = match v with
     | Vect (shp, _data) -> Vect ([], [float_of_int @@ List.length shp])
+
+let value_to_pair v = match v with
+    | Vect (shp, data) -> (shp, data)
