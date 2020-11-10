@@ -44,8 +44,11 @@ let value_neg v = match v with
 let value_not v = match v with
     | Vect (shp, data) -> Vect (shp, List.map (fun x -> if x = 0. then 0. else 1.) data)
 
+let value_sel iv v = match v with
+    | Vect (shp, data) -> Vect ([], [1.])
+
 let value_shape v = match v with
     | Vect (shp, _data) -> Vect ([List.length shp], List.map (fun x -> float_of_int x) shp)
 
 let value_dim v = match v with
-    | Vect (shp, _data) -> Vect ([1], [float_of_int @@ List.length shp])
+    | Vect (shp, _data) -> Vect ([], [float_of_int @@ List.length shp])

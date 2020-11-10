@@ -92,7 +92,10 @@ let rec eval st env e = match e with
         add_fresh_value st v
 
     | { kind=ESel (e1, e2) } ->
-        (st, "")
+        let (st, iv) = eval st env e1 in
+        let (st, v1) = eval st env e2 in
+        let v2 = value_sel (st_lookup st iv) (st_lookup st v1) in
+        add_fresh_value st v2
 
     | { kind=EShape e1 } ->
         let (st, p) = eval st env e1 in
