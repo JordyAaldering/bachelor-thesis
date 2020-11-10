@@ -6,7 +6,7 @@ open Printf
 module Tok = struct
     type t = {
         tok: Lexer.token;
-        loc: loc;
+        loc: loc
     }
 
     let mk tok loc = { tok; loc }
@@ -156,14 +156,14 @@ and parse_unary lexbuf =
 and parse_binary lexbuf =
     let rec resolve_stack s prec =
         let e1, op1, p1 = Stack.pop s in
-        if prec <= p1 then begin
+        if prec <= p1 then (
             let e2, op2, p2 = Stack.pop s in
             let e = mk_expr_binary (op_to_binop op1) (opt_get e2) (opt_get e1) in
             Stack.push (Some (e), op2, p2) s;
             resolve_stack s prec
-        end else begin
+        ) else (
             Stack.push (e1, op1, p1) s
-        end
+        )
     in
     let e1 = parse_application lexbuf in
     if e1 = None then

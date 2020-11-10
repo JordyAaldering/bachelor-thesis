@@ -146,11 +146,11 @@ let rec expr_to_str e = match e with
         sprintf "%s(%s)" (uop_to_str uop) (expr_to_str e1)
 
     | { kind=ESel (e1, e2) } ->
-        sprintf "sel(%s, %s)" (expr_to_str e1) (expr_to_str e2)
+        sprintf "sel (%s) (%s)" (expr_to_str e1) (expr_to_str e2)
     | { kind=EShape e1 } ->
-        sprintf "shape(%s)" (expr_to_str e1)
+        sprintf "shape (%s)" (expr_to_str e1)
     | { kind=EDim e1 } ->
-        sprintf "dim(%s)" (expr_to_str e1)
+        sprintf "dim (%s)" (expr_to_str e1)
 
 and bop_to_str bop = match bop with
     | OpPlus -> "+"
