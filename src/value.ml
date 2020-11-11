@@ -2,12 +2,13 @@ open Printf
 
 exception ValueFailure of string
 
+(* A shortcut for raising an exception *)
+let value_err msg = raise (ValueFailure msg)
+
+
 type value =
     | Const of float
     | Vect of value list * value list
-
-(* A shortcut for raising an exception *)
-let value_err msg = raise (ValueFailure msg)
 
 let rec value_to_str v = match v with
     | Const x -> string_of_float x
@@ -72,4 +73,5 @@ and value_gt v1 v2 = match v1, v2 with
 
 let value_to_pair v = match v with
     | Vect (shp, data) -> (shp, data)
+    | _ -> value_err "Value cannot be converted to pair"
 
