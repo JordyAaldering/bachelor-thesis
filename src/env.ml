@@ -1,6 +1,6 @@
 exception EnvFailure of string
 
-type env = (string * string) list;;
+type env = (string * string) list
 
 let env_new: unit -> env = fun () -> []
 

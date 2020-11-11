@@ -9,7 +9,7 @@ let eval_prog e =
         flush stdout;
         let st, p = Eval.eval st env e in
             printf "%s\n" (Storage.st_to_str st);
-            printf "res: %s = %s\n\n" p (value_to_str (Storage.st_lookup st p))
+            printf "%s = %s\n\n" p (value_to_str (Storage.st_lookup st p))
 
 let main () =
     let fname = Sys.argv.(1) in
