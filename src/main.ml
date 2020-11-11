@@ -18,7 +18,6 @@ let main () =
     let lexbuf = from_channel file in
         lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname=fname };
         let e = Parser.prog lexbuf in
-        let _, e = Traversal.topdown () e in
             eval_prog e;
             close_in file
 
