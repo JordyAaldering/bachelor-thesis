@@ -80,8 +80,10 @@ let rec eval st env e = match e with
         let (st, p2) = eval st env e2 in
         eval st env e1
 
-    | { kind=EIfThen (e1, e2, e3) } ->
-        (st, "")
+    | { kind=EIfThen (ec, et, ef) } ->
+        let (st, p1) = eval st env ec in
+        let v = st_lookup st p1 in
+        eval st env (if value_is_truthy v then et else ef)
 
     | { kind=ELetIn (var, e1, e2) } ->
         let pname = create_fresh_ptr () in

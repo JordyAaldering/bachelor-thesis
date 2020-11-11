@@ -56,17 +56,11 @@ and value_div v1 v2 = match v1, v2 with
 
 
 let rec value_is_truthy v = match v with
-    | Const x -> Const (if x = 0. then 0. else 1.)
-    | Vect (_shp, data) -> 
-        let rec all_zero xs = List.for_all (fun x -> match x with
-            | Const x -> x = 0.
-            | Vect (_shp, data) -> all_zero data
-        ) xs in
-        Const (if all_zero data then 0. else 1.)
+    | Const x -> x <> 0.
+    | Vect (_shp, data) -> List.for_all value_is_truthy data
 
-and value_not v = match v with
-    | Const x -> Const (if x = 0. then 1. else 0.)
-    | Vect (shp, data) -> Vect (shp, List.map value_not data)
+and value_not v =
+    Const (if value_is_truthy v then 1. else 0.)
 
 and value_eq v1 v2 = match v1, v2 with
     | Const x, Const y -> Const (if x = y then 1. else 0.)
