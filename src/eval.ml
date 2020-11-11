@@ -43,17 +43,17 @@ let ptr_binary st op p1 p2 =
     let v1 = st_lookup st p1 in
     let v2 = st_lookup st p2 in
     match op with
-        | OpPlus -> Vect ([], [0.])
-        | OpMinus -> Vect ([], [0.])
-        | OpMult -> Vect ([], [0.])
-        | OpDiv -> Vect ([], [0.])
-        | OpMod -> Vect ([], [0.])
-        | OpEq -> Vect ([], [0.])
-        | OpNe -> Vect ([], [0.])
-        | OpLt -> Vect ([], [0.])
-        | OpLe -> Vect ([], [0.])
-        | OpGt -> Vect ([], [0.])
-        | OpGe -> Vect ([], [0.])
+        | OpPlus -> value_add v1 v2
+        | OpMinus -> value_add v1 (value_neg v2)
+        | OpMult -> value_mul v1 v2
+        | OpDiv -> value_div v1 v2
+        | OpMod -> value_div v1 v2
+        | OpEq -> value_eq v1 v2
+        | OpNe -> value_not @@ value_eq v1 v2
+        | OpLt -> value_not @@ value_add (value_eq v1 v2) (value_gt v1 v2)
+        | OpLe -> value_not @@ value_gt v1 v2
+        | OpGt -> value_gt v1 v2
+        | OpGe -> value_add (value_eq v1 v2) (value_gt v1 v2)
 
 let ptr_unary st env op p =
     let v = st_lookup st p in
@@ -66,18 +66,17 @@ let rec eval st env e = match e with
         (st, (env_lookup env x))
 
     | { kind=EConst x } ->
-        add_fresh_value st (mk_value_const x)
+        add_fresh_value st (Const x)
 
     | { kind=EArray lst } ->
         let st, ptr_lst = eval_expr_lst st env lst in
-        let shp = [List.length ptr_lst] in
+        let shp = [Const (float_of_int @@ List.length ptr_lst)] in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = st_lookup st ptr in
-                match ptr_val with
-                    | Vect (_, d) -> List.append d val_lst
+                ptr_val::val_lst
             ) ptr_lst []
         in
-        add_fresh_value st (mk_value_vect shp data)
+        add_fresh_value st (Vect (shp, data))
 
     | { kind = EApply (e1, e2) } ->
         let (st, p1) = eval st env e1 in
@@ -121,7 +120,7 @@ let rec eval st env e = match e with
 
 and eval_expr_lst st env lst = match lst with
     | [] -> (st, [])
-    | e::tl ->
-        let st, p = eval st env e in
-        let st, res = eval_expr_lst st env tl in
-        (st, p::res)
+    | x::xs ->
+        let st, y = eval st env x in
+        let st, ys = eval_expr_lst st env xs in
+        (st, y::ys)
