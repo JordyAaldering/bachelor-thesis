@@ -55,8 +55,17 @@ and value_div v1 v2 = match v1, v2 with
     | _ -> value_err "Can only operate on two constants or two vectors"
 
 
-let rec value_not v = match v with
+let rec value_is_truthy v = match v with
     | Const x -> Const (if x = 0. then 0. else 1.)
+    | Vect (_shp, data) -> 
+        let rec all_zero xs = List.for_all (fun x -> match x with
+            | Const x -> x = 0.
+            | Vect (_shp, data) -> all_zero data
+        ) xs in
+        Const (if all_zero data then 0. else 1.)
+
+and value_not v = match v with
+    | Const x -> Const (if x = 0. then 1. else 0.)
     | Vect (shp, data) -> Vect (shp, List.map value_not data)
 
 and value_eq v1 v2 = match v1, v2 with
