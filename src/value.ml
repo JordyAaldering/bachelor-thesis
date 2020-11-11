@@ -60,7 +60,7 @@ let rec value_is_truthy v = match v with
     | Vect (_shp, data) -> List.for_all value_is_truthy data
 
 and value_not v =
-    Const (if value_is_truthy v then 1. else 0.)
+    Const (if value_is_truthy v then 0. else 1.)
 
 and value_eq v1 v2 = match v1, v2 with
     | Const x, Const y -> Const (if x = y then 1. else 0.)
@@ -75,6 +75,14 @@ and value_gt v1 v2 = match v1, v2 with
     | Vect (shp1, xs), Vect (shp2, ys) ->
         List.fold_left2 (fun res x y ->
                 value_mul res (value_gt x y)
+            ) (Const 1.) xs ys
+    | _ -> value_err "Can only operate on two constants or two vectors"
+
+and value_lt v1 v2 = match v1, v2 with
+    | Const x, Const y -> Const (if x < y then 1. else 0.)
+    | Vect (shp1, xs), Vect (shp2, ys) ->
+        List.fold_left2 (fun res x y ->
+                value_mul res (value_lt x y)
             ) (Const 1.) xs ys
     | _ -> value_err "Can only operate on two constants or two vectors"
 

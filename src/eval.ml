@@ -47,10 +47,10 @@ let ptr_binary st op p1 p2 =
         | OpMod -> value_div v1 v2
         | OpEq -> value_eq v1 v2
         | OpNe -> value_not @@ value_eq v1 v2
-        | OpLt -> value_not @@ value_add (value_eq v1 v2) (value_gt v1 v2)
+        | OpLt -> value_lt v1 v2
         | OpLe -> value_not @@ value_gt v1 v2
         | OpGt -> value_gt v1 v2
-        | OpGe -> value_add (value_eq v1 v2) (value_gt v1 v2)
+        | OpGe -> value_not @@ value_lt v1 v2
 
 let ptr_unary st env op p =
     let v = st_lookup st p in
