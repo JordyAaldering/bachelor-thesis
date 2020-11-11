@@ -65,7 +65,7 @@ let rec eval st env e = match e with
     | { kind=EConst x } ->
         add_fresh_value st (Const x)
 
-    | { kind=EArray lst } ->
+    | { kind=EVect lst } ->
         let st, ptr_lst = eval_expr_lst st env lst in
         let shp = [Const (float_of_int @@ List.length ptr_lst)] in
         let data = List.fold_right (fun ptr val_lst ->

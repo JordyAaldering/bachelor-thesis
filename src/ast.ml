@@ -11,7 +11,7 @@ type expr = {
 and expr_kind =
     | EVar of string
     | EConst of float
-    | EArray of expr list
+    | EVect of expr list
 
     | EApply of expr * expr
     | ELetIn of string * expr * expr
@@ -51,7 +51,7 @@ let mk_expr_const ?(loc=Internal) x =
     { loc=loc; kind=EConst x }
 
 let mk_expr_array ?(loc=Internal) xs =
-    { loc=loc; kind=EArray xs }
+    { loc=loc; kind=EVect xs }
 
 let mk_expr_apply lhs rhs =
     let { loc=l } = lhs in
@@ -90,7 +90,7 @@ let expr_get_var_name e = match e with
 let rec cmp_ast_noloc e1 e2 = match e1, e2 with
     | { kind=EVar x }, { kind=EVar y } -> x = y
     | { kind=EConst x }, { kind=EConst y } -> x = y
-    | { kind=EArray xs }, { kind=EArray ys } ->
+    | { kind=EVect xs }, { kind=EVect ys } ->
         List.length xs = List.length ys
         && (List.fold_left2 (fun res x y -> res && cmp_ast_noloc x y) true xs ys)
 
@@ -130,7 +130,7 @@ let rec cmp_ast_noloc e1 e2 = match e1, e2 with
 let rec expr_to_str e = match e with
     | { kind=EVar x } -> sprintf "%s" x
     | { kind=EConst x } -> string_of_float x
-    | { kind=EArray xs } -> sprintf "[%s]"
+    | { kind=EVect xs } -> sprintf "[%s]"
         (String.concat ", " (List.map expr_to_str xs))
 
     | { kind=EApply (e1, e2) } ->
