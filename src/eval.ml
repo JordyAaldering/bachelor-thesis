@@ -69,40 +69,28 @@ let rec eval st env e = match e with
         add_fresh_value st (mk_value_const x)
 
     | { kind=EArray lst } ->
-        let st, ptrlst = eval_expr_lst st env lst in
-        (* check that the shape of the elements is the same
-        let st, shp_valid_p = array_element_shape_valid st env ptrlst in
-        if not shp_valid_p then
-            eval_err_loc "array elements are of different shapes" e.loc; 
-        let st = List.fold_left (fun st p ->
-                force_obj_to_array st env p e.loc
-            ) st ptrlst
-        in
-         get the data vector of the shape of the first element.  *)
-        let st, shp_vec = ptr_list_fst_shape st env ptrlst in
-        let shp = List.append [mk_value_const (float_of_int @@ List.length ptrlst)] shp_vec in
+        let st, ptr_lst = eval_expr_lst st env lst in
+        let shp = [List.length ptr_lst] in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = st_lookup st ptr in
                 match ptr_val with
                     | Vect (_, d) -> List.append d val_lst
-                    | _ -> List.append [ptr_val] val_lst
-            ) ptrlst []
+            ) ptr_lst []
         in
-        add_fresh_value st (mk_array_value shp data)
+        add_fresh_value st (mk_value_vect shp data)
 
     | { kind = EApply (e1, e2) } ->
         let (st, p1) = eval st env e1 in
         let (st, p2) = eval st env e2 in
-        (*printf "--[eval-app/selection] `%s' `%s'\n"
-            (value_to_str @@ st_lookup st p1) (value_to_str @@ st_lookup st p2);*)
-        let var, body, env' = value_closure_to_triple (st_lookup st p1) in
-        eval st (env_add env' var p2) body
+        eval st env e1
 
     | { kind=EIfThen (e1, e2, e3) } ->
         (st, "")
 
     | { kind=ELetIn (var, e1, e2) } ->
-        (st, "")
+        let pname = create_fresh_ptr () in
+        let (st, p1) = eval st (env_add env var pname) e1 in
+        eval st (env_add env var p1) e2
 
     | { kind=EBinary (op, e1, e2) } ->
         let (st, p1) = eval st env e1 in
@@ -137,11 +125,3 @@ and eval_expr_lst st env lst = match lst with
         let st, p = eval st env e in
         let st, res = eval_expr_lst st env tl in
         (st, p::res)
-
-and ptr_list_fst_shape st env ptrlst =
-    if ptrlst = [] then
-        (st, [])
-    else
-        let shp = value_shape @@ List.hd ptrlst in
-        let _shp, data = value_to_pair shp in
-        (st, data)

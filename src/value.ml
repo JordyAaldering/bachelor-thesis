@@ -22,6 +22,15 @@ let value_to_str v = match v with
         (shp_to_str shp) (data_to_str data)
 
 
+let value_to_float v = match v with
+    | Vect  ([], [x]) -> x
+    | _ -> value_err "Can only get float value of const"
+
+let value_to_int v = match v with
+    | Vect  ([], [x]) -> int_of_float x
+    | _ -> value_err "Can only get float value of const"
+
+
 (** Constructors **)
 
 let mk_value_const x =
@@ -29,11 +38,7 @@ let mk_value_const x =
 
 let mk_value_vect shp data =
     if List.length shp = 0 then
-        value_err @@ sprintf "Vector cannot have empty shape";
-    let el_count = List.fold_left (fun res x -> res * x) 1 shp in
-    if List.length data <> el_count then
-        value_err @@ sprintf "Shape [%s] does not match data [%s]"
-            (shp_to_str shp) (data_to_str data);
+        value_err @@ sprintf "Vector must have non-empty shape";
     Vect (shp, data)
 
 (** Predicates **)
