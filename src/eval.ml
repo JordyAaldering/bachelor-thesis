@@ -12,7 +12,6 @@ let eval_err msg = raise @@ EvalFailure msg
 
 let eval_err_loc msg loc = raise @@ EvalFailure (sprintf "%s: error: %s" (loc_to_str loc) msg)
 
-
 type lexi_iterator =
     | Next of value list
     | Done
@@ -20,7 +19,6 @@ type lexi_iterator =
 let get_iterator_idx it = match it with
     | Next lst -> lst
     | _ -> failwith "get_iterator_idx"
-
 
 (* A global variable to generate unique names of pointers *)
 let ptr_count = ref 0

@@ -39,7 +39,7 @@ let st_lookup st p =
     Hashtbl.find st p
 
 let st_to_str st =
-    Hashtbl.fold (fun k v tail_s ->
-        sprintf "%s |-> %s%s" k (value_to_str v)
-            (if tail_s = "" then "" else sprintf ", %s" tail_s)
+    Hashtbl.fold (fun k v tail ->
+        sprintf "%s -> %s%s" k (value_to_str v)
+            (if tail = "" then "" else sprintf ",\n%s" tail)
     ) st ""
