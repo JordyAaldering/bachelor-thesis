@@ -19,7 +19,6 @@ and expr_kind =
 
     | EBinary of binary_op * expr * expr
     | EUnary of unary_op * expr
-
     | ESel of expr * expr
     | EShape of expr
     | EDim of expr
@@ -29,7 +28,6 @@ and binary_op =
     | OpMinus
     | OpMult
     | OpDiv
-    | OpMod
     | OpEq
     | OpNe
     | OpLt
@@ -113,7 +111,6 @@ let rec cmp_ast_noloc e1 e2 = match e1, e2 with
     | { kind=EUnary (op1, x1) }, { kind=EUnary (op2, x2) } ->
         op1 = op2
         && cmp_ast_noloc x1 x2
-
     | { kind=ESel (x1, y1) }, { kind=ESel (x2, y2) } ->
         cmp_ast_noloc x1 x2
         && cmp_ast_noloc y1 y2
@@ -128,7 +125,7 @@ let rec cmp_ast_noloc e1 e2 = match e1, e2 with
 (** Printing **)
 
 let rec expr_to_str e = match e with
-    | { kind=EVar x } -> sprintf "%s" x
+    | { kind=EVar x } -> x
     | { kind=EConst x } -> string_of_float x
     | { kind=EVect xs } -> sprintf "[%s]"
         (String.concat ", " (List.map expr_to_str xs))
@@ -144,7 +141,6 @@ let rec expr_to_str e = match e with
         sprintf "(%s) %s (%s)" (expr_to_str e1) (bop_to_str bop) (expr_to_str e2)
     | { kind=EUnary (uop, e1) } ->
         sprintf "%s(%s)" (uop_to_str uop) (expr_to_str e1)
-
     | { kind=ESel (e1, e2) } ->
         sprintf "sel (%s) (%s)" (expr_to_str e1) (expr_to_str e2)
     | { kind=EShape e1 } ->
@@ -157,7 +153,6 @@ and bop_to_str bop = match bop with
     | OpMinus -> "-"
     | OpMult -> "*"
     | OpDiv -> "/"
-    | OpMod -> "%"
     | OpEq -> "="
     | OpNe -> "!="
     | OpLt -> "<"

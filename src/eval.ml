@@ -44,7 +44,6 @@ let ptr_binary st op p1 p2 =
         | OpMinus -> value_add v1 (value_neg v2)
         | OpMult -> value_mul v1 v2
         | OpDiv -> value_div v1 v2
-        | OpMod -> value_div v1 v2
         | OpEq -> value_eq v1 v2
         | OpNe -> value_not @@ value_eq v1 v2
         | OpLt -> value_lt v1 v2

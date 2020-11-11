@@ -30,8 +30,7 @@ let op_prec tok = match tok with
     | PLUS
     | MINUS -> 3
     | MULT
-    | DIV
-    | MOD -> 4
+    | DIV -> 4
     | _ -> 5
 
 (* Stack to keep tokens that we have peeked at but not consumed yet.  *)

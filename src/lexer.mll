@@ -15,7 +15,6 @@ type token =
     | MINUS
     | MULT
     | DIV
-    | MOD
     | EQ
     | NE
     | LT
@@ -43,7 +42,6 @@ let tok_to_str = function
     | MINUS   -> "-"
     | MULT    -> "*"
     | DIV     -> "/"
-    | MOD     -> "%"
     | NE      -> "!="
     | EQ      -> "=="
     | LT      -> "<"
@@ -63,7 +61,6 @@ let is_op tok = match tok with
     | MINUS
     | MULT
     | DIV
-    | MOD
     | EQ
     | NE
     | LT
@@ -77,7 +74,6 @@ let op_to_binop tok = match tok with
     | MINUS -> OpMinus
     | MULT  -> OpMult
     | DIV   -> OpDiv
-    | MOD   -> OpMod
     | EQ    -> OpEq
     | NE    -> OpNe
     | LT    -> OpLt
@@ -104,7 +100,6 @@ rule token = parse
     | "-"        { MINUS }
     | "*"        { MULT }
     | "/"        { DIV }
-    | "%"        { MOD }
     | "="        { EQ }
     | "!="       { NE }
     | "<"        { LT }
