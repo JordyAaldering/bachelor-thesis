@@ -94,7 +94,7 @@ let rec expr_to_str e = match e with
     | ELambda (x, e) ->
         sprintf "\\%s.(%s)" x (expr_to_str e)
     | ELetIn (x, e1, e2) ->
-        sprintf "let %s = %s in %s" x (expr_to_str e1) (expr_to_str e2)
+        sprintf "let %s = %s in\n%s" x (expr_to_str e1) (expr_to_str e2)
     | EIfThen (e1, e2, e3) ->
         sprintf "if %s then %s else %s" (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
 

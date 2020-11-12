@@ -5,7 +5,7 @@ open Printf
 
 let eval_prog e =
     let st, env, e = (Storage.st_new (), Env.env_new (), e) in
-        printf "%s\n" (expr_to_str e);
+        printf "%s\n\n" (expr_to_str e);
         flush stdout;
         let st, p = Eval.eval st env e in
             printf "%s\n" (Storage.st_to_str st);

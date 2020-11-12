@@ -11,6 +11,8 @@ let rec value_to_str v = match v with
     | Const x -> string_of_float x
     | Vect (shp, data) -> sprintf "<[%s], [%s]>"
         (value_lst_to_str shp) (value_lst_to_str data)
+    | Closure (e, env) -> sprintf "{%s, %s}"
+        (Ast.expr_to_str e) (Env.env_to_str env)
 
 and value_lst_to_str v =
     String.concat ", " (List.map value_to_str v)

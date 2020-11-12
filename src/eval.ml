@@ -74,7 +74,11 @@ let rec eval st env e = match e with
     | EApply (e1, e2) ->
         let (st, p1) = eval st env e1 in
         let (st, p2) = eval st env e2 in
-        eval st env e1
+        let x, body, env' = closure_to_triple (st_lookup st p1) in
+        eval st (env_add env' x p2) body
+
+    | ELambda (_x, _e) ->
+        add_fresh_value st (Closure (e, env))
 
     | EIfThen (ec, et, ef) ->
         let (st, p1) = eval st env ec in

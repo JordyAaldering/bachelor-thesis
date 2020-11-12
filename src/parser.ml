@@ -67,8 +67,9 @@ let rec parse_primary lexbuf =
         | ID x -> Some (EVar x)
         | INT x -> Some (EConst (float_of_int x))
         | FLOAT x -> Some (EConst x)
-        | IF -> parse_ifthen lexbuf
+        | LAMBDA -> parse_lambda lexbuf
         | LET -> parse_letin lexbuf
+        | IF -> parse_ifthen lexbuf
         | LSQUARE ->
             let lst = if peek_token lexbuf <> RSQUARE then
                     parse_array lexbuf parse_expr
@@ -114,33 +115,41 @@ and parse_application ?(e1=None) lexbuf =
         | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (EApply (e1, e2)))
         | _, None -> e1
 
+and parse_lambda lexbuf =
+    let t = expect_id lexbuf in
+    let _dot = expect_token lexbuf DOT in
+    let e = parse_expr lexbuf in
+    if e = None then
+        parse_err "expected expression after `.'";
+    Some (ELambda (token_to_str t, opt_get e))
+
 and parse_letin lexbuf =
     let id = expect_id lexbuf in
     let _eq = expect_token lexbuf EQ in
     let e1 = parse_expr lexbuf in
     if e1 = None then
-        parse_err "expression expected after `='";
+        parse_err "expected expression after `='";
 
     let _in = expect_token lexbuf IN in
     let e2 = parse_expr lexbuf in
     if e2 = None then
-        parse_err "expression expected after `in'";
+        parse_err "expected expression after `in'";
     Some (ELetIn (token_to_str id, opt_get e1, opt_get e2))
 
 and parse_ifthen lexbuf =
     let e1 = parse_expr lexbuf in
     if e1 = None then
-        parse_err "expression expected after `if'";
+        parse_err "expected expression after `if'";
 
     let _then = expect_token lexbuf THEN in
     let e2 = parse_expr lexbuf in
     if e2 = None then
-        parse_err "expression expected after `then'";
+        parse_err "expected expression after `then'";
     
     let _else = expect_token lexbuf ELSE in
     let e3 = parse_expr lexbuf in
     if e3 = None then
-        parse_err "expression expected after `else'";
+        parse_err "expected expression after `else'";
     Some (EIfThen (opt_get e1, opt_get e2, opt_get e3))
 
 and parse_binary lexbuf =
@@ -164,7 +173,7 @@ and parse_binary lexbuf =
                 resolve_stack s (op_prec t);
                 let e2 = parse_application lexbuf in
                 if e2 = None then
-                    parse_err @@ sprintf "expression expected after %s" (token_to_str t);
+                    parse_err @@ sprintf "expected expression after %s" (token_to_str t);
                 Stack.push (e2, t, op_prec t) s;
         done;
         resolve_stack s 0;
