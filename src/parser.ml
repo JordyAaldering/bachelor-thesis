@@ -19,12 +19,10 @@ let op_prec token = match token with
     | DIV -> 4
     | _ -> 5
 
+let parse_err msg = raise @@ ParseFailure (sprintf "Error: %s" msg)
+
 (* Stack to keep tokens that we have peeked at but not consumed yet *)
 let token_stack = ref []
-
-(* A shortcut for raising an exception *)
-let parse_err msg =
-    raise @@ ParseFailure (sprintf "Error: %s" msg)
 
 let get_token lexbuf = match !token_stack with
     | [] -> token lexbuf

@@ -82,7 +82,7 @@ let op_to_binop tok = match tok with
     | LE    -> OpLe
     | GT    -> OpGt
     | GE    -> OpGe
-    | _ -> raise @@ ParseFailure "not a binary operation"
+    | _ -> parse_err "not a binary operation"
 }
 
 let white   = [' ' '\t']+
@@ -125,4 +125,4 @@ rule token = parse
     | "else"     { ELSE }
     | ident as i { ID i }
     | eof        { EOF }
-    | _          { raise @@ ParseFailure "Lexing error" }
+    | _          { parse_err "lexing error" }

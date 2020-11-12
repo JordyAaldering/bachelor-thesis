@@ -13,7 +13,7 @@ let st_new: unit -> storage = fun () ->
 let find_and_raise st p expected msg =
     let exists = try Hashtbl.find st p; true with Not_found -> false in
     if expected <> exists then
-        raise (StorageFailure msg)
+        raise @@ StorageFailure msg
 
 let st_add st p v =
     find_and_raise st p false

@@ -6,16 +6,7 @@ open Printf
 
 exception EvalFailure of string
 
-(* Shortcut for raising exceptions *)
 let eval_err msg = raise @@ EvalFailure msg
-
-type lexi_iterator =
-    | Next of value list
-    | Done
-
-let get_iterator_idx it = match it with
-    | Next lst -> lst
-    | _ -> failwith "get_iterator_idx"
 
 (* A global variable to generate unique names of pointers *)
 let ptr_count = ref 0

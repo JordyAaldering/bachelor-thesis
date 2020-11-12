@@ -2,6 +2,8 @@ open Printf
 
 exception ParseFailure of string
 
+let parse_err msg = raise @@ ParseFailure msg
+
 type expr =
     | EVar of string
     | EConst of float

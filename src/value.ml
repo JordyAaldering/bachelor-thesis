@@ -2,6 +2,8 @@ open Printf
 
 exception ValueFailure of string
 
+let value_err msg = raise (ValueFailure msg)
+
 type value =
     | Const of float
     | Vect of value list * value list
@@ -16,9 +18,6 @@ let rec value_to_str v = match v with
 
 and value_lst_to_str v =
     String.concat ", " (List.map value_to_str v)
-
-(* A shortcut for raising an exception *)
-let value_err msg = raise (ValueFailure msg)
 
 
 (** Primitive Functions **)
