@@ -89,9 +89,9 @@ let rec parse_generic_list ?(msg="expression expected") lexbuf parse_fun =
 let rec parse_primary lexbuf =
     let t = get_token lexbuf in
     match Tok.get_tok t with
-        | ID x ->  Some (mk_expr_var x)
-        | INT x -> Some (mk_expr_const (float_of_int x))
-        | FLOAT x -> Some (mk_expr_const x)
+        | ID x ->  Some (EVar x)
+        | INT x -> Some (EConst (float_of_int x))
+        | FLOAT x -> Some (EConst x)
 
         | IF -> unget_tok t; parse_ifthen lexbuf
         | LET -> unget_tok t; parse_letin lexbuf
@@ -103,7 +103,7 @@ let rec parse_primary lexbuf =
                     parse_generic_list lexbuf parse_expr
                         ~msg:"array element definition is missing"
             in let _ = expect_tok lexbuf RSQUARE in
-            Some (mk_expr_array (List.map opt_get lst))
+            Some (EArray (List.map opt_get lst))
 
         | LPAREN ->
             let e = parse_expr lexbuf in
@@ -122,14 +122,14 @@ and parse_postfix lexbuf =
         let e1 = parse_primary lexbuf in
         if e1 = None then
             parse_err "expected index specification in selection";
-        e := Some (mk_expr_sel (opt_get !e) (opt_get e1))
+        e := Some (ESel ((opt_get !e), (opt_get e1)))
     done;
     !e
 
 and parse_application ?(e1=None) lexbuf  =
     match e1, parse_unary lexbuf with
         | None, Some e2 -> parse_application lexbuf ~e1:(Some e2)
-        | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (mk_expr_apply e1 e2))
+        | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (EApply (e1, e2)))
         | _, None -> e1
 
 and parse_unary lexbuf =
@@ -140,7 +140,7 @@ and parse_binary lexbuf =
         let e1, op1, p1 = Stack.pop s in
         if prec <= p1 then (
             let e2, op2, p2 = Stack.pop s in
-            let e = mk_expr_binary (op_to_binop op1) (opt_get e2) (opt_get e1) in
+            let e = EBinary ((op_to_binop op1), (opt_get e2), (opt_get e1)) in
             Stack.push (Some (e), op2, p2) s;
             resolve_stack s prec
         ) else (
@@ -182,7 +182,7 @@ and parse_letin lexbuf =
     let e2 = parse_expr lexbuf in
     if e2 = None then
         parse_err "expression expected after `in'";
-    Some (mk_expr_letin (Tok.to_str t) (opt_get e1) (opt_get e2))
+    Some (ELetIn ((Tok.to_str t), (opt_get e1), (opt_get e2)))
 
 and parse_ifthen lexbuf =
     let t = get_token lexbuf in
@@ -198,11 +198,11 @@ and parse_ifthen lexbuf =
     let e3 = parse_expr lexbuf in
     if e3 = None then
         parse_err "expression expected after `else'";
-    Some (mk_expr_ifthen (opt_get e1) (opt_get e2) (opt_get e3))
+    Some (EIfThen ((opt_get e1), (opt_get e2), (opt_get e3)))
 
 let prog lexbuf =
     tok_stack := [];
     match parse_expr lexbuf with
         | Some e -> e
-        | None -> raise @@ ParseFailure (sprintf "parser returned None")
+        | None -> parse_err "parser returned None"
  

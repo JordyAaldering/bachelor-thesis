@@ -55,13 +55,13 @@ let ptr_unary st env op p =
         | OpNot -> value_not v
 
 let rec eval st env e = match e with
-    | { kind=EVar x } ->
+    | EVar x ->
         (st, (env_lookup env x))
 
-    | { kind=EConst x } ->
+    | EConst x ->
         add_fresh_value st (Const x)
 
-    | { kind=EVect lst } ->
+    | EArray lst ->
         let st, ptr_lst = eval_expr_lst st env lst in
         let shp = [Const (float_of_int @@ List.length ptr_lst)] in
         let data = List.fold_right (fun ptr val_lst ->
@@ -71,44 +71,44 @@ let rec eval st env e = match e with
         in
         add_fresh_value st (Vect (shp, data))
 
-    | { kind = EApply (e1, e2) } ->
+    | EApply (e1, e2) ->
         let (st, p1) = eval st env e1 in
         let (st, p2) = eval st env e2 in
         eval st env e1
 
-    | { kind=EIfThen (ec, et, ef) } ->
+    | EIfThen (ec, et, ef) ->
         let (st, p1) = eval st env ec in
         let v = st_lookup st p1 in
         eval st env (if value_is_truthy v then et else ef)
 
-    | { kind=ELetIn (var, e1, e2) } ->
+    | ELetIn (var, e1, e2) ->
         let pname = create_fresh_ptr () in
         let (st, p1) = eval st (env_add env var pname) e1 in
         eval st (env_add env var p1) e2
 
-    | { kind=EBinary (op, e1, e2) } ->
+    | EBinary (op, e1, e2) ->
         let (st, p1) = eval st env e1 in
         let (st, p2) = eval st env e2 in
         let v = ptr_binary st op p1 p2 in
         add_fresh_value st v
 
-    | { kind=EUnary (op, e1) } ->
+    | EUnary (op, e1) ->
         let (st, p) = eval st env e1 in
         let v = ptr_unary st env op p in
         add_fresh_value st v
 
-    | { kind=ESel (e1, e2) } ->
+    | ESel (e1, e2) ->
         let (st, iv) = eval st env e1 in
         let (st, v1) = eval st env e2 in
         let v2 = value_sel (st_lookup st iv) (st_lookup st v1) in
         add_fresh_value st v2
 
-    | { kind=EShape e1 } ->
+    | EShape e1 ->
         let (st, p) = eval st env e1 in
         let v = value_shape @@ st_lookup st p in
         add_fresh_value st v
 
-    | { kind=EDim e1 } ->
+    | EDim e1 ->
         let (st, p) = eval st env e1 in
         let v = value_dim @@ st_lookup st p in
         add_fresh_value st v
