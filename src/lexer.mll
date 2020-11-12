@@ -6,6 +6,7 @@ type token =
     | ID of string
     | INT of int
     | FLOAT of float
+    | LAMBDA
     | LET
     | IN
     | IF
@@ -33,6 +34,7 @@ let token_to_str = function
     | ID x    -> x
     | INT x   -> string_of_int x
     | FLOAT x -> string_of_float x
+    | LAMBDA  -> "\\"
     | LET     -> "let"
     | IN      -> "in"
     | IF      -> "if"
@@ -110,6 +112,7 @@ rule token = parse
     | ")"        { RPAREN }
     | "["        { LSQUARE }
     | "]"        { RSQUARE }
+    | "\\"       { LAMBDA }
     | "let"      { LET }
     | "in"       { IN }
     | "if"       { IF }

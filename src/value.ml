@@ -5,6 +5,7 @@ exception ValueFailure of string
 type value =
     | Const of float
     | Vect of value list * value list
+    | Closure of Ast.expr * Env.env
 
 let rec value_to_str v = match v with
     | Const x -> string_of_float x
@@ -92,3 +93,7 @@ and value_lt v1 v2 = match v1, v2 with
 let value_to_pair v = match v with
     | Const x -> ([Const 0.], [Const x])
     | Vect (shp, data) -> (shp, data)
+
+and closure_to_triple v = match v with
+    | Closure (ELambda (x, body), env) -> (x, body, env)
+    | _ -> value_err "Expected closure of lambda expression"

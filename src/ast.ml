@@ -8,6 +8,7 @@ type expr =
     | EArray of expr list
 
     | EApply of expr * expr
+    | ELambda of string * expr
     | ELetIn of string * expr * expr
     | EIfThen of expr * expr * expr
 
@@ -50,6 +51,9 @@ let rec ast_cmp e1 e2 = match e1, e2 with
     | EApply (x1, y1), EApply (x2, y2) ->
         ast_cmp x1 x2
         && ast_cmp y1 y2
+    | ELambda (v1, e1), ELambda (v2, e2) ->
+        v1 = v2
+        && ast_cmp e1 e2        
     | ELetIn (v1, x1, y1), ELetIn (v2, x2, y2) ->
         v1 = v2
         && ast_cmp x1 x2
@@ -87,6 +91,8 @@ let rec expr_to_str e = match e with
 
     | EApply (e1, e2) ->
         sprintf "((%s) (%s))" (expr_to_str e1) (expr_to_str e2)
+    | ELambda (x, e) ->
+        sprintf "\\%s.(%s)" x (expr_to_str e)
     | ELetIn (x, e1, e2) ->
         sprintf "let %s = %s in %s" x (expr_to_str e1) (expr_to_str e2)
     | EIfThen (e1, e2, e3) ->
