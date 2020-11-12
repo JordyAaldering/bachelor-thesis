@@ -4,11 +4,9 @@ type env = (string * string) list
 
 let env_err msg = raise @@ EnvFailure msg
 
-let env_new: unit -> env = fun () ->
-    []
+let env_new: unit -> env = fun () -> []
 
-let env_add e v p =
-    (v, p) :: e
+let env_add e v p = (v, p) :: e
 
 let rec env_lookup e v = match e with
     | [] -> env_err @@ Printf.sprintf "lookup of variable `%s' failed" v

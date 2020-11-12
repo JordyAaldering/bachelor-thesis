@@ -4,7 +4,7 @@ open Lexer
 open Printf
 
 let eval_prog e =
-    let st, env, e = (Storage.st_new (), Env.env_new (), e) in
+    let st, env, e = Storage.st_new (), Env.env_new (), e in
         printf "%s\n\n" (expr_to_str e);
         flush stdout;
         let st, p = Evaluator.eval_expr st env e in

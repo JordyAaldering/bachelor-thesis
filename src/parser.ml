@@ -19,7 +19,7 @@ let op_prec token = match token with
     | DIV -> 4
     | _ -> 5
 
-let parse_err msg = raise @@ ParseFailure (sprintf "Error: %s" msg)
+let parse_err msg = raise @@ ParseFailure msg
 
 (* Stack to keep tokens that we have peeked at but not consumed yet *)
 let token_stack = ref []
@@ -40,10 +40,10 @@ let peek_token lexbuf =
 
 let match_token lexbuf expected =
     let t = peek_token lexbuf in
-    if t = expected then
-        let _step = get_token lexbuf in
+    if t = expected then (
+        get_token lexbuf;
         true
-    else false
+    ) else false
 
 let expect_id lexbuf =
     let t = get_token lexbuf in
@@ -73,13 +73,13 @@ let rec parse_primary lexbuf =
                     parse_array lexbuf parse_expr
                 else []
             in
-            let _square = expect_token lexbuf RSQUARE in
+            expect_token lexbuf RSQUARE;
             Some (EArray (List.map opt_get lst))
         | LPAREN ->
             let e = parse_expr lexbuf in
             if e = None then
                 parse_err "empty expression found";
-            let _paren = expect_token lexbuf RPAREN in
+            expect_token lexbuf RPAREN;
             e
         | _ -> unget_token t; None
 
@@ -115,7 +115,7 @@ and parse_application ?(e1=None) lexbuf =
 
 and parse_lambda lexbuf =
     let t = expect_id lexbuf in
-    let _dot = expect_token lexbuf DOT in
+    expect_token lexbuf DOT;
     let e = parse_expr lexbuf in
     if e = None then
         parse_err "expected expression after `.'";
@@ -123,12 +123,12 @@ and parse_lambda lexbuf =
 
 and parse_letin lexbuf =
     let id = expect_id lexbuf in
-    let _eq = expect_token lexbuf EQ in
+    expect_token lexbuf EQ;
     let e1 = parse_expr lexbuf in
     if e1 = None then
         parse_err "expected expression after `='";
 
-    let _in = expect_token lexbuf IN in
+    expect_token lexbuf IN;
     let e2 = parse_expr lexbuf in
     if e2 = None then
         parse_err "expected expression after `in'";
@@ -139,12 +139,12 @@ and parse_ifthen lexbuf =
     if e1 = None then
         parse_err "expected expression after `if'";
 
-    let _then = expect_token lexbuf THEN in
+    expect_token lexbuf THEN;
     let e2 = parse_expr lexbuf in
     if e2 = None then
         parse_err "expected expression after `then'";
     
-    let _else = expect_token lexbuf ELSE in
+    expect_token lexbuf ELSE;
     let e3 = parse_expr lexbuf in
     if e3 = None then
         parse_err "expected expression after `else'";

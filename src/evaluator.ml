@@ -22,16 +22,14 @@ let add_fresh_value st v =
     (st, p)
 
 
-(** Evaluation **)
-
 let ptr_binary st op p1 p2 =
     let v1 = st_lookup st p1 in
     let v2 = st_lookup st p2 in
     match op with
         | OpPlus -> value_add v1 v2
-        | OpMin -> value_add v1 (value_neg v2)
+        | OpMin  -> value_add v1 (value_neg v2)
         | OpMult -> value_mul v1 v2
-        | OpDiv -> value_div v1 v2
+        | OpDiv  -> value_div v1 v2
         | OpEq -> value_eq v1 v2
         | OpNe -> value_not @@ value_eq v1 v2
         | OpLt -> value_lt v1 v2
@@ -47,7 +45,7 @@ let ptr_unary st env op p =
 
 let rec eval_expr st env e = match e with
     | EVar x ->
-        (st, (env_lookup env x))
+        (st, env_lookup env x)
 
     | EConst x ->
         add_fresh_value st (Const x)
@@ -113,4 +111,4 @@ and eval_expr_lst st env lst = match lst with
     | x::xs ->
         let st, y = eval_expr st env x in
         let st, ys = eval_expr_lst st env xs in
-        (st, y::ys)
+        (st, y :: ys)
