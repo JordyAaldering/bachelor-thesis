@@ -29,7 +29,7 @@ type token =
     | RSQUARE
     | EOF
 
-let tok_to_str = function
+let token_to_str = function
     | ID x    -> x
     | INT x   -> string_of_int x
     | FLOAT x -> string_of_float x
@@ -80,7 +80,7 @@ let op_to_binop tok = match tok with
     | LE    -> OpLe
     | GT    -> OpGt
     | GE    -> OpGe
-    | _ -> raise (ParseFailure "not a binary operation")
+    | _ -> raise @@ ParseFailure "not a binary operation"
 }
 
 let white   = [' ' '\t']+
@@ -122,4 +122,4 @@ rule token = parse
     | decimal    { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
     | ident as i { ID i }
     | eof        { EOF }
-    | _          { raise (ParseFailure "Lexing error") }
+    | _          { raise @@ ParseFailure "Lexing error" }
