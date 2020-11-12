@@ -2,4 +2,4 @@
 
 let add = \x.\y. x + y
 in
-add 10 20
+add ((\x.x+1) 10) 20
