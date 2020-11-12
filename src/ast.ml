@@ -22,7 +22,7 @@ type expr =
 
 and binary_op =
     | OpPlus
-    | OpMinus
+    | OpMin
     | OpMult
     | OpDiv
     | OpEq
@@ -113,7 +113,7 @@ let rec expr_to_str e = match e with
 
 and bop_to_str bop = match bop with
     | OpPlus -> "+"
-    | OpMinus -> "-"
+    | OpMin -> "-"
     | OpMult -> "*"
     | OpDiv -> "/"
     | OpEq -> "="

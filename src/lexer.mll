@@ -73,7 +73,7 @@ let is_op tok = match tok with
 
 let op_to_binop tok = match tok with
     | PLUS  -> OpPlus
-    | MIN -> OpMinus
+    | MIN -> OpMin
     | MULT  -> OpMult
     | DIV   -> OpDiv
     | EQ    -> OpEq

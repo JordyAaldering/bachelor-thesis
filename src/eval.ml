@@ -29,7 +29,7 @@ let ptr_binary st op p1 p2 =
     let v2 = st_lookup st p2 in
     match op with
         | OpPlus -> value_add v1 v2
-        | OpMinus -> value_add v1 (value_neg v2)
+        | OpMin -> value_add v1 (value_neg v2)
         | OpMult -> value_mul v1 v2
         | OpDiv -> value_div v1 v2
         | OpEq -> value_eq v1 v2
