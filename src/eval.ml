@@ -1,4 +1,3 @@
-open Loc
 open Ast
 open Env
 open Value
@@ -9,8 +8,6 @@ exception EvalFailure of string
 
 (* Shortcut for raising exceptions *)
 let eval_err msg = raise @@ EvalFailure msg
-
-let eval_err_loc msg loc = raise @@ EvalFailure (sprintf "%s: error: %s" (loc_to_str loc) msg)
 
 type lexi_iterator =
     | Next of value list

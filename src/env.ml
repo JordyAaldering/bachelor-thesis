@@ -13,8 +13,7 @@ let rec env_lookup e v = match e with
         else env_lookup tl v
 
 let env_to_str e =
-    if List.length e = 0 then
-        "[]"
+    if List.length e = 0 then "[]"
     else
         String.concat ", " (List.map (fun vp ->
             let v, p = vp in
