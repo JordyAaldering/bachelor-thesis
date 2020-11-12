@@ -91,11 +91,16 @@ let comment = '#' [^ '\n']*
 
 let digit   = ['0'-'9']
 let alpha   = ['A'-'Z' 'a'-'z']
-let integer = digit+
-let decimal = digit+ '.' digit+
+let integer = '-'? digit+
+let decimal = '-'? digit+ '.' digit+
 let ident   = (alpha | '_') (alpha | digit | '_')*
 
 rule token = parse
+    | white      { token lexbuf }
+    | newline    { new_line lexbuf; token lexbuf }
+    | comment    { token lexbuf }
+    | integer    { INT (int_of_string (Lexing.lexeme lexbuf)) }
+    | decimal    { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
     | "."        { DOT }
     | ","        { COMMA }
     | "+"        { PLUS }
@@ -118,11 +123,6 @@ rule token = parse
     | "if"       { IF }
     | "then"     { THEN }
     | "else"     { ELSE }
-    | white      { token lexbuf }
-    | newline    { new_line lexbuf; token lexbuf }
-    | comment    { token lexbuf }
-    | integer    { INT (int_of_string (Lexing.lexeme lexbuf)) }
-    | decimal    { FLOAT (float_of_string (Lexing.lexeme lexbuf)) }
     | ident as i { ID i }
     | eof        { EOF }
     | _          { raise @@ ParseFailure "Lexing error" }
