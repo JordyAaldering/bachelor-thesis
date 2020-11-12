@@ -1,0 +1,5 @@
+# A program to test lambdas
+
+let add = \x.\y. x + y
+in
+add 10 20
