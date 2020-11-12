@@ -12,7 +12,7 @@ type token =
     | THEN
     | ELSE
     | PLUS
-    | MINUS
+    | MIN
     | MULT
     | DIV
     | EQ
@@ -39,7 +39,7 @@ let token_to_str = function
     | THEN    -> "then"
     | ELSE    -> "else"
     | PLUS    -> "+"
-    | MINUS   -> "-"
+    | MIN   -> "-"
     | MULT    -> "*"
     | DIV     -> "/"
     | NE      -> "!="
@@ -58,7 +58,7 @@ let token_to_str = function
 
 let is_op tok = match tok with
     | PLUS
-    | MINUS
+    | MIN
     | MULT
     | DIV
     | EQ
@@ -71,7 +71,7 @@ let is_op tok = match tok with
 
 let op_to_binop tok = match tok with
     | PLUS  -> OpPlus
-    | MINUS -> OpMinus
+    | MIN -> OpMinus
     | MULT  -> OpMult
     | DIV   -> OpDiv
     | EQ    -> OpEq
@@ -97,7 +97,7 @@ rule token = parse
     | "."        { DOT }
     | ","        { COMMA }
     | "+"        { PLUS }
-    | "-"        { MINUS }
+    | "-"        { MIN }
     | "*"        { MULT }
     | "/"        { DIV }
     | "="        { EQ }

@@ -1,13 +1,12 @@
 open Ast
-open Loc
 open Lexer
 open Printf
 
 let opt_get x = match x with
     | Some x -> x
-    | None -> raise (Invalid_argument "opt_get")
+    | None -> raise @@ Invalid_argument "opt_get"
 
-let op_prec tok = match tok with
+let op_prec token = match token with
     | EQ
     | NE -> 1
     | LT
@@ -15,26 +14,26 @@ let op_prec tok = match tok with
     | GT
     | GE -> 2
     | PLUS
-    | MINUS -> 3
+    | MIN -> 3
     | MULT
     | DIV -> 4
     | _ -> 5
 
-(* Stack to keep tokens that we have peeked at but not consumed yet.  *)
-let tok_stack = ref []
+(* Stack to keep tokens that we have peeked at but not consumed yet *)
+let token_stack = ref []
 
 (* A shortcut for raising an exception *)
-let parse_err msg = raise @@ ParseFailure (sprintf "Error: %s" msg)
+let parse_err msg =
+    raise @@ ParseFailure (sprintf "Error: %s" msg)
 
-let get_token lexbuf = match !tok_stack with
+let get_token lexbuf = match !token_stack with
     | [] -> token lexbuf
-    | h::t ->
-        tok_stack := t;
+    | h :: t ->
+        token_stack := t;
         h
 
-(* Puts the token back on the top of the stack *)
-let unget_token tok =
-    tok_stack := tok::!tok_stack
+let unget_token token =
+    token_stack := token :: !token_stack
 
 let peek_token lexbuf =
     let t = get_token lexbuf in
@@ -68,28 +67,25 @@ let rec parse_primary lexbuf =
         | ID x -> Some (EVar x)
         | INT x -> Some (EConst (float_of_int x))
         | FLOAT x -> Some (EConst x)
-
         | IF -> parse_ifthen lexbuf
         | LET -> parse_letin lexbuf
-
         | LSQUARE ->
-            let lst = if (peek_token lexbuf) <> RSQUARE then
+            let lst = if peek_token lexbuf <> RSQUARE then
                     parse_array lexbuf parse_expr
                 else []
-            in let _square = expect_token lexbuf RSQUARE in
+            in
+            let _square = expect_token lexbuf RSQUARE in
             Some (EArray (List.map opt_get lst))
-
         | LPAREN ->
             let e = parse_expr lexbuf in
             if e = None then
                 parse_err "empty expression found";
             let _paren = expect_token lexbuf RPAREN in
             e
-
         | _ -> unget_token t; None
 
-(* Parse non-empty comma separated list of elements that
-   can be parsed by `parse_fun' function *)
+(* Parse non-empty comma separated list of elements
+    that can be parsed by `parse_fun' *)
 and parse_array lexbuf parse_fun =
     let e = parse_fun lexbuf in
     if e = None then
@@ -124,6 +120,7 @@ and parse_letin lexbuf =
     let e1 = parse_expr lexbuf in
     if e1 = None then
         parse_err "expression expected after `='";
+
     let _in = expect_token lexbuf IN in
     let e2 = parse_expr lexbuf in
     if e2 = None then
@@ -131,18 +128,20 @@ and parse_letin lexbuf =
     Some (ELetIn (token_to_str id, opt_get e1, opt_get e2))
 
 and parse_ifthen lexbuf =
-    let ec = parse_expr lexbuf in
-    if ec = None then
+    let e1 = parse_expr lexbuf in
+    if e1 = None then
         parse_err "expression expected after `if'";
+
     let _then = expect_token lexbuf THEN in
-    let et = parse_expr lexbuf in
-    if et = None then
+    let e2 = parse_expr lexbuf in
+    if e2 = None then
         parse_err "expression expected after `then'";
+    
     let _else = expect_token lexbuf ELSE in
-    let ef = parse_expr lexbuf in
-    if ef = None then
+    let e3 = parse_expr lexbuf in
+    if e3 = None then
         parse_err "expression expected after `else'";
-    Some (EIfThen (opt_get ec, opt_get et, opt_get ef))
+    Some (EIfThen (opt_get e1, opt_get e2, opt_get e3))
 
 and parse_binary lexbuf =
     let rec resolve_stack s prec =
@@ -155,7 +154,8 @@ and parse_binary lexbuf =
         ) else Stack.push (e1, op1, p1) s
     in
     let e1 = parse_application lexbuf in
-    if e1 <> None then
+    if e1 = None then e1
+    else
         let s = Stack.create () in
         (* first expression goes with no priority; -1 *)
         Stack.push (e1, EOF, -1) s;
@@ -170,13 +170,12 @@ and parse_binary lexbuf =
         resolve_stack s 0;
         let e, _op, _prec = Stack.pop s in
         e
-    else e1
 
 and parse_unary lexbuf =
     parse_postfix lexbuf
 
 let prog lexbuf =
-    tok_stack := [];
+    token_stack := [];
     match parse_expr lexbuf with
         | Some e -> e
         | None -> parse_err "parser returned None"
