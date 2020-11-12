@@ -7,7 +7,7 @@ let eval_prog e =
     let st, env, e = (Storage.st_new (), Env.env_new (), e) in
         printf "%s\n\n" (expr_to_str e);
         flush stdout;
-        let st, p = Eval.eval st env e in
+        let st, p = Evaluator.eval_expr st env e in
             printf "%s\n" (Storage.st_to_str st);
             printf "%s = %s\n\n" p (value_to_str (Storage.st_lookup st p))
 
