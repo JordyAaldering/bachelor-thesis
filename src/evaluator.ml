@@ -44,64 +44,64 @@ let ptr_unary st env op p =
         | OpNot -> value_not v
 
 let rec eval_expr st env e = match e with
-    | EVar x ->
+    | { kind=EVar x } ->
         (st, env_lookup env x)
 
-    | EConst x ->
+    | { kind=EConst x } ->
         add_fresh_value st (Const x)
 
-    | EArray lst ->
+    | { kind=EArray lst } ->
         let st, ptr_lst = eval_expr_lst st env lst in
         let shp = [Const (float_of_int @@ List.length ptr_lst)] in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = st_lookup st ptr in
-                ptr_val::val_lst
+                ptr_val :: val_lst
             ) ptr_lst []
         in
         add_fresh_value st (Vect (shp, data))
 
-    | EApply (e1, e2) ->
+    | { kind=EApply (e1, e2) } ->
         let (st, p1) = eval_expr st env e1 in
         let (st, p2) = eval_expr st env e2 in
         let x, body, env' = closure_to_triple (st_lookup st p1) in
         eval_expr st (env_add env' x p2) body
 
-    | ELambda (_x, _e) ->
+    | { kind=ELambda (_x, _e) } ->
         add_fresh_value st (Closure (e, env))
 
-    | EIfThen (ec, et, ef) ->
+    | { kind=EIfThen (ec, et, ef) } ->
         let (st, p1) = eval_expr st env ec in
         let v = st_lookup st p1 in
         eval_expr st env (if value_is_truthy v then et else ef)
 
-    | ELetIn (var, e1, e2) ->
+    | { kind=ELetIn (var, e1, e2) } ->
         let pname = create_fresh_ptr () in
         let (st, p1) = eval_expr st (env_add env var pname) e1 in
         eval_expr st (env_add env var p1) e2
 
-    | EBinary (op, e1, e2) ->
+    | { kind=EBinary (op, e1, e2) } ->
         let (st, p1) = eval_expr st env e1 in
         let (st, p2) = eval_expr st env e2 in
         let v = ptr_binary st op p1 p2 in
         add_fresh_value st v
 
-    | EUnary (op, e1) ->
+    | { kind=EUnary (op, e1) } ->
         let (st, p) = eval_expr st env e1 in
         let v = ptr_unary st env op p in
         add_fresh_value st v
 
-    | ESel (e1, e2) ->
+    | { kind=ESel (e1, e2) } ->
         let (st, iv) = eval_expr st env e1 in
         let (st, v1) = eval_expr st env e2 in
         let v2 = value_sel (st_lookup st iv) (st_lookup st v1) in
         add_fresh_value st v2
 
-    | EShape e1 ->
+    | { kind=EShape e1 } ->
         let (st, p) = eval_expr st env e1 in
         let v = value_shape @@ st_lookup st p in
         add_fresh_value st v
 
-    | EDim e1 ->
+    | { kind=EDim e1 } ->
         let (st, p) = eval_expr st env e1 in
         let v = value_dim @@ st_lookup st p in
         add_fresh_value st v

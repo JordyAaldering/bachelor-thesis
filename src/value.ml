@@ -24,15 +24,17 @@ and value_lst_to_str v =
 
 let value_sel iv v = match iv, v with
     | Const i, Vect (shp, data) -> List.nth data (int_of_float i)
-    | _ -> value_err "Can only select in a 1d vector"
+    | _ -> value_err "Invalid sel arguments"
 
 let value_shape v = match v with
     | Const _x -> Const 0.
     | Vect (shp, _data) -> Vect ([Const (float_of_int @@ List.length shp)], shp)
+    | _ -> value_err "Invalid shape argument"
 
 let value_dim v = match v with
     | Const _x -> Const 0.
     | Vect (shp, _data) -> Const (float_of_int @@ List.length shp)
+    | _ -> value_err "Invalid dim argument"
 
 
 (** Predicates **)
@@ -40,6 +42,7 @@ let value_dim v = match v with
 let rec value_neg v = match v with
     | Const x -> Const (-.x)
     | Vect (shp, data) -> Vect (shp, List.map value_neg data)
+    | _ -> value_err "Can only operate on a constant or vector"
 
 and value_add v1 v2 = match v1, v2 with
     | Const x, Const y -> Const (x +. y)
@@ -60,6 +63,7 @@ and value_div v1 v2 = match v1, v2 with
 let rec value_is_truthy v = match v with
     | Const x -> x <> 0.
     | Vect (_shp, data) -> List.for_all value_is_truthy data
+    | _ -> false
 
 and value_not v =
     Const (if value_is_truthy v then 0. else 1.)
@@ -94,7 +98,8 @@ and value_lt v1 v2 = match v1, v2 with
 let value_to_pair v = match v with
     | Const x -> ([Const 0.], [Const x])
     | Vect (shp, data) -> (shp, data)
+    | _ -> value_err "Can only get pair of constant or vector"
 
 and closure_to_triple v = match v with
-    | Closure (ELambda (x, body), env) -> (x, body, env)
+    | Closure ({ kind=ELambda (x, body) }, env) -> (x, body, env)
     | _ -> value_err "Expected closure of lambda expression"
