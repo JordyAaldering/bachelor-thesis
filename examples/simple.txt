@@ -1,11 +1,5 @@
 # Simple example program
 
-let add = \x. x + [1, 2, 3] in
-let v = [0, 0, 0] in
-let w = add v in
-    let x = if w >= [1, 1, 1] then
-        w * [1.1, -2.2, 3.3]
-    else
-        [-9, 8, -7]
-    in
-    shape x
+let get_shape = \x. shape x in
+let v = [1, 2, 3] in
+get_shape v

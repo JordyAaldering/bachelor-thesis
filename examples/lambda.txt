@@ -1,5 +1,0 @@
-# A program to test lambdas
-
-let add = \x.\y. x + y
-in
-add ((\x.x+1) 10) 20
