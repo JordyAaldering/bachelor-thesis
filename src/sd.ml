@@ -29,7 +29,9 @@ let rec sd: expr -> int array -> dem_env -> dem_env = fun e dem f -> match e wit
             dem_env_set f x (List.hd lambda_pv);
             let dem' = pv_get lambda_pv 0 dem in
             let env_lambda = sd el dem' f in
-            sd e2 dem' env_lambda
+            let f' = sd e2 dem' env_lambda in
+            dem_env_remove f' x;
+            f'
         | _ -> rewrite_err @@ sprintf "Invalid SD Apply arguments `%s' and `%s'"
                 (expr_to_str e1) (expr_to_str e2)
     )
@@ -37,10 +39,12 @@ let rec sd: expr -> int array -> dem_env -> dem_env = fun e dem f -> match e wit
         | ELambda (var, lambda) -> (
             let lambda_pv = pv e1 f in
             dem_env_set f x (List.hd lambda_pv);
-            let env_let = sd lambda (pv_get lambda_pv 0 dem) f in
-            let env_in = sd e2 dem f in
-            dem_env_remove env_in var;
-            dem_env_combine env_let env_in
+            let env_e1 = sd lambda (pv_get lambda_pv 0 dem) f in
+            let env_e2 = sd e2 dem f in
+            dem_env_remove env_e1 var;
+            let f' = dem_env_combine env_e1 env_e2 in
+            dem_env_remove f' var;
+            f'
         )
         | _ -> (
             let dem_pv = pv (ELambda (x, e2)) f in
