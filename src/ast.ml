@@ -1,3 +1,4 @@
+open Demenv
 open Printf
 
 exception ParseFailure of string
@@ -6,7 +7,7 @@ let parse_err msg = raise @@ ParseFailure msg
 
 type expr = {
     kind: expr_kind;
-    dem_env: (string * int array) list
+    dem_env: dem_env
 }
 
 and expr_kind =
@@ -42,18 +43,18 @@ and unary_op =
     | OpNot
 
 
-let mk_expr_var x = { kind=EVar x; dem_env=[] }
-let mk_expr_const x = { kind=EConst x; dem_env=[] }
-let mk_expr_array xs = { kind=EArray xs; dem_env=[] }
-let mk_expr_apply e1 e2 = { kind=EApply (e1, e2); dem_env=[] }
-let mk_expr_lambda x e = { kind=ELambda (x, e); dem_env=[] }
-let mk_expr_letin x e1 e2 = { kind=ELetIn (x, e1, e2); dem_env=[] }
-let mk_expr_ifthen e1 e2 e3 = { kind=EIfThen (e1, e2, e3); dem_env=[] }
-let mk_expr_binary op e1 e2 = { kind=EBinary (op, e1, e2); dem_env=[] }
-let mk_expr_unary op e = { kind=EUnary (op, e); dem_env=[] }
-let mk_expr_sel e1 e2 = { kind=ESel (e1, e2); dem_env=[] }
-let mk_expr_shape e = { kind=EShape e; dem_env=[] }
-let mk_expr_dim e = { kind=EDim e; dem_env=[] }
+let mk_expr_var x = { kind=EVar x; dem_env=dem_env_empty () }
+let mk_expr_const x = { kind=EConst x; dem_env=dem_env_empty () }
+let mk_expr_array xs = { kind=EArray xs; dem_env=dem_env_empty () }
+let mk_expr_apply e1 e2 = { kind=EApply (e1, e2); dem_env=dem_env_empty () }
+let mk_expr_lambda x e = { kind=ELambda (x, e); dem_env=dem_env_empty () }
+let mk_expr_letin x e1 e2 = { kind=ELetIn (x, e1, e2); dem_env=dem_env_empty () }
+let mk_expr_ifthen e1 e2 e3 = { kind=EIfThen (e1, e2, e3); dem_env=dem_env_empty () }
+let mk_expr_binary op e1 e2 = { kind=EBinary (op, e1, e2); dem_env=dem_env_empty () }
+let mk_expr_unary op e = { kind=EUnary (op, e); dem_env=dem_env_empty () }
+let mk_expr_sel e1 e2 = { kind=ESel (e1, e2); dem_env=dem_env_empty () }
+let mk_expr_shape e = { kind=EShape e; dem_env=dem_env_empty () }
+let mk_expr_dim e = { kind=EDim e; dem_env=dem_env_empty () }
 
 
 let expr_get_var_name e = match e with
