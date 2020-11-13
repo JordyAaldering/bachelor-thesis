@@ -68,6 +68,8 @@ let rec parse_primary lexbuf =
         | LAMBDA -> parse_lambda lexbuf
         | LET -> parse_letin lexbuf
         | IF -> parse_ifthen lexbuf
+        | SHAPE -> parse_shape lexbuf
+        | DIM -> parse_dim lexbuf
         | LSQUARE ->
             let lst = if peek_token lexbuf <> RSQUARE then
                     parse_array lexbuf parse_expr
@@ -149,6 +151,18 @@ and parse_ifthen lexbuf =
     if e3 = None then
         parse_err "expected expression after `else'";
     Some (EIfThen (opt_get e1, opt_get e2, opt_get e3))
+
+and parse_shape lexbuf =
+    let e = parse_expr lexbuf in
+    if e = None then
+        parse_err "expected expression after `shape'";
+    Some (EShape (opt_get e))
+
+and parse_dim lexbuf =
+    let e = parse_expr lexbuf in
+    if e = None then
+        parse_err "expected expression after `dim'";
+    Some (EDim (opt_get e))
 
 and parse_binary lexbuf =
     let rec resolve_stack s prec =

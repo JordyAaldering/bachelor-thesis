@@ -12,6 +12,8 @@ type token =
     | IF
     | THEN
     | ELSE
+    | SHAPE
+    | DIM
     | PLUS
     | MIN
     | MULT
@@ -40,8 +42,10 @@ let token_to_str = function
     | IF      -> "if"
     | THEN    -> "then"
     | ELSE    -> "else"
+    | SHAPE   -> "shape"
+    | DIM     -> "dim"
     | PLUS    -> "+"
-    | MIN   -> "-"
+    | MIN     -> "-"
     | MULT    -> "*"
     | DIV     -> "/"
     | NE      -> "!="
@@ -73,7 +77,7 @@ let is_op tok = match tok with
 
 let op_to_binop tok = match tok with
     | PLUS  -> OpPlus
-    | MIN -> OpMin
+    | MIN   -> OpMin
     | MULT  -> OpMult
     | DIV   -> OpDiv
     | EQ    -> OpEq
@@ -123,6 +127,8 @@ rule token = parse
     | "if"       { IF }
     | "then"     { THEN }
     | "else"     { ELSE }
+    | "shape"    { SHAPE }
+    | "dim"      { DIM }
     | ident as i { ID i }
     | eof        { EOF }
     | _          { parse_err "lexing error" }

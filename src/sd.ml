@@ -19,7 +19,11 @@ let rec sd: expr -> int array -> dem_env = fun e dem -> match e with
     | EConst _x -> dem_env_empty ()
     | EArray _xs -> dem_env_empty ()
 
-    | EApply (e1, e2) -> dem_env_empty ()
+    | EApply (e1, e2) -> (match e1 with
+        | ELambda (x, e)
+        | _ -> rewrite_err "Invalid SD Apply argument"
+    )
+
     | ELetIn (x, e1, e2) ->
         let pv = pv @@ ELambda (x, e2) in
         let env_e1 = sd e1 (pv_get pv 0 dem) in
@@ -31,6 +35,16 @@ let rec sd: expr -> int array -> dem_env = fun e dem -> match e with
         let env_et = sd et dem in
         let env_ef = sd ef dem in
         dem_env_combine (dem_env_combine env_ec env_et) env_ef
+
+    | ESel (iv, v) ->
+        let dem_pv = pv e1 in
+        let env_iv = sd iv (pv_get dem_pv 0 dem) in
+        let env_v = sd v (pv_get dem_pv 1 dem) in
+        dem_env_combine env_iv env_v
+    | EShape x
+    | EDim x ->
+        let dem_0 = pv_get (pv e1) 0 dem in
+        sd x dem_0
 
     | _ -> rewrite_err "Invalid SD argument"
 
@@ -55,8 +69,8 @@ and pv: expr -> (int array) list = fun e -> match e with
         | OpNeg -> [ [|0;1;2;3|] ]
         | OpNot -> [ [|0;0;0;3|] ]
     )
-    | ESel _ -> [ [|0;2;2;3|]; [|0;1;2;3|] ]
+    | ESel _   -> [ [|0;2;2;3|]; [|0;1;2;3|] ]
     | EShape _ -> [ [|0;0;1;2|] ]
-    | EDim _ -> [ [|0;0;0;1|] ]
+    | EDim _   -> [ [|0;0;0;1|] ]
 
     | _ -> rewrite_err "Invalid PV argument"
