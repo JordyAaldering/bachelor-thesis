@@ -101,5 +101,5 @@ let value_to_pair v = match v with
     | _ -> value_err "Can only get pair of constant or vector"
 
 and closure_to_triple v = match v with
-    | Closure ({ kind=ELambda (x, body) }, env) -> (x, body, env)
+    | Closure (ELambda (x, body), env) -> (x, body, env)
     | _ -> value_err "Expected closure of lambda expression"
