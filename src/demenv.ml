@@ -4,13 +4,8 @@ exception DemEnvFailure of string
 
 type dem_env = (string, int array) Hashtbl.t
 
-let dem_env_empty: unit -> dem_env = fun () ->
+let mk_dem_env: unit -> dem_env = fun () ->
     Hashtbl.create 100
-
-let dem_env_new: string -> int array -> dem_env = fun x dem ->
-    let st = Hashtbl.create 100 in
-    Hashtbl.add st x dem;
-    st
 
 (* Helper function for debugging *)
 let dem_env_find_and_raise st p expected msg =
@@ -18,15 +13,13 @@ let dem_env_find_and_raise st p expected msg =
     if expected <> exists then
         raise @@ DemEnvFailure msg
 
-let dem_env_set: dem_env -> string -> int array -> dem_env = fun st x dem ->
+let dem_env_set: dem_env -> string -> int array -> unit = fun st x dem ->
     try
         let dem_old = Hashtbl.find st x in
         let dem_oplus = Array.map2 max dem dem_old in
-        Hashtbl.replace st x dem_oplus;
-        Hashtbl.copy st
+        Hashtbl.replace st x dem_oplus
     with Not_found ->
-        Hashtbl.add st x dem;
-        Hashtbl.copy st
+        Hashtbl.add st x dem
 
 let dem_env_combine: dem_env -> dem_env -> dem_env = fun xs ys ->
     let union = Hashtbl.copy xs in 
@@ -40,11 +33,10 @@ let dem_env_combine: dem_env -> dem_env -> dem_env = fun xs ys ->
     ) ys;
     union
 
-let dem_env_remove st p =
-    Hashtbl.remove st p;
-    Hashtbl.copy st
+let dem_env_remove: dem_env -> string -> unit = fun st p ->
+    Hashtbl.remove st p
 
-let dem_env_lookup st p =
+let dem_env_lookup: dem_env -> string -> int array = fun st p ->
     dem_env_find_and_raise st p true
         @@ sprintf "Attempt to lookup non-existing pointer `%s'" p;
     Hashtbl.find st p

@@ -15,40 +15,38 @@ let pv_get: (int array) list -> int -> int array -> int array = fun pv i dem_ivs
     ) dem_ivs
 
 let rec sd: expr -> int array -> dem_env -> dem_env = fun e dem f -> match e with
-    | EVar x -> dem_env_new x dem
-    | EConst _x -> dem_env_empty ()
-    | EArray _xs -> dem_env_empty ()
+    | EVar x -> dem_env_set f x dem; f
+    | EConst _x -> f
+    | EArray _xs -> f
 
-    | EApply (e1, arg) -> (match e1 with
-        | EVar x ->
-            let fun_pv = dem_env_lookup f x in
-            let dem_pv = pv_get [fun_pv] 0 dem in
-            sd arg dem_pv f
-        | ELambda (x, el) ->
-            let fun_pv = pv e1 f in
-            let dem_pv = pv_get fun_pv 0 dem in
-            sd arg dem_pv f
-        | _ -> rewrite_err @@ sprintf "Invalid SD Apply argument `%s'" (expr_to_str e)
+    | EApply (e1, e2) -> (match e1 with
+        | EVar x -> (* e2 is applied to a var, e.g. the name of a lambda function *)
+            let x_dem = dem_env_lookup f x in
+            let dem' = pv_get [x_dem] 0 dem in
+            sd e2 dem' f
+        | ELambda (x, el) -> (* e1 is a local lambda, which e2 is applied to *)
+            let lambda_pv = pv e1 f in
+            dem_env_set f x (List.hd lambda_pv);
+            let dem' = pv_get lambda_pv 0 dem in
+            let env_lambda = sd el dem' f in
+            sd e2 dem' env_lambda
+        | _ -> rewrite_err @@ sprintf "Invalid SD Apply arguments `%s' and `%s'"
+                (expr_to_str e1) (expr_to_str e2)
     )
-    | ELambda (x, e1) ->
-        let fun_pv = pv e f in
-        let f = dem_env_set f x (List.hd fun_pv) in
-        let dem_pv = pv_get fun_pv 0 dem in
-        sd e1 dem_pv f
     | ELetIn (x, e1, e2) -> (match e1 with
         | ELambda (var, lambda) -> (
             let lambda_pv = pv e1 f in
-            let f = dem_env_set f x (List.hd lambda_pv) in
-            let env_let = sd e1 (pv_get lambda_pv 0 dem) f in
+            dem_env_set f x (List.hd lambda_pv);
+            let env_let = sd lambda (pv_get lambda_pv 0 dem) f in
             let env_in = sd e2 dem f in
-            let env_in = dem_env_remove env_in var in
+            dem_env_remove env_in var;
             dem_env_combine env_let env_in
         )
         | _ -> (
             let dem_pv = pv (ELambda (x, e2)) f in
             let env_e1 = sd e1 (pv_get dem_pv 0 dem) f in
             let env_e2 = sd e2 dem f in
-            let env_e2 = dem_env_remove env_e2 x in
+            dem_env_remove env_e2 x;
             dem_env_combine env_e1 env_e2
         )
     )
@@ -76,6 +74,8 @@ let rec sd: expr -> int array -> dem_env -> dem_env = fun e dem f -> match e wit
     | EDim x ->
         let dem_pv = pv e f in
         sd x (pv_get dem_pv 0 dem) f
+
+    | _ -> rewrite_err @@ sprintf "Invalid SD argument `%s'" (expr_to_str e)
 
 and pv: expr -> dem_env -> (int array) list = fun e f -> match e with
     | ELambda (x, e) ->
@@ -105,4 +105,4 @@ and pv: expr -> dem_env -> (int array) list = fun e f -> match e with
     | _ -> rewrite_err @@ sprintf "Invalid PV argument `%s'" (expr_to_str e)
 
 let sd_prog: expr -> dem_env = fun e ->
-    sd e [|0;1;2;3|] (dem_env_empty ())
+    sd e [|0;1;2;3|] (mk_dem_env ())

@@ -2,4 +2,5 @@
 
 let get_shape = \x. shape x in
 let v = [1, 2, 3] in
-get_shape v
+let w = [6] in
+    (\y. get_shape y) v * w
