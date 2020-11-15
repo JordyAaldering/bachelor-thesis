@@ -28,6 +28,14 @@ and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
         let lvl = Array.get (List.hd dem) 3 in
         let env' = Eval_env.add x lvl env in
         ELambda (x, rewrite_f e1 env')
+    | ELetIn (x, e1, e2) ->
+        let dem = pv (ELambda (x, e2)) Dem_env.empty in
+        let lvl = Array.get (List.hd dem) 3 in
+        if lvl = 0 then
+            rewrite_f e2 env
+        else
+            let env' = Eval_env.add x lvl env in
+            ELetIn (x, rewrite e1 lvl env, rewrite_f e2 env')
 
     | _ -> e
 
@@ -52,6 +60,14 @@ and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
         let lvl = Array.get (List.hd dem) 2 in
         let env' = Eval_env.add x lvl env in
         ELambda (x, rewrite_s e1 env')
+    | ELetIn (x, e1, e2) ->
+        let dem = pv (ELambda (x, e2)) Dem_env.empty in
+        let lvl = Array.get (List.hd dem) 2 in
+        if lvl = 0 then
+            rewrite_s e2 env
+        else
+            let env' = Eval_env.add x lvl env in
+            ELetIn (x, rewrite e1 lvl env, rewrite_s e2 env')
 
     | _ -> e
 
@@ -78,6 +94,14 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
         let lvl = Array.get (List.hd dem) 1 in
         let env' = Eval_env.add x lvl env in
         ELambda (x, rewrite_d e1 env')
+    | ELetIn (x, e1, e2) ->
+        let dem = pv (ELambda (x, e2)) Dem_env.empty in
+        let lvl = Array.get (List.hd dem) 1 in
+        if lvl = 0 then
+            rewrite_d e2 env
+        else
+            let env' = Eval_env.add x lvl env in
+            ELetIn (x, rewrite e1 lvl env, rewrite_d e2 env')
 
     | _ -> e
 
