@@ -18,7 +18,7 @@ let main () =
     let lexbuf = from_channel file in
         lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname=fname };
         let e = Parser.prog lexbuf in
-            printf "%s" @@ Inference.dem_env_to_str @@ Inference.infer_prog e;
+            printf "\n%s\n" @@ Inference.dem_env_to_str @@ Inference.infer_prog e;
             eval_prog e;
             close_in file
 

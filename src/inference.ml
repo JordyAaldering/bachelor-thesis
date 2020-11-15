@@ -9,7 +9,7 @@ exception InferenceFailure of string
 let infer_err msg = raise @@ InferenceFailure msg
 
 let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
-    | EVar x -> printf "adding %s\n" x; Dem_env.add x [dem] env
+    | EVar x -> Dem_env.add x [dem] env
     | EConst _x -> env
     | EArray _xs -> env
 
@@ -17,24 +17,28 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
         let env' = sd e1 dem env in
         let demx = Dem_env.find x env' in
         Dem_env.add x demx env'
-    | EApply (EVar fun_id, e2) -> begin try
-            let dem' = Dem_env.find fun_id env in
-            let dem' = Array.map (Array.get @@ List.hd dem') dem in
-            sd e2 dem' env
-        with Not_found ->
-            printf "Could not find `%s' in env\n" fun_id;
-            sd e2 [|0; 1; 2; 3|] env
-    end
+    | EApply (EVar fun_id, e2) ->
+        let dem' = Dem_env.find fun_id env in
+        let dem' = Array.map (Array.get @@ List.hd dem') dem in
+        sd e2 dem' env
     | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
         let dem' = pv e1 env in
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
         sd e2 dem' env
+    | ELetIn (fun_id, ELambda(x, e1), e2) ->
+        let dem' = pv (ELambda (x, e1)) env in
+        let dem' = Array.map (Array.get @@ List.hd dem') dem in
+        let env' = Dem_env.add fun_id [dem'] env in
+        let env2 = sd e2 dem env' in
+        let env2' = Dem_env.remove x env2 in
+        Dem_env.union (fun key x y ->
+            Some (List.map2 max x y)
+        ) env' env2'
     | ELetIn (x, e1, e2) ->
         let dem' = pv (ELambda (x, e2)) env in
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
-        let env' = Dem_env.add x [dem] env in
-        let env1 = sd e1 dem' env' in
-        let env2 = Dem_env.remove x @@ sd e2 dem env' in
+        let env1 = sd e1 dem' env in
+        let env2 = Dem_env.remove x @@ sd e2 dem env in
         Dem_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) env1 env2
@@ -96,7 +100,8 @@ and pv: expr -> dem_env -> demand list = fun e env -> match e with
 
     | _ -> infer_err @@ sprintf "invalid PV argument `%s'" (expr_to_str e)
 
-let dem_env_to_str: dem_env -> string = fun env ->
+and dem_env_to_str: dem_env -> string = fun env ->
+    "Demand environment:\n" ^
     Dem_env.fold (fun k v tail ->
         sprintf "%s -> [%s]\n%s" k (String.concat ", " @@ Array.to_list (Array.map string_of_int @@ List.hd v)) tail
     ) env ""
