@@ -1,38 +1,7 @@
-# Simple example program
-
-let id = \x.
-    x
-in
-
-let get_shape = \x.
-    shape x
-in
-
-let six = \y.
-    [6]
+let add = \x.
+    x + [1, 1, 1]
 in
 
 let v = [1, 2, 3] in
-let w = six v in
-    (\y. get_shape y) v
-        * (id) w
-
-
-# Rewrite gives:
-
-#let id = \x.
-#    dim x
-#in
-
-#let get_shape = \x.
-#    1
-#in
-
-#let six = \x.
-#    dim [6]
-#in
-
-#let v = [1, 2, 3] in
-#let w = six v in                   ## w = dim [6] = 0
-#    (\y. get_shape y) (shape v)    ## shape v = [3] -> get_shape [3] = 1
-#        * (id) w
+let w = add v in
+shape w

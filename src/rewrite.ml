@@ -16,7 +16,9 @@ let rec rewrite: expr -> int -> dem_env -> eval_env -> expr = fun e lvl inf env 
     | 0 -> EConst 0.
     | _ -> rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
 
-and rewrite_f: expr -> dem_env -> eval_env -> expr = fun e inf env -> match e with
+and rewrite_f: expr -> dem_env -> eval_env -> expr = fun e inf env -> 
+    printf "F(%s)\n" (expr_to_str e);
+    match e with
     | EVar x -> e
     | EConst x -> e
     | EArray x -> e
@@ -32,15 +34,14 @@ and rewrite_f: expr -> dem_env -> eval_env -> expr = fun e inf env -> match e wi
     | EShape e1 -> rewrite_s e1 inf env
     | EDim e1 -> rewrite_d e1 inf env
 
-and rewrite_s: expr -> dem_env -> eval_env -> expr = fun e inf env -> match e with
+and rewrite_s: expr -> dem_env -> eval_env -> expr = fun e inf env ->
+    printf "S(%s)\n" (expr_to_str e);
+    match e with
     | EVar x -> begin try
             let lvl = Eval_env.find x env in
-            if lvl = 3 then
-                EShape e
-            else if lvl = 2 then
-                e
-            else
-                rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
+            if lvl = 3 then EShape e
+            else if lvl = 2 then e
+            else rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
         with Not_found ->
             rewrite_err_in e @@ sprintf "key `%s' was not found" x
     end
@@ -66,18 +67,15 @@ and rewrite_s: expr -> dem_env -> eval_env -> expr = fun e inf env -> match e wi
     | EShape e1 -> EArray [rewrite_d e1 inf env]
     | EDim _ -> EConst 1.
 
-and rewrite_d: expr -> dem_env -> eval_env -> expr = fun e inf env -> match e with
-    | EVar x -> begin
-        try
+and rewrite_d: expr -> dem_env -> eval_env -> expr = fun e inf env -> 
+    printf "D(%s)\n" (expr_to_str e);
+    match e with
+    | EVar x -> begin try
             let lvl = Eval_env.find x env in
-            if lvl = 3 then
-                EDim e
-            else if lvl = 2 then
-                ESel (EShape e, EConst 0.)
-            else if lvl = 1 then
-                e
-            else
-                rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
+            if lvl = 3 then EDim e
+            else if lvl = 2 then ESel (EShape e, EConst 0.)
+            else if lvl = 1 then e
+            else rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
         with Not_found ->
             rewrite_err_in e @@ sprintf "key `%s' was not found" x
     end
@@ -108,7 +106,7 @@ and rewrite_lambda: expr -> int -> dem_env -> eval_env -> expr = fun e lvl inf e
         let dem = pv e inf in
         let lvl' = Array.get (List.hd dem) lvl in
         let env' = Eval_env.add x lvl' env in
-        ELambda (x, rewrite_d e1 inf env')
+        ELambda (x, rewrite e1 lvl inf env')
     | _ -> assert false
 
 and rewrite_apply: expr -> int -> dem_env -> eval_env -> expr = fun e lvl inf env -> match e with
