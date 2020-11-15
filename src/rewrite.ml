@@ -23,11 +23,7 @@ and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EConst x -> e
     | EArray x -> e
 
-    | ELambda (x, e1) ->
-        let dem = pv e Dem_env.empty in
-        let lvl = Array.get (List.hd dem) 3 in
-        let env' = Eval_env.add x lvl env in
-        ELambda (x, rewrite_f e1 env')
+    | ELambda (x, e1) -> rewrite_lambda e 3 env
     | ELetIn (x, e1, e2) -> rewrite_let e 3 env
     | EIfThen _ -> rewrite_if e 3 env
 
@@ -55,11 +51,7 @@ and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EConst x -> EShape e
     | EArray x -> EShape e
 
-    | ELambda (x, e1) ->
-        let dem = pv e Dem_env.empty in
-        let lvl = Array.get (List.hd dem) 2 in
-        let env' = Eval_env.add x lvl env in
-        ELambda (x, rewrite_s e1 env')
+    | ELambda (x, e1) -> rewrite_lambda e 2 env
     | ELetIn (x, e1, e2) -> rewrite_let e 2 env
     | EIfThen _ -> rewrite_if e 2 env
 
@@ -98,11 +90,7 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EConst x -> EDim e
     | EArray x -> EDim e
 
-    | ELambda (x, e1) ->
-        let dem = pv e Dem_env.empty in
-        let lvl = Array.get (List.hd dem) 1 in
-        let env' = Eval_env.add x lvl env in
-        ELambda (x, rewrite_d e1 env')
+    | ELambda (x, e1) -> rewrite_lambda e 1 env
     | ELetIn (x, e1, e2) -> rewrite_let e 1 env
     | EIfThen _ -> rewrite_if e 1 env
 
@@ -121,6 +109,15 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EDim _ -> EConst 0.
 
     | _ -> e
+
+and rewrite_lambda: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
+    | ELambda (x, e1) ->
+        let dem = pv e Dem_env.empty in
+        let lvl' = Array.get (List.hd dem) lvl in
+        let env' = Eval_env.add x lvl' env in
+        ELambda (x, rewrite_d e1 env')
+    | _ -> assert false
+    
 
 and rewrite_let: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
     | ELetIn (x, e1, e2) ->
