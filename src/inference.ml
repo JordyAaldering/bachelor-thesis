@@ -24,6 +24,16 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
         Dem_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) env1 env2
+    | EIfThen (ec, et, ef) ->
+        let envc = sd ec [|0; 3; 3; 3|] env in
+        let envt = sd et dem env in
+        let envf = sd ef dem env in
+        Dem_env.union (fun key x y ->
+            Some (List.map2 max x y)
+        ) envc @@
+            Dem_env.union (fun key x y ->
+                Some (List.map2 max x y)
+            ) envt envf
 
     | _ -> infer_err @@ sprintf "invalid SD argument `%s'" (expr_to_str e)
 
