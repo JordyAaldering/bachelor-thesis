@@ -17,9 +17,12 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
     | EConst _x -> env
     | EArray _xs -> env
 
-    | EApply (EVar fun_id, e1) ->
+    | EApply (EVar fun_id, e2) ->
         let dem' = Dem_env.find fun_id env in
-        sd e1 (pv_get dem' 0 dem) env
+        sd e2 (pv_get dem' 0 dem) env
+    | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
+        let dem' = pv e1 env in
+        sd e2 (pv_get dem' 0 dem) env
 
     | ELetIn (x, e1, e2) ->
         let dem' = pv (ELambda (x, e2)) env in
