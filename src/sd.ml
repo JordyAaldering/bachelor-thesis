@@ -4,7 +4,7 @@ open Demenv
 open Printf
 
 module Dem_env = Map.Make(String)
-type dem_env = ((int array) list) Dem_env.t
+type dem_env = (int array) list Dem_env.t
 
 
 exception SdFailure of string

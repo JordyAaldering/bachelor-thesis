@@ -5,20 +5,18 @@ open Printf
 module Eval_env = Map.Make(String)
 type eval_env = int Eval_env.t
 
-
 exception RewriteFailure of string
 let rewrite_err msg = raise @@ RewriteFailure msg
 let rewrite_err_in e msg = raise @@ RewriteFailure (sprintf "%s: %s" (expr_to_str e) msg)
 
-
-let rec rewrite: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match lvl with
+let rec rewrite: expr -> int -> eval_env -> expr = fun e lvl env -> match lvl with
     | 3 -> rewrite_f e env
     | 2 -> rewrite_s e env
     | 1 -> rewrite_d e env
     | 0 -> EConst 0.
     | _ -> rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
 
-and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
+and rewrite_f: expr -> eval_env -> expr = fun e env -> match e with
     | EVar x -> e
     | EConst x -> e
     | EArray x -> e
@@ -30,12 +28,11 @@ and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
 
     | EBinary (op, e1, e2) -> EBinary (op, rewrite_f e1 env, rewrite_f e2 env)
     | EUnary (op, e1) -> EUnary (op, rewrite_f e1 env)
-
     | ESel (e1, e2) -> ESel (rewrite_f e1 env, rewrite_f e2 env)
     | EShape e1 -> rewrite_s e1 env
     | EDim e1 -> rewrite_d e1 env
 
-and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
+and rewrite_s: expr -> eval_env -> expr = fun e env -> match e with
     | EVar x -> begin try
             let lvl = Eval_env.find x env in
             if lvl = 3 then
@@ -65,12 +62,11 @@ and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
         | OpNeg -> rewrite_s e1 env
         | OpNot -> EArray []
     end
-
     | ESel _ -> EArray []
     | EShape e1 -> EArray [rewrite_d e1 env]
     | EDim _ -> EConst 1.
 
-and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
+and rewrite_d: expr -> eval_env -> expr = fun e env -> match e with
     | EVar x -> begin
         try
             let lvl = Eval_env.find x env in
@@ -107,7 +103,7 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EShape _ -> EConst 1.
     | EDim _ -> EConst 0.
 
-and rewrite_lambda: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
+and rewrite_lambda: expr -> int -> eval_env -> expr = fun e lvl env -> match e with
     | ELambda (x, e1) ->
         let dem = pv e Dem_env.empty in
         let lvl' = Array.get (List.hd dem) lvl in
@@ -115,7 +111,7 @@ and rewrite_lambda: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> mat
         ELambda (x, rewrite_d e1 env')
     | _ -> assert false
 
-and rewrite_apply: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
+and rewrite_apply: expr -> int -> eval_env -> expr = fun e lvl env -> match e with
     | EApply (ELambda (x, e1), e2) ->
         let dem = pv (ELambda (x, e1)) Dem_env.empty in
         let lvl' = Array.get (List.hd dem) lvl in
@@ -127,7 +123,7 @@ and rewrite_apply: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> matc
         EApply (rewrite_f e1 env, rewrite_f e2 env)
     | _ -> assert false
 
-and rewrite_let: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
+and rewrite_let: expr -> int -> eval_env -> expr = fun e lvl env -> match e with
     | ELetIn (x, e1, e2) ->
         let dem = pv (ELambda (x, e2)) Dem_env.empty in
         let lvl' = Array.get (List.hd dem) lvl in
@@ -138,7 +134,7 @@ and rewrite_let: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match 
             ELetIn (x, rewrite e1 lvl' env, rewrite e2 lvl env')
     | _ -> assert false
 
-and rewrite_if: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
+and rewrite_if: expr -> int -> eval_env -> expr = fun e lvl env -> match e with
     | EIfThen (ec, et, ef) -> EIfThen (rewrite_f ec env, rewrite et lvl env, rewrite ef lvl env)
     | _ -> assert false
 
