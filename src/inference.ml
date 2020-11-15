@@ -13,9 +13,17 @@ let pv_get: demand list -> int -> demand -> demand = fun pv i iv ->
     Array.map (Array.get dem) iv
 
 let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
-    | EVar x -> Dem_env.add x [dem] env
+    | EVar name -> Dem_env.add name [dem] env
     | EConst _x -> env
     | EArray _xs -> env
+
+    | ELetIn (x, e1, e2) ->
+        let dem' = pv (ELambda (x, e2)) env in
+        let env1 = sd e1 (pv_get dem' 0 dem) env in
+        let env2 = Dem_env.remove x @@ sd e2 dem env in
+        Dem_env.union (fun key x y ->
+            Some (List.map2 max x y)
+        ) env1 env2
 
     | _ -> infer_err @@ sprintf "invalid SD argument `%s'" (expr_to_str e)
 
@@ -24,13 +32,13 @@ and pv: expr -> dem_env -> demand list = fun e env -> match e with
         let env' = sd e1 [|0; 1; 2; 3|] env in
         Dem_env.find x env'
     
-    | EBinary (op, _l, _r) -> begin match op with
+    | EBinary (op, _e1, _e2) -> begin match op with
         | OpPlus | OpMin | OpMult | OpDiv ->
             [ [|0; 1; 2; 3|]; [|0; 1; 2; 3|] ]
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe ->
             [ [|0; 0; 0; 3|]; [|0; 0; 0; 3|] ]
     end
-    | EUnary (op, _r) -> begin match op with
+    | EUnary (op, _e1) -> begin match op with
         | OpNeg -> [ [|0; 1; 2; 3|] ]
         | OpNot -> [ [|0; 0; 0; 3|] ]
     end
