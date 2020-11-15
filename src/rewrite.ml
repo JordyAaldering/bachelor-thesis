@@ -24,6 +24,7 @@ and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EArray x -> e
 
     | ELambda (x, e1) -> rewrite_lambda e 3 env
+    | EApply (x, e1) -> rewrite_apply e 3 env
     | ELetIn (x, e1, e2) -> rewrite_let e 3 env
     | EIfThen _ -> rewrite_if e 3 env
 
@@ -33,8 +34,6 @@ and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | ESel (e1, e2) -> ESel (rewrite_f e1 env, rewrite_f e2 env)
     | EShape e1 -> rewrite_s e1 env
     | EDim e1 -> rewrite_d e1 env
-
-    | _ -> e
 
 and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EVar x -> begin try
@@ -52,6 +51,7 @@ and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EArray x -> EShape e
 
     | ELambda (x, e1) -> rewrite_lambda e 2 env
+    | EApply (x, e1) -> rewrite_apply e 2 env
     | ELetIn (x, e1, e2) -> rewrite_let e 2 env
     | EIfThen _ -> rewrite_if e 2 env
 
@@ -69,8 +69,6 @@ and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | ESel _ -> EArray []
     | EShape e1 -> EArray [rewrite_d e1 env]
     | EDim _ -> EConst 1.
-
-    | _ -> e
 
 and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EVar x -> begin
@@ -91,6 +89,7 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EArray x -> EDim e
 
     | ELambda (x, e1) -> rewrite_lambda e 1 env
+    | EApply (x, e1) -> rewrite_apply e 1 env
     | ELetIn (x, e1, e2) -> rewrite_let e 1 env
     | EIfThen _ -> rewrite_if e 1 env
 
@@ -108,8 +107,6 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | EShape _ -> EConst 1.
     | EDim _ -> EConst 0.
 
-    | _ -> e
-
 and rewrite_lambda: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
     | ELambda (x, e1) ->
         let dem = pv e Dem_env.empty in
@@ -117,7 +114,18 @@ and rewrite_lambda: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> mat
         let env' = Eval_env.add x lvl' env in
         ELambda (x, rewrite_d e1 env')
     | _ -> assert false
-    
+
+and rewrite_apply: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
+    | EApply (ELambda (x, e1), e2) ->
+        let dem = pv (ELambda (x, e1)) Dem_env.empty in
+        let lvl' = Array.get (List.hd dem) lvl in
+        if lvl' = 0 then
+            rewrite e1 lvl env
+        else
+            EApply (rewrite (ELambda (x, e1)) lvl env, rewrite e2 lvl' env)
+    | EApply (e1, e2) -> (* TODO: temporary implementation *)
+        EApply (rewrite_f e1 env, rewrite_f e2 env)
+    | _ -> assert false
 
 and rewrite_let: expr -> int -> int Eval_env.t -> expr = fun e lvl env -> match e with
     | ELetIn (x, e1, e2) ->
