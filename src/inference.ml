@@ -17,6 +17,10 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
     | EConst _x -> env
     | EArray _xs -> env
 
+    | EApply (EVar fun_id, e1) ->
+        let dem' = Dem_env.find fun_id env in
+        sd e1 (pv_get dem' 0 dem) env
+
     | ELetIn (x, e1, e2) ->
         let dem' = pv (ELambda (x, e2)) env in
         let env1 = sd e1 (pv_get dem' 0 dem) env in
