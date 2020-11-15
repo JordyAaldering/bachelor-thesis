@@ -3,9 +3,9 @@ open Pv
 open Demenv
 open Printf
 
-exception RewriteFailure of string
+exception SdFailure of string
 
-let rewrite_err msg = raise @@ RewriteFailure msg
+let sd_err msg = raise @@ SdFailure msg
 
 
 let pv_get: (int array) list -> int -> int array -> int array = fun pv i dem_ivs ->
@@ -32,7 +32,7 @@ let rec sd: expr -> int array -> dem_env -> dem_env = fun e dem f -> match e wit
             let f' = sd e2 dem' env_lambda in
             dem_env_remove f' x;
             f'
-        | _ -> rewrite_err @@ sprintf "Invalid SD Apply arguments `%s' and `%s'"
+        | _ -> sd_err @@ sprintf "Invalid SD Apply arguments `%s' and `%s'"
                 (expr_to_str e1) (expr_to_str e2)
     )
     | ELetIn (x, e1, e2) -> (match e1 with
@@ -79,7 +79,7 @@ let rec sd: expr -> int array -> dem_env -> dem_env = fun e dem f -> match e wit
         let dem_pv = pv e f in
         sd x (pv_get dem_pv 0 dem) f
 
-    | _ -> rewrite_err @@ sprintf "Invalid SD argument `%s'" (expr_to_str e)
+    | _ -> sd_err @@ sprintf "Invalid SD argument `%s'" (expr_to_str e)
 
 and pv: expr -> dem_env -> (int array) list = fun e f -> match e with
     | ELambda (x, e) ->
@@ -106,7 +106,7 @@ and pv: expr -> dem_env -> (int array) list = fun e f -> match e with
     | EShape _ -> [ [|0;0;1;2|] ]
     | EDim _   -> [ [|0;0;0;1|] ]
 
-    | _ -> rewrite_err @@ sprintf "Invalid PV argument `%s'" (expr_to_str e)
+    | _ -> sd_err @@ sprintf "Invalid PV argument `%s'" (expr_to_str e)
 
 let sd_prog: expr -> dem_env = fun e ->
     sd e [|0;1;2;3|] (mk_dem_env ())
