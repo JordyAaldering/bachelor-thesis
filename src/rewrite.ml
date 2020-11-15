@@ -31,6 +31,10 @@ and rewrite_f: expr -> int Eval_env.t -> expr = fun e env -> match e with
     | ELetIn (x, e1, e2) -> rewrite_let e 3 env
     | EIfThen _ -> rewrite_if e 3 env
 
+    | ESel (e1, e2) -> ESel (rewrite_f e1 env, rewrite_f e2 env)
+    | EShape e1 -> rewrite_s e1 env
+    | EDim e1 -> rewrite_d e1 env
+
     | _ -> e
 
 and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
@@ -56,6 +60,10 @@ and rewrite_s: expr -> int Eval_env.t -> expr = fun e env -> match e with
         ELambda (x, rewrite_s e1 env')
     | ELetIn (x, e1, e2) -> rewrite_let e 2 env
     | EIfThen _ -> rewrite_if e 2 env
+
+    | ESel _ -> EArray []
+    | EShape e1 -> EArray [rewrite_d e1 env]
+    | EDim _ -> EConst 1.
 
     | _ -> e
 
@@ -84,6 +92,10 @@ and rewrite_d: expr -> int Eval_env.t -> expr = fun e env -> match e with
         ELambda (x, rewrite_d e1 env')
     | ELetIn (x, e1, e2) -> rewrite_let e 1 env
     | EIfThen _ -> rewrite_if e 1 env
+
+    | ESel _ -> EConst 0.
+    | EShape _ -> EConst 1.
+    | EDim _ -> EConst 0.
 
     | _ -> e
 
