@@ -1,5 +1,5 @@
-open Sd
 open Ast
+open Inference
 open Printf
 
 module Eval_env = Map.Make(String)

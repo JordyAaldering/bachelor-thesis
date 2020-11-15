@@ -18,8 +18,6 @@ let main () =
     let lexbuf = from_channel file in
         lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname=fname };
         let e = Parser.prog lexbuf in
-        let sde = Sd.sd_prog e in
-            printf "\n%s\n" (Demenv.dem_env_to_str sde);
             eval_prog e;
             close_in file
 
