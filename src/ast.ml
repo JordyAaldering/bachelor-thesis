@@ -42,30 +42,30 @@ let expr_get_var_name e = match e with
     | _ -> None
 
 let rec expr_to_str e = match e with
-    | EVar x -> sprintf "VAR (%s)" x
-    | EConst x -> sprintf "CONST (%s)" (string_of_float x)
-    | EArray xs -> sprintf "ARRAY [%s]"
+    | EVar x -> x
+    | EConst x -> string_of_float x
+    | EArray xs -> sprintf "[%s]"
         (String.concat ", " (List.map expr_to_str xs))
 
     | EApply (e1, e2) ->
-        sprintf "APPLY ((%s), (%s))" (expr_to_str e1) (expr_to_str e2)
+        sprintf "(%s) (%s)" (expr_to_str e1) (expr_to_str e2)
     | ELambda (x, e) ->
-        sprintf "LAMBDA (\\%s. %s)" x (expr_to_str e)
+        sprintf "\\%s. %s" x (expr_to_str e)
     | ELetIn (x, e1, e2) ->
-        sprintf "LET %s = %s IN\n%s" x (expr_to_str e1) (expr_to_str e2)
+        sprintf "let %s = %s in\n%s" x (expr_to_str e1) (expr_to_str e2)
     | EIfThen (e1, e2, e3) ->
-        sprintf "IF %s THEN %s ELSE %s" (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
+        sprintf "if %s then %s else %s" (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
 
     | EBinary (bop, e1, e2) ->
-        sprintf "BOP ((%s) %s (%s))" (expr_to_str e1) (bop_to_str bop) (expr_to_str e2)
+        sprintf "((%s) %s (%s))" (expr_to_str e1) (bop_to_str bop) (expr_to_str e2)
     | EUnary (uop, e1) ->
-        sprintf "UOP (%s (%s))" (uop_to_str uop) (expr_to_str e1)
+        sprintf "(%s (%s))" (uop_to_str uop) (expr_to_str e1)
     | ESel (e1, e2) ->
-        sprintf "SEL (%s) (%s)" (expr_to_str e1) (expr_to_str e2)
+        sprintf "sel (%s) (%s)" (expr_to_str e1) (expr_to_str e2)
     | EShape e1 ->
-        sprintf "SHAPE (%s)" (expr_to_str e1)
+        sprintf "shape (%s)" (expr_to_str e1)
     | EDim e1 ->
-        sprintf "DIM (%s)" (expr_to_str e1)
+        sprintf "dim (%s)" (expr_to_str e1)
 
 and bop_to_str bop = match bop with
     | OpPlus -> "+"

@@ -91,7 +91,7 @@ and pv: expr -> dem_env -> demand list = fun e env -> match e with
         begin try
             Dem_env.find x env'
         with Not_found -> (* variable x does not occur in e1, thus there is no demand *)
-            [[|0; 0; 0; 0|]]
+            [[|0; 3; 3; 3|]]
         end
     
     | EBinary (op, _e1, _e2) -> begin match op with

@@ -138,6 +138,5 @@ and rewrite_if: expr -> int -> dem_env -> eval_env -> expr = fun e lvl inf env -
     | EIfThen (ec, et, ef) -> EIfThen (rewrite_f ec inf env, rewrite et lvl inf env, rewrite ef lvl inf env)
     | _ -> assert false
 
-let rewrite_prog: expr -> expr = fun e ->
-    let inf = infer_prog e in
+let rewrite_prog: expr -> dem_env -> expr = fun e inf ->
     rewrite_f e inf Eval_env.empty
