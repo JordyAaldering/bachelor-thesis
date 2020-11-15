@@ -1,18 +1,17 @@
 # Simple example program
 
-#let id = \x.
-#    x
-#in
+let id = \x.
+    x
+in
 
 let get_shape = \x.
     shape x
 in
 
-#let six = \x.
-#    let y = [6] in y
-#in
+let six = \x.
+    let y = [6] in y
+in
 
 let v = [1, 2, 3] in
-    get_shape v
-#let w = six v in
-#    (\y. get_shape y) v * (id) w
+let w = six v in
+    (\y. get_shape y) v * (id) w

@@ -13,14 +13,20 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
     | EConst _x -> env
     | EArray _xs -> env
 
-    | ELambda (x, e1) ->
-        let env' = sd e1 dem env in
-        let demx = Dem_env.find x env' in
-        Dem_env.add x demx env'
-    | EApply (EVar fun_id, e2) ->
-        let dem' = Dem_env.find fun_id env in
-        let dem' = Array.map (Array.get @@ List.hd dem') dem in
-        sd e2 dem' env
+    | ELambda (x, e1) -> begin try
+            let env' = sd e1 dem env in
+            let demx = Dem_env.find x env' in
+            Dem_env.add x demx env'
+        with Not_found ->
+            infer_err @@ sprintf "could not find lambda variable `%s' in environment" x
+    end
+    | EApply (EVar fun_id, e2) -> begin try
+            let dem' = Dem_env.find fun_id env in
+            let dem' = Array.map (Array.get @@ List.hd dem') dem in
+            sd e2 dem' env
+        with Not_found ->
+            infer_err @@ sprintf "could not find function `%s' in environment" fun_id
+    end
     | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
         let dem' = pv e1 env in
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
@@ -82,7 +88,11 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
 and pv: expr -> dem_env -> demand list = fun e env -> match e with
     | ELambda (x, e1) ->
         let env' = sd e1 [|0; 1; 2; 3|] env in
-        Dem_env.find x env'
+        begin try
+            Dem_env.find x env'
+        with Not_found -> (* variable x does not occur in e1, thus there is no demand *)
+            [[|0; 0; 0; 0|]]
+        end
     
     | EBinary (op, _e1, _e2) -> begin match op with
         | OpPlus | OpMin | OpMult | OpDiv ->
