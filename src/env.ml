@@ -7,6 +7,9 @@ module Env = Map.Make(String)
 type ptr_env = string Env.t
 
 let ptr_env_to_str env =
-    Env.fold (fun k v tail ->
-        sprintf "%s -> %s, %s" k v tail
-    ) env ""
+    if Env.is_empty env then "[]"
+    else
+        Env.fold (fun k v tail -> match tail with
+            | "" -> sprintf "%s -> %s" k v
+            | _ -> sprintf "%s -> %s, %s" k v tail
+        ) env ""

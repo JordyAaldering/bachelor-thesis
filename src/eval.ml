@@ -100,11 +100,14 @@ and eval_expr_lst es st env = match es with
         (st, y :: ys)
 
 let st_to_str: val_env -> string = fun st ->
-    Env.fold (fun k v tail ->
-        sprintf "%s -> %s\n%s" k (value_to_str v) tail
-    ) st ""
+    if Env.is_empty st then "[]"
+    else
+        Env.fold (fun k v tail -> match tail with
+            | "" -> sprintf "%s -> %s" k (value_to_str v)
+            | _ -> sprintf "%s -> %s\n%s" k (value_to_str v) tail
+        ) st ""
 
 let eval_prog: expr -> unit = fun e ->
     let st, p = eval_expr e Env.empty Env.empty in
-    printf "Env:\n%s\n" (st_to_str st);
+    printf "Environment:\n%s\n\n" (st_to_str st);
     printf "Result:\n%s = %s\n" p (value_to_str (Env.find p st))

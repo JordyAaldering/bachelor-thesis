@@ -116,9 +116,10 @@ and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env 
         if lvl' = 0 then
             rewrite e1 lvl inf env
         else
-            EApply (rewrite (ELambda (x, e1)) lvl inf env, rewrite e2 lvl' inf env)
+            let env' = Env.add x lvl' env in
+            EApply (ELambda (x, rewrite e1 lvl inf env'), rewrite e2 lvl' inf env)
     | EApply (e1, e2) -> (* TODO: temporary implementation *)
-        EApply (rewrite_f e1 inf env, rewrite_f e2 inf env)
+        EApply (rewrite e1 lvl inf env, rewrite e2 lvl inf env)
     | _ -> assert false
 
 and rewrite_let: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match e with
@@ -137,4 +138,6 @@ and rewrite_if: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> 
     | _ -> assert false
 
 let rewrite_prog: expr -> pv_env -> expr = fun e inf ->
-    rewrite_f e inf Env.empty
+    let e = rewrite_f e inf Env.empty in
+    printf "Rewrite:\n%s\n\n" (expr_to_str e);
+    e

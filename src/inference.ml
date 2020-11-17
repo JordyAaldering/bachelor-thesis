@@ -14,9 +14,12 @@ let pv_to_str: demand list -> string = fun pv ->
     ) pv
 
 let pv_env_to_str: pv_env -> string = fun env ->
-    Env.fold (fun k v tail ->
-        sprintf "%s -> %s\n%s" k (pv_to_str v) tail
-    ) env ""
+    if Env.is_empty env then "[]"
+    else
+        Env.fold (fun k v tail -> match tail with
+            | "" -> sprintf "%s -> %s" k (pv_to_str v)
+            | _ -> sprintf "%s -> %s\n%s" k (pv_to_str v) tail
+        ) env ""
 
 let rec sd: expr -> demand -> pv_env -> pv_env = fun e dem env -> match e with
     | EVar x -> Env.add x [dem] env
@@ -28,14 +31,16 @@ let rec sd: expr -> demand -> pv_env -> pv_env = fun e dem env -> match e with
             let demx = Env.find x env' in
             Env.add x demx env'
         with Not_found ->
-            infer_err @@ sprintf "could not find lambda variable `%s' in environment" x
+            infer_err @@ sprintf "could not find lambda variable `%s' in environment %s"
+                    x (pv_env_to_str env)
     end
     | EApply (EVar fun_id, e2) -> begin try
             let dem' = Env.find fun_id env in
             let dem' = Array.map (Array.get @@ List.hd dem') dem in
             sd e2 dem' env
         with Not_found ->
-            infer_err @@ sprintf "could not find function `%s' in environment" fun_id
+            infer_err @@ sprintf "could not find function `%s' in environment %s"
+                    fun_id (pv_env_to_str env)
     end
     | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
         let dem' = pv e1 env in
@@ -100,27 +105,27 @@ and pv: expr -> pv_env -> demand list = fun e env -> match e with
         let env' = sd e1 [|0; 1; 2; 3|] env in
         begin try
             Env.find x env'
-        with Not_found -> (* variable x does not occur in e1, thus there is no demand *)
-            [[|0; 3; 3; 3|]]
+        with Not_found ->
+            [[|0; 1; 2; 3|]]
         end
     
     | EBinary (op, _e1, _e2) -> begin match op with
         | OpPlus | OpMin | OpMult | OpDiv ->
-            [ [|0; 1; 2; 3|]; [|0; 1; 2; 3|] ]
+            [[|0; 1; 2; 3|]; [|0; 1; 2; 3|]]
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe ->
-            [ [|0; 0; 0; 3|]; [|0; 0; 0; 3|] ]
+            [[|0; 0; 0; 3|]; [|0; 0; 0; 3|]]
     end
     | EUnary (op, _e1) -> begin match op with
-        | OpNeg -> [ [|0; 1; 2; 3|] ]
-        | OpNot -> [ [|0; 0; 0; 3|] ]
+        | OpNeg -> [[|0; 1; 2; 3|]]
+        | OpNot -> [[|0; 0; 0; 3|]]
     end
-    | ESel _   -> [ [|0; 2; 2; 3|]; [|0; 1; 2; 3|] ]
-    | EShape _ -> [ [|0; 0; 1; 2|] ]
-    | EDim _   -> [ [|0; 0; 0; 1|] ]
+    | ESel _   -> [[|0; 2; 2; 3|]; [|0; 1; 2; 3|]]
+    | EShape _ -> [[|0; 0; 1; 2|]]
+    | EDim _   -> [[|0; 0; 0; 1|]]
 
     | _ -> infer_err @@ sprintf "invalid PV argument `%s'" (expr_to_str e)
 
 let infer_prog: expr -> pv_env = fun e ->
     let env = sd e [|0; 1; 2; 3|] Env.empty in
-    printf "Demand environment:\n%s\n" (pv_env_to_str env);
+    printf "Demand environment:\n%s\n\n" (pv_env_to_str env);
     env
