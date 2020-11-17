@@ -4,7 +4,7 @@ open Value
 open Printf
 
 module Storage = Map.Make(String)
-type storage = string Storage.t
+type storage = value Storage.t
 
 exception EvalFailure of string
 let eval_err msg = raise @@ EvalFailure msg
