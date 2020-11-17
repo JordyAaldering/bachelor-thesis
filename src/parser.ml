@@ -195,9 +195,11 @@ and parse_binary lexbuf =
 and parse_unary lexbuf =
     parse_postfix lexbuf
 
-let prog lexbuf =
+let parse_prog lexbuf =
     token_stack := [];
     match parse_expr lexbuf with
-        | Some e -> e
+        | Some e ->
+            printf "%s\n" (expr_to_str e);
+            e
         | None -> parse_err "parser returned None"
  

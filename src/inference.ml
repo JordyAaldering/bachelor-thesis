@@ -1,27 +1,38 @@
 open Ast
 open Printf
 
-module Dem_env = Map.Make(String)
+module Pv_env = Map.Make(String)
 type demand = int array
-type dem_env = demand list Dem_env.t
+type pv_env = demand list Pv_env.t
 
 exception InferenceFailure of string
 let infer_err msg = raise @@ InferenceFailure msg
 
-let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
-    | EVar x -> Dem_env.add x [dem] env
+let dem_to_str: demand -> string = fun dem ->
+    sprintf "[%s]" @@ String.concat ", " @@ Array.to_list (Array.map string_of_int dem)
+
+let pv_to_str: demand list -> string = fun pv ->
+    sprintf "[%s]" @@ String.concat ", " @@ List.map dem_to_str pv
+
+let pv_env_to_str: pv_env -> string = fun env ->
+    Pv_env.fold (fun k v tail ->
+        sprintf "%s -> %s\n%s" k (pv_to_str v) tail
+    ) env ""
+
+let rec sd: expr -> demand -> pv_env -> pv_env = fun e dem env -> match e with
+    | EVar x -> Pv_env.add x [dem] env
     | EConst _x -> env
     | EArray _xs -> env
 
     | ELambda (x, e1) -> begin try
             let env' = sd e1 dem env in
-            let demx = Dem_env.find x env' in
-            Dem_env.add x demx env'
+            let demx = Pv_env.find x env' in
+            Pv_env.add x demx env'
         with Not_found ->
             infer_err @@ sprintf "could not find lambda variable `%s' in environment" x
     end
     | EApply (EVar fun_id, e2) -> begin try
-            let dem' = Dem_env.find fun_id env in
+            let dem' = Pv_env.find fun_id env in
             let dem' = Array.map (Array.get @@ List.hd dem') dem in
             sd e2 dem' env
         with Not_found ->
@@ -34,28 +45,28 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
     | ELetIn (fun_id, ELambda(x, e1), e2) ->
         let dem' = pv (ELambda (x, e1)) env in
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
-        let env' = Dem_env.add fun_id [dem'] env in
+        let env' = Pv_env.add fun_id [dem'] env in
         let env2 = sd e2 dem env' in
-        let env2' = Dem_env.remove x env2 in
-        Dem_env.union (fun key x y ->
+        let env2' = Pv_env.remove x env2 in
+        Pv_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) env' env2'
     | ELetIn (x, e1, e2) ->
         let dem' = pv (ELambda (x, e2)) env in
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
         let env1 = sd e1 dem' env in
-        let env2 = Dem_env.remove x @@ sd e2 dem env in
-        Dem_env.union (fun key x y ->
+        let env2 = Pv_env.remove x @@ sd e2 dem env in
+        Pv_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) env1 env2
     | EIfThen (ec, et, ef) ->
         let envc = sd ec [|0; 3; 3; 3|] env in
         let envt = sd et dem env in
         let envf = sd ef dem env in
-        Dem_env.union (fun key x y ->
+        Pv_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) envc @@
-            Dem_env.union (fun key x y ->
+            Pv_env.union (fun key x y ->
                 Some (List.map2 max x y)
             ) envt envf
 
@@ -64,7 +75,7 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
         let env1 = sd e1 dem' env in
         let env2 = sd e2 dem' env in
-        Dem_env.union (fun key x y ->
+        Pv_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) env1 env2
     | EUnary (op, e1) ->
@@ -76,7 +87,7 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
         let env1 = sd e1 dem' env in
         let env2 = sd e2 dem' env in
-        Dem_env.union (fun key x y ->
+        Pv_env.union (fun key x y ->
             Some (List.map2 max x y)
         ) env1 env2
     | EShape e1
@@ -85,11 +96,11 @@ let rec sd: expr -> demand -> dem_env -> dem_env = fun e dem env -> match e with
         let dem' = Array.map (Array.get @@ List.hd dem') dem in
         sd e1 dem' env
 
-and pv: expr -> dem_env -> demand list = fun e env -> match e with
+and pv: expr -> pv_env -> demand list = fun e env -> match e with
     | ELambda (x, e1) ->
         let env' = sd e1 [|0; 1; 2; 3|] env in
         begin try
-            Dem_env.find x env'
+            Pv_env.find x env'
         with Not_found -> (* variable x does not occur in e1, thus there is no demand *)
             [[|0; 3; 3; 3|]]
         end
@@ -110,11 +121,7 @@ and pv: expr -> dem_env -> demand list = fun e env -> match e with
 
     | _ -> infer_err @@ sprintf "invalid PV argument `%s'" (expr_to_str e)
 
-and dem_env_to_str: dem_env -> string = fun env ->
-    "Demand environment:\n" ^
-    Dem_env.fold (fun k v tail ->
-        sprintf "%s -> [%s]\n%s" k (String.concat ", " @@ Array.to_list (Array.map string_of_int @@ List.hd v)) tail
-    ) env ""
-
-let infer_prog: expr -> dem_env = fun e ->
-    sd e [|0; 1; 2; 3|] Dem_env.empty
+let infer_prog: expr -> pv_env = fun e ->
+    let env = sd e [|0; 1; 2; 3|] Pv_env.empty in
+    printf "Demand environment:\n%s\n" (pv_env_to_str env);
+    env
