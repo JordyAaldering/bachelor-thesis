@@ -1,18 +1,19 @@
 open Ast
 open Value
 open Lexer
+open Evaluator
 open Printf
 
 let eval_prog e =
-    let st, env, e = Storage.st_new (), Env.env_new (), e in
+    let st, env, e = Storage.empty, Env.env_new (), e in
         printf "--- ORIGINAL ---\n";
         printf "%s\n\n" (expr_to_str e);
         flush stdout;
-        let st, p = Evaluator.eval_expr st env e in
-            printf "Result:\n%s = %s\n\n" p (value_to_str (Storage.st_lookup st p))
+        let st, p = eval_expr st env e in
+            printf "Result:\n%s = %s\n\n" p (value_to_str (Storage.find p st))
 
 let eval_rewrite e =
-    let st, env, e = Storage.st_new (), Env.env_new (), e in
+    let st, env, e = Storage.empty, Env.env_new (), e in
         printf "--- REWRITE ---\n";
         let inf = Inference.infer_prog e in
         let e = Rewrite.rewrite_prog e inf in
@@ -20,7 +21,7 @@ let eval_rewrite e =
             printf "%s\n" (Inference.dem_env_to_str inf);
             flush stdout;
             let st, p = Evaluator.eval_expr st env e in
-                printf "Result:\n%s = %s\n\n" p (value_to_str (Storage.st_lookup st p))
+                printf "Result:\n%s = %s\n\n" p (value_to_str (Storage.find p st))
 
 let main () =
     let fname = Sys.argv.(1) in

@@ -1,11 +1,12 @@
 open Ast
 open Env
 open Value
-open Storage
 open Printf
 
-exception EvalFailure of string
+module Storage = Map.Make(String)
+type storage = string Storage.t
 
+exception EvalFailure of string
 let eval_err msg = raise @@ EvalFailure msg
 
 (* A global variable to generate unique names of pointers *)
@@ -15,16 +16,16 @@ let create_fresh_ptr () =
     ptr_count := !ptr_count + 1;
     sprintf "p%d" !ptr_count
 
-(* Creates a fresh variable and adds it to storage `st' with value `v' *)
+(* Creates a fresh variable and adds it to the variable environment with value `v' *)
 let add_fresh_value st v =
     let p = create_fresh_ptr () in
-    let st = st_add st p v in
+    let st = Storage.add p v st in
     (st, p)
 
 
 let ptr_binary st op p1 p2 =
-    let v1 = st_lookup st p1 in
-    let v2 = st_lookup st p2 in
+    let v1 = Storage.find p1 st in
+    let v2 = Storage.find p2 st in
     match op with
         | OpPlus -> value_add v1 v2
         | OpMin  -> value_add v1 (value_neg v2)
@@ -38,7 +39,7 @@ let ptr_binary st op p1 p2 =
         | OpGe -> value_not @@ value_lt v1 v2
 
 let ptr_unary st env op p =
-    let v = st_lookup st p in
+    let v = Storage.find p st in
     match op with
         | OpNeg -> value_neg v
         | OpNot -> value_not v
@@ -54,7 +55,7 @@ let rec eval_expr st env e = match e with
         let st, ptr_lst = eval_expr_lst st env lst in
         let shp = [Const (float_of_int @@ List.length ptr_lst)] in
         let data = List.fold_right (fun ptr val_lst ->
-                let ptr_val = st_lookup st ptr in
+                let ptr_val = Storage.find ptr st in
                 ptr_val :: val_lst
             ) ptr_lst []
         in
@@ -63,7 +64,7 @@ let rec eval_expr st env e = match e with
     | EApply (e1, e2) ->
         let (st, p1) = eval_expr st env e1 in
         let (st, p2) = eval_expr st env e2 in
-        let x, body, env' = closure_to_triple (st_lookup st p1) in
+        let x, body, env' = closure_to_triple (Storage.find p1 st) in
         eval_expr st (env_add env' x p2) body
 
     | ELambda (_x, _e) ->
@@ -71,7 +72,7 @@ let rec eval_expr st env e = match e with
 
     | EIfThen (ec, et, ef) ->
         let (st, p1) = eval_expr st env ec in
-        let v = st_lookup st p1 in
+        let v = Storage.find p1 st in
         eval_expr st env (if value_is_truthy v then et else ef)
 
     | ELetIn (var, e1, e2) ->
@@ -93,17 +94,17 @@ let rec eval_expr st env e = match e with
     | ESel (e1, e2) ->
         let (st, iv) = eval_expr st env e1 in
         let (st, v1) = eval_expr st env e2 in
-        let v2 = value_sel (st_lookup st iv) (st_lookup st v1) in
+        let v2 = value_sel (Storage.find iv st) (Storage.find v1 st) in
         add_fresh_value st v2
 
     | EShape e1 ->
         let (st, p) = eval_expr st env e1 in
-        let v = value_shape @@ st_lookup st p in
+        let v = value_shape @@ Storage.find p st in
         add_fresh_value st v
 
     | EDim e1 ->
         let (st, p) = eval_expr st env e1 in
-        let v = value_dim @@ st_lookup st p in
+        let v = value_dim @@ Storage.find p st in
         add_fresh_value st v
 
 and eval_expr_lst st env lst = match lst with
