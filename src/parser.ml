@@ -63,8 +63,8 @@ let rec parse_primary lexbuf =
     let t = get_token lexbuf in
     match t with
         | ID x -> Some (EVar x)
-        | INT x -> Some (EConst (float_of_int x))
-        | FLOAT x -> Some (EConst x)
+        | INT x -> Some (ENum (float_of_int x))
+        | FLOAT x -> Some (ENum x)
         | LAMBDA -> parse_lambda lexbuf
         | LET -> parse_letin lexbuf
         | IF -> parse_ifthen lexbuf

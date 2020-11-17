@@ -5,7 +5,7 @@ let parse_err msg = raise @@ ParseFailure msg
 
 type expr =
     | EVar of string
-    | EConst of float
+    | ENum of float
     | EArray of expr list
 
     | EApply of expr * expr
@@ -41,7 +41,7 @@ let expr_get_var_name e = match e with
 
 let rec expr_to_str e = match e with
     | EVar x -> x
-    | EConst x -> string_of_float x
+    | ENum x -> string_of_float x
     | EArray xs -> sprintf "[%s]"
         (String.concat ", " (List.map expr_to_str xs))
 

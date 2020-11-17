@@ -6,14 +6,14 @@ let value_err msg = raise (ValueFailure msg)
 type value =
     | Const of float
     | Vect of value list * value list
-    | Closure of Ast.expr * Eval_env.env
+    | Closure of Ast.expr * Env.ptr_env
 
 let rec value_to_str v = match v with
     | Const x -> string_of_float x
     | Vect (shp, data) -> sprintf "<[%s], [%s]>"
         (value_lst_to_str shp) (value_lst_to_str data)
     | Closure (e, env) -> sprintf "{%s, %s}"
-        (Ast.expr_to_str e) (Eval_env.env_to_str env)
+        (Ast.expr_to_str e) (Env.ptr_env_to_str env)
 
 and value_lst_to_str v =
     String.concat ", " (List.map value_to_str v)
