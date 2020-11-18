@@ -1,5 +1,5 @@
 let suc = \x.
-    x + [1, 1, 1]
+    x + 1
 in
 
 let v = [2, 3, 4] in

@@ -36,62 +36,87 @@ let value_sel iv v = match iv, v with
             (value_to_str iv) (value_to_str v)
 
 let value_shape v = match v with
-    | Vect (shp, _data) -> Vect ([List.length shp], List.map float_of_int shp)
+    | Vect (shp, _) -> Vect ([List.length shp], List.map float_of_int shp)
     | _ -> value_err @@ sprintf "invalid shape argument %s" (value_to_str v)
 
 let value_dim v = match v with
-    | Vect (shp, _data) -> Vect ([], [float_of_int @@ List.length shp])
+    | Vect (shp, _) -> Vect ([], [float_of_int @@ List.length shp])
     | _ -> value_err @@ sprintf "invalid dim argument %s" (value_to_str v)
 
 
 (** Predicates **)
 
-let rec value_neg v = match v with
+let value_neg v = match v with
     | Vect (shp, data) -> Vect (shp, List.map (fun x -> -. x) data)
     | _ -> value_err @@ sprintf "invalid neg argument %s" (value_to_str v)
 
 and value_add v1 v2 = match v1, v2 with
-    | Vect (shp1, xs), Vect (shp2, ys) -> Vect (shp1, List.map2 (+.) xs ys)
+    | Vect ([], [c]), Vect (shp, xs)
+    | Vect (shp, xs), Vect ([], [c]) ->
+        Vect (shp, List.map ((+.) c) xs)
+    | Vect (shp1, xs), Vect (shp2, ys) ->
+        Vect (shp1, List.map2 (+.) xs ys)
     | _ -> value_err @@ sprintf "invalid add arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 and value_mul v1 v2 = match v1, v2 with
-    | Vect (shp1, xs), Vect (shp2, ys) -> Vect (shp1, List.map2 ( *.) xs ys)
+    | Vect ([], [c]), Vect (shp, xs)
+    | Vect (shp, xs), Vect ([], [c]) ->
+        Vect (shp, List.map (( *.) c) xs)
+    | Vect (shp1, xs), Vect (shp2, ys) ->
+        Vect (shp1, List.map2 ( *.) xs ys)
     | _ -> value_err @@ sprintf "invalid mul arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 and value_div v1 v2 = match v1, v2 with
-    | Vect (shp1, xs), Vect (shp2, ys) -> Vect (shp1, List.map2 (/.) xs ys)
+    | Vect ([], [c]), Vect (shp, xs)
+    | Vect (shp, xs), Vect ([], [c]) ->
+        Vect (shp, List.map ((/.) c) xs)
+    | Vect (shp1, xs), Vect (shp2, ys) ->
+        Vect (shp1, List.map2 (/.) xs ys)
     | _ -> value_err @@ sprintf "invalid div arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 
-let rec value_is_truthy v = match v with
-    | Vect (_shp, data) -> List.for_all ((<>)0.) data
+let value_is_truthy v = match v with
+    | Vect (_, data) -> List.for_all ((<>) 0.) data
     | _ -> false
 
-and value_not v =
+let value_not v =
     Vect ([], [if value_is_truthy v then 0. else 1.])
 
 and value_eq v1 v2 = match v1, v2 with
     | Vect (shp1, xs), Vect (shp2, ys) ->
-        if List.length shp1 <> List.length shp2 then Vect ([], [0.])
-        else Vect ([], [if List.for_all2 (=) xs ys then 1. else 0.])
+        if List.length shp1 = List.length shp2
+            && List.for_all2 (=) shp1 shp2
+            && List.for_all2 (=) xs ys
+        then Vect ([], [1.])
+        else Vect ([], [0.])
     | _ -> Vect ([], [0.])
 
 and value_gt v1 v2 = match v1, v2 with
+    | Vect ([], [c]), Vect (shp, xs) ->
+        Vect ([], [if List.for_all ((>) c) xs then 1. else 0.])
+    | Vect (shp, xs), Vect ([], [c]) ->
+        Vect ([], [if List.for_all ((<) c) xs then 1. else 0.])
     | Vect (shp1, xs), Vect (shp2, ys) ->
-        if List.length shp1 <> List.length shp2 then
-            value_err @@ sprintf "got different lengths [%s] and [%s]"
+        if List.length shp1 <> List.length shp2
+            || not @@ List.for_all2 (=) shp1 shp2
+        then value_err @@ sprintf "gt got different shapes [%s] and [%s]"
                 (shp_to_str shp1) (shp_to_str shp2);
         Vect ([], [if List.for_all2 (>) xs ys then 1. else 0.])
     | _ -> value_err @@ sprintf "invalid gt arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 and value_lt v1 v2 = match v1, v2 with
+    | Vect ([], [c]), Vect (shp, xs) ->
+        Vect ([], [if List.for_all ((<) c) xs then 1. else 0.])
+    | Vect (shp, xs), Vect ([], [c]) ->
+        Vect ([], [if List.for_all ((>) c) xs then 1. else 0.])
     | Vect (shp1, xs), Vect (shp2, ys) ->
-        if List.length shp1 <> List.length shp2 then
-            value_err @@ sprintf "got different lengths [%s] and [%s]"
+        if List.length shp1 <> List.length shp2
+            || not @@ List.for_all2 (=) shp1 shp2
+        then value_err @@ sprintf "lt got different shapes [%s] and [%s]"
                 (shp_to_str shp1) (shp_to_str shp2);
         Vect ([], [if List.for_all2 (<) xs ys then 1. else 0.])
     | _ -> value_err @@ sprintf "invalid lt arguments %s and %s"

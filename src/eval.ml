@@ -113,6 +113,7 @@ let st_to_str: val_env -> string = fun st ->
         ) st ""
 
 let eval_prog: expr -> unit = fun e ->
+    ptr_count := 0;
     let st, p = eval_expr e Env.empty Env.empty in
     printf "Environment:\n%s\n\n" (st_to_str st);
     printf "Result:\n%s = %s\n" p (value_to_str (Env.find p st))
