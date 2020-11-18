@@ -39,31 +39,31 @@ let expr_get_var_name e = match e with
     | EVar x -> Some x
     | _ -> None
 
-let rec expr_to_str e = match e with
+let rec expr_to_str ?(sep=" ") e = match e with
     | EVar x -> x
     | ENum x -> string_of_float x
     | EArray xs -> sprintf "[%s]"
         (String.concat ", " (List.map expr_to_str xs))
 
     | EApply (e1, e2) -> sprintf "(%s) (%s)"
-        (expr_to_str e1) (expr_to_str e2)
+        (expr_to_str ~sep:sep e1) (expr_to_str ~sep:sep e2)
     | ELambda (x, e) -> sprintf "\\%s. %s"
-        x (expr_to_str e)
-    | ELetIn (x, e1, e2) -> sprintf "let %s = %s in %s"
-        x (expr_to_str e1) (expr_to_str e2)
+        x (expr_to_str ~sep:sep e)
+    | ELetIn (x, e1, e2) -> sprintf "let %s = %s in%s%s"
+        x (expr_to_str ~sep:sep e1) sep (expr_to_str ~sep:sep e2)
     | EIfThen (e1, e2, e3) -> sprintf "if %s then %s else %s"
-        (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
+        (expr_to_str ~sep:sep e1) (expr_to_str ~sep:sep e2) (expr_to_str ~sep:sep e3)
 
     | EBinary (bop, e1, e2) -> sprintf "((%s) %s (%s))"
-        (expr_to_str e1) (bop_to_str bop) (expr_to_str e2)
+        (expr_to_str ~sep:sep e1) (bop_to_str bop) (expr_to_str ~sep:sep e2)
     | EUnary (uop, e1) -> sprintf "(%s (%s))"
-        (uop_to_str uop) (expr_to_str e1)
+        (uop_to_str uop) (expr_to_str ~sep:sep e1)
     | ESel (e1, e2) -> sprintf "sel (%s) (%s)"
-        (expr_to_str e1) (expr_to_str e2)
+        (expr_to_str ~sep:sep e1) (expr_to_str ~sep:sep e2)
     | EShape e1 -> sprintf "shape (%s)"
-        (expr_to_str e1)
+        (expr_to_str ~sep:sep e1)
     | EDim e1 -> sprintf "dim (%s)"
-        (expr_to_str e1)
+        (expr_to_str ~sep:sep e1)
 
 and bop_to_str bop = match bop with
     | OpPlus -> "+"

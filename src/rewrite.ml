@@ -7,7 +7,7 @@ type lvl_env = int Env.t
 
 exception RewriteFailure of string
 let rewrite_err msg = raise @@ RewriteFailure msg
-let rewrite_err_in e msg = raise @@ RewriteFailure (sprintf "%s: %s" (expr_to_str e) msg)
+let rewrite_err_in e msg = raise @@ RewriteFailure (sprintf "at %s: %s" (expr_to_str e) msg)
 
 let rec rewrite: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match lvl with
     | 3 -> rewrite_f e inf env
@@ -37,7 +37,11 @@ and rewrite_f: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
 and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
     printf "S(%s)\n" (expr_to_str e);
     match e with
-    | EVar x -> begin try
+    | EVar x ->
+        if try let _ = Env.find x inf in true with Not_found -> false; then
+            EVar (x ^ "_s")
+        else
+        begin try
             let lvl = Env.find x env in
             if lvl = 3 then EShape e
             else if lvl = 2 then e
@@ -70,12 +74,16 @@ and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
 and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env -> 
     printf "D(%s)\n" (expr_to_str e);
     match e with
-    | EVar x -> begin try
+    | EVar x ->
+        if try let _ = Env.find x inf in true with Not_found -> false; then
+            EVar (x ^ "_d")
+        else
+        begin try
             let lvl = Env.find x env in
             if lvl = 3 then EDim e
             else if lvl = 2 then ESel (EShape e, ENum 0.)
             else if lvl = 1 then e
-            else rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
+            else ENum 0.
         with Not_found ->
             rewrite_err_in e @@ sprintf "key `%s' was not found" x
     end
@@ -123,13 +131,25 @@ and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env 
     | _ -> assert false
 
 and rewrite_let: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match e with
-    | ELetIn (x, e1, e2) ->
-        let dem = pv (ELambda (x, e2)) inf in
+    | ELetIn (fid, ELambda (var, e1), e2) ->
+        let dem = pv (ELambda (fid, e2)) inf in
         let lvl' = Array.get (List.hd dem) lvl in
+        let env' = Env.add fid lvl' env in
         if lvl' = 0 then
             rewrite e2 lvl inf env
         else
-            let env' = Env.add x lvl' env in
+            let lmb = ELambda (var, e1) in
+            ELetIn (fid, rewrite_f lmb inf env, 
+            ELetIn (fid ^ "_s", rewrite_s lmb inf env,
+            ELetIn (fid ^ "_d", rewrite_d lmb inf env,
+                rewrite e2 lvl inf env')))
+    | ELetIn (x, e1, e2) ->
+        let dem = pv (ELambda (x, e2)) inf in
+        let lvl' = Array.get (List.hd dem) lvl in
+        let env' = Env.add x lvl' env in
+        if lvl' = 0 then
+            rewrite e2 lvl inf env'
+        else
             ELetIn (x, rewrite e1 lvl' inf env, rewrite e2 lvl inf env')
     | _ -> assert false
 
@@ -139,5 +159,5 @@ and rewrite_if: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> 
 
 let rewrite_prog: expr -> pv_env -> expr = fun e inf ->
     let e = rewrite_f e inf Env.empty in
-    printf "Rewrite:\n%s\n\n" (expr_to_str e);
+    printf "Rewrite:\n%s\n\n" (expr_to_str ~sep:"\n" e);
     e

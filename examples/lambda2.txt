@@ -1,0 +1,37 @@
+let suc = \x.
+    x + [1, 1, 1]
+in
+
+let shp = \x.
+    shape x
+in
+
+let v = [3, 4, 5] in
+let w = shp v in
+dim w
+# = 1
+
+## Rewrites to:
+# let suc = \x.
+#     x + [1, 1, 1]
+# in
+# let suc_s = \x.
+#     x
+# in
+# let suc_d = \x.
+#     x
+# in
+# 
+# let shp = \x.
+#     x
+# in
+# let shp_s = \x.
+#     [x]
+# in
+# let shp_d = \x.
+#     1
+# in
+# 
+# let w = shp_d 0. in
+# w
+## = 1
