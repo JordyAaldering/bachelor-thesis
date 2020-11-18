@@ -81,7 +81,7 @@ and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
         begin try
             let lvl = Env.find x env in
             if lvl = 3 then EDim e
-            else if lvl = 2 then ESel (EShape e, ENum 0.)
+            else if lvl = 2 then ESel (ENum 0., EShape e)
             else if lvl = 1 then e
             else ENum 0.
         with Not_found ->
@@ -126,8 +126,14 @@ and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env 
         else
             let env' = Env.add x lvl' env in
             EApply (ELambda (x, rewrite e1 lvl inf env'), rewrite e2 lvl' inf env)
-    | EApply (e1, e2) -> (* TODO: temporary implementation *)
-        EApply (rewrite e1 lvl inf env, rewrite e2 lvl inf env)
+    | EApply (EVar x, e2) -> (* function call *)
+        let dem = Env.find x inf in
+        let lvl' = Array.get (List.hd dem) lvl in
+        let fid = x ^ if lvl' = 3 then ""
+            else if lvl' = 2 then "_s"
+            else if lvl' = 1 then "_d"
+            else sprintf "_err_%d" lvl' in
+        EApply (EVar fid, rewrite e2 lvl' inf env)
     | _ -> assert false
 
 and rewrite_let: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match e with

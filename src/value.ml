@@ -19,6 +19,8 @@ and data_to_str data = String.concat ", " (List.map string_of_float data)
 (** Primitive Functions **)
 
 let value_sel iv v = match iv, v with
+    | Vect ([], [x]), Vect (shp2, data) ->
+        Vect ([], [List.nth data (int_of_float x)])
     | Vect (_, shp1), Vect (shp2, data) ->
         let rec row_major sprod res shp iv = match shp, iv with
             | [], [] -> res
