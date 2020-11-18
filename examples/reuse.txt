@@ -1,0 +1,9 @@
+let suc = \x.
+    x + [1, 1, 1]
+in
+
+let v = [2, 3, 4] in
+let w = shape suc v in
+let p = dim suc v in
+w + [p]
+# = [4]

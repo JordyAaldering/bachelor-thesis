@@ -42,13 +42,18 @@ let ptr_unary st op p =
 
 let rec eval_expr e st env = match e with
     | EVar x -> (st, Env.find x env)
-    | ENum x -> add_fresh_value st (Const x)
+    | ENum x -> add_fresh_value st (Vect ([], [x]))
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
-        let shp = [Const (float_of_int @@ List.length ptr_lst)] in
+        let shp = [List.length ptr_lst] in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
-                ptr_val :: val_lst
+                let flt_val = begin match ptr_val with
+                    | Vect ([], [x]) -> x
+                    | _ -> eval_err @@ sprintf "invalid value in list `%s'"
+                            (value_to_str ptr_val)
+                end in
+                flt_val :: val_lst
             ) ptr_lst []
         in
         add_fresh_value st (Vect (shp, data))
