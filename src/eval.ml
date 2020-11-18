@@ -84,9 +84,9 @@ let rec eval_expr e st env = match e with
         let v = ptr_unary st op p in
         add_fresh_value st v
     | ESel (e1, e2) ->
-        let st, iv = eval_expr e1 st env in
-        let st, v1 = eval_expr e2 st env in
-        let v2 = value_sel (Env.find iv st) (Env.find v1 st) in
+        let st, v1 = eval_expr e1 st env in
+        let st, iv = eval_expr e2 st env in
+        let v2 = value_sel (Env.find v1 st) (Env.find iv st) in
         add_fresh_value st v2
     | EShape e1 ->
         let st, p = eval_expr e1 st env in

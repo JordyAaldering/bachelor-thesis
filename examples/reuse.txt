@@ -5,22 +5,5 @@ in
 let v = [2, 3, 4] in
 let w = shape suc v in
 let p = dim suc v in
-w + [p]
-# = [4]
-
-## Rewrites to:
-# let suc = \x.
-#     x + [1, 1, 1]
-# in
-# let suc_s = \x.
-#     x
-# in
-# let suc_d = \x.
-#     x
-# in
-# 
-# let v = shape [2, 3, 4] in            # = [3]
-# let w = suc_s v in                    # = [3]
-# let p = suc_d (sel 0 (shape v)) in    # = 1
-# w + [p]
-## = [4]
+let q = w + [p] in
+q.([0])
