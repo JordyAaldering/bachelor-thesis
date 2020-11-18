@@ -131,8 +131,8 @@ and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env 
         let lvl' = Array.get (List.hd dem) lvl in
         let fid = x ^ if lvl' = 3 then ""
             else if lvl' = 2 then "_s"
-            else if lvl' = 1 then "_d"
-            else sprintf "_err_%d" lvl' in
+            else "_d"
+        in
         EApply (EVar fid, rewrite e2 lvl' inf env)
     | _ -> assert false
 
