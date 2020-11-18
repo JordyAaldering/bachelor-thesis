@@ -10,7 +10,7 @@ w + [p]
 
 ## Rewrites to:
 # let suc = \x.
-#     ((x) + ([1., 1., 1.]))
+#     x + [1, 1, 1]
 # in
 # let suc_s = \x.
 #     x
@@ -19,8 +19,8 @@ w + [p]
 #     x
 # in
 # 
-# let v = shape [2, 3, 4] in
-# let w = suc_s v in
-# let p = suc_d (sel 0 (shape v)) in
+# let v = shape [2, 3, 4] in            # = [3]
+# let w = suc_s v in                    # = [3]
+# let p = suc_d (sel 0 (shape v)) in    # = 1
 # w + [p]
 ## = [4]
