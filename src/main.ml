@@ -15,7 +15,7 @@ let eval_rewrite e =
     eval_prog e
 
 let main () =
-    let file = open_in Sys.argv.(1) in
+    let file = open_in (Sys.argv.(1) ^ ".txt") in
     let lexbuf = Lexing.from_channel file in
     let e = parse_prog lexbuf in
         eval_orig e;

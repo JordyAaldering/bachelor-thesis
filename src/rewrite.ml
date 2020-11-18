@@ -1,6 +1,6 @@
 open Ast
-open Inference
 open Env
+open Inference
 open Printf
 
 type lvl_env = int Env.t
@@ -16,9 +16,7 @@ let rec rewrite: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env ->
     | 0 -> ENum 0.
     | _ -> rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
 
-and rewrite_f: expr -> pv_env -> lvl_env -> expr = fun e inf env -> 
-    printf "F(%s)\n" (expr_to_str e);
-    match e with
+and rewrite_f: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
     | EVar x -> e
     | ENum x -> e
     | EArray x -> e
@@ -34,12 +32,10 @@ and rewrite_f: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
     | EShape e1 -> rewrite_s e1 inf env
     | EDim e1 -> rewrite_d e1 inf env
 
-and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
-    printf "S(%s)\n" (expr_to_str e);
-    match e with
+and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
     | EVar x ->
         if try let _ = Env.find x inf in true with Not_found -> false; then
-            EVar (x ^ "_s")
+            EVar (x ^ "_s") (* The variable is the name of a function *)
         else
         begin try
             let lvl = Env.find x env in
@@ -71,12 +67,10 @@ and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env ->
     | EShape e1 -> EArray [rewrite_d e1 inf env]
     | EDim _ -> ENum 1.
 
-and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env -> 
-    printf "D(%s)\n" (expr_to_str e);
-    match e with
+and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
     | EVar x ->
         if try let _ = Env.find x inf in true with Not_found -> false; then
-            EVar (x ^ "_d")
+            EVar (x ^ "_d") (* The variable is the name of a function *)
         else
         begin try
             let lvl = Env.find x env in
