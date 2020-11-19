@@ -25,7 +25,6 @@ let st_to_str st =
                 (if tail = "" then "" else (", " ^ tail))
         ) st ""
 
-(* Creates a fresh variable and adds it to the value environment with value `v' *)
 let add_fresh_value st v =
     let p = create_fresh_ptr () in
     let st = Env.add p v st in
