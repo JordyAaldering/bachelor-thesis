@@ -14,12 +14,10 @@ let eval_rewrite e =
     let e = rewrite_prog e env in
     eval_prog e
 
-let main () =
+let () =
     let file = open_in (Sys.argv.(1) ^ ".txt") in
     let lexbuf = Lexing.from_channel file in
     let e = parse_prog lexbuf in
         eval_orig e;
         eval_rewrite e;
         close_in file
-
-let _ = main ()

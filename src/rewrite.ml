@@ -6,15 +6,19 @@ open Printf
 type lvl_env = int Env.t
 
 exception RewriteFailure of string
-let rewrite_err msg = raise @@ RewriteFailure msg
-let rewrite_err_in e msg = raise @@ RewriteFailure (sprintf "at %s: %s" (expr_to_str e) msg)
+
+let rewrite_err msg =
+    raise @@ RewriteFailure msg
+
+let rewrite_err_at e msg =
+    raise @@ RewriteFailure (sprintf "at %s: %s" (expr_to_str e) msg)
 
 let rec rewrite: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match lvl with
     | 3 -> rewrite_f e inf env
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
     | 0 -> ENum 0.
-    | _ -> rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
+    | _ -> rewrite_err_at e @@ sprintf "invalid eval level `%d'" lvl
 
 and rewrite_f: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
     | EVar x -> e
@@ -41,9 +45,9 @@ and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
             let lvl = Env.find x env in
             if lvl = 3 then EShape e
             else if lvl = 2 then e
-            else rewrite_err_in e @@ sprintf "invalid eval level `%d'" lvl
+            else rewrite_err_at e @@ sprintf "invalid eval level `%d'" lvl
         with Not_found ->
-            rewrite_err_in e @@ sprintf "key `%s' was not found" x
+            rewrite_err_at e @@ sprintf "key `%s' was not found" x
     end
     | ENum x -> EShape e
     | EArray x -> EShape e
@@ -54,7 +58,7 @@ and rewrite_s: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
     | EIfThen _ -> rewrite_if e 2 inf env
 
     | EBinary (op, e1, e2) -> begin match op with
-        | OpPlus | OpMin | OpMult | OpDiv
+        | OpAdd | OpMin | OpMul | OpDiv
             -> rewrite_s e1 inf env
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
             -> EArray []
@@ -79,7 +83,7 @@ and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
             else if lvl = 1 then e
             else ENum 0.
         with Not_found ->
-            rewrite_err_in e @@ sprintf "key `%s' was not found" x
+            rewrite_err_at e @@ sprintf "key `%s' was not found" x
     end
     | ENum x -> EDim e
     | EArray x -> EDim e
@@ -90,7 +94,7 @@ and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
     | EIfThen _ -> rewrite_if e 1 inf env
 
     | EBinary (op, e1, e2) -> begin match op with
-        | OpPlus | OpMin | OpMult | OpDiv
+        | OpAdd | OpMin | OpMul | OpDiv
             -> rewrite_d e1 inf env
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
             -> ENum 0.
@@ -106,7 +110,7 @@ and rewrite_d: expr -> pv_env -> lvl_env -> expr = fun e inf env -> match e with
 and rewrite_lambda: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match e with
     | ELambda (x, e1) ->
         let dem = pv e inf in
-        let lvl' = Array.get (List.hd dem) lvl in
+        let lvl' = Array.get dem lvl in
         let env' = Env.add x lvl' env in
         ELambda (x, rewrite e1 lvl inf env')
     | _ -> assert false
@@ -114,7 +118,7 @@ and rewrite_lambda: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env
 and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match e with
     | EApply (ELambda (x, e1), e2) ->
         let dem = pv (ELambda (x, e1)) inf in
-        let lvl' = Array.get (List.hd dem) lvl in
+        let lvl' = Array.get dem lvl in
         if lvl' = 0 then
             rewrite e1 lvl inf env
         else
@@ -122,7 +126,7 @@ and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env 
             EApply (ELambda (x, rewrite e1 lvl inf env'), rewrite e2 lvl' inf env)
     | EApply (EVar x, e2) -> (* function call *)
         let dem = Env.find x inf in
-        let lvl' = Array.get (List.hd dem) lvl in
+        let lvl' = Array.get dem lvl in
         let fid = x ^ if lvl' = 3 then ""
             else if lvl' = 2 then "_s"
             else if lvl' = 1 then "_d"
@@ -134,7 +138,7 @@ and rewrite_apply: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env 
 and rewrite_let: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env -> match e with
     | ELetIn (fid, ELambda (var, e1), e2) ->
         let dem = pv (ELambda (fid, e2)) inf in
-        let lvl' = Array.get (List.hd dem) lvl in
+        let lvl' = Array.get dem lvl in
         let env' = Env.add fid lvl' env in
         if lvl' = 0 then
             rewrite e2 lvl inf env
@@ -146,7 +150,7 @@ and rewrite_let: expr -> int -> pv_env -> lvl_env -> expr = fun e lvl inf env ->
                 rewrite e2 lvl inf env')))
     | ELetIn (x, e1, e2) ->
         let dem = pv (ELambda (x, e2)) inf in
-        let lvl' = Array.get (List.hd dem) lvl in
+        let lvl' = Array.get dem lvl in
         let env' = Env.add x lvl' env in
         if lvl' = 0 then
             rewrite e2 lvl inf env'

@@ -1,7 +1,9 @@
 open Printf
 
 exception ParseFailure of string
-let parse_err msg = raise @@ ParseFailure msg
+
+let parse_err msg =
+    raise @@ ParseFailure msg
 
 type expr =
     | EVar of string
@@ -20,9 +22,9 @@ type expr =
     | EDim of expr
 
 and binary_op =
-    | OpPlus
+    | OpAdd
     | OpMin
-    | OpMult
+    | OpMul
     | OpDiv
     | OpEq
     | OpNe
@@ -34,10 +36,6 @@ and binary_op =
 and unary_op =
     | OpNeg
     | OpNot
-
-let expr_get_var_name e = match e with
-    | EVar x -> Some x
-    | _ -> None
 
 let rec expr_to_str ?(sep=" ") e = match e with
     | EVar x -> x
@@ -54,10 +52,10 @@ let rec expr_to_str ?(sep=" ") e = match e with
     | EIfThen (e1, e2, e3) -> sprintf "if %s then %s else %s"
         (expr_to_str ~sep:sep e1) (expr_to_str ~sep:sep e2) (expr_to_str ~sep:sep e3)
 
-    | EBinary (bop, e1, e2) -> sprintf "((%s) %s (%s))"
-        (expr_to_str ~sep:sep e1) (bop_to_str bop) (expr_to_str ~sep:sep e2)
-    | EUnary (uop, e1) -> sprintf "(%s (%s))"
-        (uop_to_str uop) (expr_to_str ~sep:sep e1)
+    | EBinary (op, e1, e2) -> sprintf "(%s) %s (%s)"
+        (expr_to_str ~sep:sep e1) (bop_to_str op) (expr_to_str ~sep:sep e2)
+    | EUnary (op, e1) -> sprintf "%s(%s)"
+        (uop_to_str op) (expr_to_str ~sep:sep e1)
     | ESel (e1, e2) -> sprintf "sel (%s) (%s)"
         (expr_to_str ~sep:sep e1) (expr_to_str ~sep:sep e2)
     | EShape e1 -> sprintf "shape (%s)"
@@ -66,10 +64,10 @@ let rec expr_to_str ?(sep=" ") e = match e with
         (expr_to_str ~sep:sep e1)
 
 and bop_to_str bop = match bop with
-    | OpPlus -> "+"
-    | OpMin  -> "-"
-    | OpMult -> "*"
-    | OpDiv  -> "/"
+    | OpAdd -> "+"
+    | OpMin -> "-"
+    | OpMul -> "*"
+    | OpDiv -> "/"
     | OpEq -> "="
     | OpNe -> "!="
     | OpLt -> "<"
