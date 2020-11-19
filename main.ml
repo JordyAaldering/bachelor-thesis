@@ -1,7 +1,7 @@
-open Parser
-open Eval
-open Inference
-open Rewrite
+open Src.Parser
+open Src.Eval
+open Src.Infer
+open Src.Rewrite
 open Printf
 
 let eval_orig e =

@@ -2,12 +2,12 @@ open Printf
 
 exception ValueFailure of string
 
-let value_err msg =
-    raise @@ ValueFailure msg
-
 type value =
     | Vect of int list * float list
     | Closure of Ast.expr * Env.ptr_env
+
+let value_err msg =
+    raise @@ ValueFailure msg
 
 let shp_to_str shp =
     String.concat ", " (List.map string_of_int shp)
@@ -25,7 +25,7 @@ let value_to_str v = match v with
 (** Primitive Functions **)
 
 let value_sel v iv = match v, iv with
-    | Vect (shp, xs), Vect ([], [i]) ->
+    | Vect (_shp, xs), Vect ([], [i]) ->
         Vect ([], [List.nth xs (int_of_float i)])
     | Vect (shp, data), Vect (_, idx) ->
         let rec row_major sprod res shp iv = match shp, iv with
@@ -62,7 +62,7 @@ let value_add v1 v2 = match v1, v2 with
     | Vect ([], [c]), Vect (shp, xs)
     | Vect (shp, xs), Vect ([], [c]) ->
         Vect (shp, List.map ((+.) c) xs)
-    | Vect (shp1, xs), Vect (shp2, ys) ->
+    | Vect (shp1, xs), Vect (_shp2, ys) ->
         Vect (shp1, List.map2 (+.) xs ys)
     | _ -> value_err @@ sprintf "invalid add arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
@@ -71,7 +71,7 @@ let value_mul v1 v2 = match v1, v2 with
     | Vect ([], [c]), Vect (shp, xs)
     | Vect (shp, xs), Vect ([], [c]) ->
         Vect (shp, List.map (( *.) c) xs)
-    | Vect (shp1, xs), Vect (shp2, ys) ->
+    | Vect (shp1, xs), Vect (_shp2, ys) ->
         Vect (shp1, List.map2 ( *.) xs ys)
     | _ -> value_err @@ sprintf "invalid mul arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
@@ -80,7 +80,7 @@ let value_div v1 v2 = match v1, v2 with
     | Vect ([], [c]), Vect (shp, xs)
     | Vect (shp, xs), Vect ([], [c]) ->
         Vect (shp, List.map ((/.) c) xs)
-    | Vect (shp1, xs), Vect (shp2, ys) ->
+    | Vect (shp1, xs), Vect (_shp2, ys) ->
         Vect (shp1, List.map2 (/.) xs ys)
     | _ -> value_err @@ sprintf "invalid div arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
@@ -103,9 +103,9 @@ let value_eq v1 v2 = match v1, v2 with
     | _ -> Vect ([], [0.])
 
 let value_gt v1 v2 = match v1, v2 with
-    | Vect ([], [c]), Vect (shp, xs) ->
+    | Vect ([], [c]), Vect (_shp, xs) ->
         Vect ([], [if List.for_all ((>) c) xs then 1. else 0.])
-    | Vect (shp, xs), Vect ([], [c]) ->
+    | Vect (_shp, xs), Vect ([], [c]) ->
         Vect ([], [if List.for_all ((<) c) xs then 1. else 0.])
     | Vect (shp1, xs), Vect (shp2, ys) ->
         if List.length shp1 <> List.length shp2
@@ -117,9 +117,9 @@ let value_gt v1 v2 = match v1, v2 with
             (value_to_str v1) (value_to_str v2)
 
 let value_lt v1 v2 = match v1, v2 with
-    | Vect ([], [c]), Vect (shp, xs) ->
+    | Vect ([], [c]), Vect (_shp, xs) ->
         Vect ([], [if List.for_all ((<) c) xs then 1. else 0.])
-    | Vect (shp, xs), Vect ([], [c]) ->
+    | Vect (_shp, xs), Vect ([], [c]) ->
         Vect ([], [if List.for_all ((>) c) xs then 1. else 0.])
     | Vect (shp1, xs), Vect (shp2, ys) ->
         if List.length shp1 <> List.length shp2

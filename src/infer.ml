@@ -2,9 +2,9 @@ open Ast
 open Env
 open Printf
 
-type pv_env = int array Env.t
-
 exception InferenceFailure of string
+
+type pv_env = int array Env.t
 
 let infer_err msg =
     raise @@ InferenceFailure msg
@@ -19,7 +19,7 @@ let pv_env_to_str env =
         ) env ""
 
 let pv_env_union =
-    Env.union (fun key x y ->
+    Env.union (fun _key x y ->
         Some (Array.map2 max x y)
     )
 
@@ -67,13 +67,13 @@ let rec sd e dem env = match e with
         let env3 = sd e3 dem env in
         pv_env_union env1 (pv_env_union env2 env3)
 
-    | EBinary (op, e1, e2) ->
+    | EBinary (_op, e1, e2) ->
         let dem' = pv e env in
         let dem' = Array.map (Array.get dem') dem in
         let env1 = sd e1 dem' env in
         let env2 = sd e2 dem' env in
         pv_env_union env1 env2
-    | EUnary (op, e1) ->
+    | EUnary (_op, e1) ->
         let dem' = pv e env in
         let dem' = Array.map (Array.get dem') dem in
         sd e1 dem' env
@@ -97,19 +97,19 @@ and pv e env = match e with
             [|0; 1; 2; 3|]
         end
     
-    | EBinary (op, e1, e2) -> begin match op with
+    | EBinary (op, _e1, _e2) -> begin match op with
         | OpAdd | OpMin | OpMul | OpDiv ->
             [|0; 1; 2; 3|]
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe ->
             [|0; 0; 0; 3|]
     end
-    | EUnary (op, e1) -> begin match op with
+    | EUnary (op, _e1) -> begin match op with
         | OpNeg -> [|0; 1; 2; 3|]
         | OpNot -> [|0; 0; 0; 3|]
     end
-    | ESel (e1, e2) -> [|0; 2; 2; 3|]
-    | EShape e1 -> [|0; 0; 1; 2|]
-    | EDim e1   -> [|0; 0; 0; 1|]
+    | ESel (_e1, _e2) -> [|0; 2; 2; 3|]
+    | EShape _e1 -> [|0; 0; 1; 2|]
+    | EDim _e1   -> [|0; 0; 0; 1|]
 
     | _ -> infer_err @@ sprintf "invalid PV argument `%s'"
             (expr_to_str e)

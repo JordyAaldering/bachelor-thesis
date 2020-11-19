@@ -1,0 +1,6 @@
+(ocamllex lexer)
+
+(library
+    (name src)
+    (libraries lib)
+)

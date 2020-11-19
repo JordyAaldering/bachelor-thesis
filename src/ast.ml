@@ -2,26 +2,21 @@ open Printf
 
 exception ParseFailure of string
 
-let parse_err msg =
-    raise @@ ParseFailure msg
-
 type expr =
     | EVar of string
     | ENum of float
     | EArray of expr list
-
     | EApply of expr * expr
     | ELambda of string * expr
     | ELetIn of string * expr * expr
     | EIfThen of expr * expr * expr
-
-    | EBinary of binary_op * expr * expr
-    | EUnary of unary_op * expr
+    | EBinary of bop * expr * expr
+    | EUnary of uop * expr
     | ESel of expr * expr
     | EShape of expr
     | EDim of expr
 
-and binary_op =
+and bop =
     | OpAdd
     | OpMin
     | OpMul
@@ -33,9 +28,12 @@ and binary_op =
     | OpGt
     | OpGe
 
-and unary_op =
+and uop =
     | OpNeg
     | OpNot
+
+let parse_err msg =
+    raise @@ ParseFailure msg
 
 let rec expr_to_str ?(sep=" ") e = match e with
     | EVar x -> x

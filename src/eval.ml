@@ -77,7 +77,7 @@ let rec eval_expr e st env = match e with
         let st, p2 = eval_expr e2 st env in
         let x, body, env' = closure_to_triple (Env.find p1 st) in
         eval_expr body st (Env.add x p2 env')
-    | ELambda (x, e1) ->
+    | ELambda (_x, _e1) ->
         add_fresh_value st (Closure (e, env))
     | EIfThen (e1, e2, e3) ->
         let st, p1 = eval_expr e1 st env in
