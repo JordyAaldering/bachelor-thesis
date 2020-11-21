@@ -1,0 +1,9 @@
+let add = \w. \x. \y. \z.
+    x + y + z
+in
+
+let u = [1, 2, 3] in
+let v = [4, 5, 6] in
+let w = [7, 8, 9] in
+let p = add u v w w in
+shape p

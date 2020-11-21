@@ -28,14 +28,12 @@ let rec sd e dem env = match e with
     | ENum _x -> env
     | EArray _xs -> env
 
-    | ELambda (x, e1) -> begin try
-            let env' = sd e1 dem env in
-            let demx = Env.find x env' in
-            Env.add x demx env'
-        with Not_found ->
-            infer_err @@ sprintf "could not find lambda variable `%s' in environment %s"
-                x (pv_env_to_str env)
-    end
+    | ELambda (x, e1) ->
+        let env' = sd e1 dem env in
+        let demx = try Env.find x env'
+            with Not_found -> [|0; 0; 0; 0|]
+        in
+        Env.add x demx env'
     | EApply (EVar fun_id, e2) -> begin try
             let dem' = Env.find fun_id env in
             let dem' = Array.map (Array.get dem') dem in
@@ -90,12 +88,16 @@ let rec sd e dem env = match e with
         sd e1 dem' env
 
 and pv e env = match e with
-    | ELambda (x, e1) -> begin try
+    | ELambda (x, e1)
+    | EApply (EVar x, e1) -> begin try
             let env' = sd e1 [|0; 1; 2; 3|] env in
             Env.find x env'
         with Not_found ->
             [|0; 1; 2; 3|]
         end
+    | EApply (e1, e2) ->
+        let env' = sd e2 [|0; 1; 2; 3|] env in
+        pv e1 env'
     
     | EBinary (op, _e1, _e2) -> begin match op with
         | OpAdd | OpMin | OpMul | OpDiv ->

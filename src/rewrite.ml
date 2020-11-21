@@ -49,8 +49,8 @@ and rewrite_s e inf env = match e with
         with Not_found ->
             rewrite_err_at e @@ sprintf "key `%s' was not found" x
     end
-    | ENum _x -> EShape e
-    | EArray _xs -> EShape e
+    | ENum _x -> EArray []
+    | EArray xs -> EArray [ENum (float_of_int @@ List.length xs)]
 
     | ELambda _ -> rewrite_lambda e 2 inf env
     | EApply _ -> rewrite_apply e 2 inf env
@@ -85,8 +85,8 @@ and rewrite_d e inf env = match e with
         with Not_found ->
             rewrite_err_at e @@ sprintf "key `%s' was not found" x
     end
-    | ENum _x -> EDim e
-    | EArray _xs -> EDim e
+    | ENum _x -> ENum 0.
+    | EArray _xs -> ENum 1.
 
     | ELambda _ -> rewrite_lambda e 1 inf env
     | EApply _ -> rewrite_apply e 1 inf env
@@ -133,7 +133,20 @@ and rewrite_apply e lvl inf env = match e with
             else "_d"
         in
         EApply (EVar fid, rewrite e2 lvl' inf env)
-    | _ -> assert false
+    | EApply (EApply (EVar x, e1), e2) ->
+        let dem = Env.find x inf in
+        let lvl' = Array.get dem lvl in
+        let fid = x ^ if lvl' = 3 then ""
+            else if lvl' = 2 then "_s"
+            else if lvl' = 1 then "_d"
+            else "_d"
+        in
+        EApply (EApply (EVar fid, rewrite e1 lvl' inf env), rewrite e2 lvl' inf env)
+    | EApply (e1, e2) ->
+        let dem = pv e1 inf in
+        let lvl' = Array.get dem lvl in
+        EApply (rewrite e1 lvl' inf env, rewrite e2 lvl' inf env)
+    | _ -> printf "%s\n" (expr_to_str e); assert false
 
 and rewrite_let e lvl inf env = match e with
     | ELetIn (fid, ELambda (var, e1), e2) ->
