@@ -1,4 +1,4 @@
-(*open Lexer
+open Lexer
 open Lexing
 
 val opt_get : token option -> token
@@ -25,7 +25,7 @@ val expect_token : lexbuf -> token -> unit
 val parse_primary : lexbuf -> token option
 
 (* Parse non-empty comma separated list of elements
-    that can be parsed by `parse_fun' *)
+    that can be parsed by the given function *)
 val parse_array : lexbuf -> (lexbuf -> token) -> Ast.expr list
 
 val parse_postfix : lexbuf -> Ast.expr
@@ -49,4 +49,3 @@ val parse_binary : lexbuf -> Ast.expr option
 val parse_unary : lexbuf -> Ast.expr option
 
 val parse_prog : lexbuf -> Ast.expr
-*)
