@@ -133,5 +133,5 @@ and eval_expr_lst es st env = match es with
 let eval_prog e =
     ptr_count := 0;
     let st, p = eval_expr e Env.empty Env.empty in
-    printf "Environment:\n%s\n\n" (st_to_str st);
+    (*printf "Environment:\n%s\n\n" (st_to_str st);*)
     printf "Result:\n%s = %s\n" p (value_to_str (Env.find p st))

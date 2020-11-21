@@ -34,14 +34,12 @@ let rec sd e dem env = match e with
             with Not_found -> [|0; 0; 0; 0|]
         in
         Env.add x demx env'
-    | EApply (EVar fun_id, e2) -> begin try
-            let dem' = Env.find fun_id env in
-            let dem' = Array.map (Array.get dem') dem in
-            sd e2 dem' env
-        with Not_found ->
-            infer_err @@ sprintf "could not find function `%s' in environment %s"
-                fun_id (pv_env_to_str env)
-    end
+    | EApply (EVar fun_id, e2) ->
+        let dem' = try Env.find fun_id env
+            with Not_found -> [|0; 1; 2; 3|]
+        in
+        let dem' = Array.map (Array.get dem') dem in
+        sd e2 dem' env
     | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
         let dem' = pv e1 env in
         let dem' = Array.map (Array.get dem') dem in
