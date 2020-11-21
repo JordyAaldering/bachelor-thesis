@@ -13,6 +13,8 @@ val st_to_str : val_env -> string
 (* Creates a fresh variable and adds it to the value environment with value `v' *)
 val add_fresh_value : val_env -> value -> (val_env * string)
 
+val update_let_ptr : val_env -> string -> string -> val_env
+
 val ptr_binary : val_env -> value -> string -> string -> value
 
 val ptr_unary : val_env -> value -> string -> value

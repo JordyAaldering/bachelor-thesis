@@ -30,6 +30,18 @@ let add_fresh_value st v =
     let st = Env.add p v st in
     (st, p)
 
+let update_let_ptr st p_old p_new =
+    let value_updater v =
+        match v with
+            | Closure (x, env) ->
+                let env' = Env.map (fun p ->
+                    if p = p_old then p_new else p
+                ) env in
+                Closure (x, env')
+            | _ -> v
+    in
+    Env.map value_updater st
+
 let ptr_binary st op p1 p2 =
     let v1 = Env.find p1 st in
     let v2 = Env.find p2 st in
@@ -78,14 +90,15 @@ let rec eval_expr e st env = match e with
         eval_expr body st (Env.add x p2 env')
     | ELambda (_x, _e1) ->
         add_fresh_value st (Closure (e, env))
+    | ELetIn (x, e1, e2) ->
+        let pname = create_fresh_ptr () in
+        let st, p1 = eval_expr e1 st (Env.add x pname env) in
+        let st = update_let_ptr st pname p1 in
+        eval_expr e2 st (Env.add x p1 env)
     | EIfThen (e1, e2, e3) ->
         let st, p1 = eval_expr e1 st env in
         let v = Env.find p1 st in
         eval_expr (if value_is_truthy v then e2 else e3) st env
-    | ELetIn (x, e1, e2) ->
-        let pname = sprintf "tmp%d" (!ptr_count + 1) in
-        let st, p1 = eval_expr e1 st (Env.add x pname env) in
-        eval_expr e2 st (Env.add x p1 env)
 
     | EBinary (op, e1, e2) ->
         let st, p1 = eval_expr e1 st env in
