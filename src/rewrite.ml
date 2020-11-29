@@ -127,9 +127,9 @@ and rewrite_apply e lvl inf env = match e with
     | EApply (EVar x, e2) -> (* function call *)
         let dem = Env.find x inf in
         let lvl' = Array.get dem lvl in
-        let fid = x ^ if lvl' = 3 then ""
-            else if lvl' = 2 then "_s"
-            else if lvl' = 1 then "_d"
+        let fid = x ^ if lvl = 3 then ""
+            else if lvl = 2 then "_s"
+            else if lvl = 1 then "_d"
             else "_d"
         in
         EApply (EVar fid, rewrite e2 lvl' inf env)

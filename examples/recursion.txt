@@ -4,4 +4,5 @@ let fib = \n.
     else fib (n - 1) + fib (n - 2)
 in
 
-fib 20
+let f = fib 20 in
+shape f
