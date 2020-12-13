@@ -1,13 +1,9 @@
 open Printf
-
-exception ValueFailure of string
+open Exception
 
 type value =
     | Vect of int list * float list
     | Closure of Ast.expr * Env.ptr_env
-
-let value_err msg =
-    raise @@ ValueFailure msg
 
 let shp_to_str shp =
     String.concat ", " (List.map string_of_int shp)

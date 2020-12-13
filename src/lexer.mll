@@ -1,6 +1,7 @@
 {
 open Ast
 open Lexing
+open Exception
 
 type token =
     | ID of string

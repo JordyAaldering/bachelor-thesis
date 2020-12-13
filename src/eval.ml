@@ -2,13 +2,9 @@ open Ast
 open Env
 open Value
 open Printf
+open Exception
 
 type val_env = value Env.t
-
-exception EvalFailure of string
-
-let eval_err msg =
-    raise @@ EvalFailure msg
 
 let ptr_count = ref 0
 

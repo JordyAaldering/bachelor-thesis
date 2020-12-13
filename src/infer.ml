@@ -1,13 +1,9 @@
 open Ast
 open Env
 open Printf
-
-exception InferenceFailure of string
+open Exception
 
 type pv_env = int array Env.t
-
-let infer_err msg =
-    raise @@ InferenceFailure msg
 
 let pv_env_to_str env =
     if Env.is_empty env then "[]"

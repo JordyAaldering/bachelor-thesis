@@ -1,7 +1,5 @@
 open Printf
 
-exception ParseFailure of string
-
 type expr =
     | EVar of string
     | ENum of float
@@ -31,9 +29,6 @@ and bop =
 and uop =
     | OpNeg
     | OpNot
-
-let parse_err msg =
-    raise @@ ParseFailure msg
 
 let rec expr_to_str ?(sep=" ") e = match e with
     | EVar x -> x

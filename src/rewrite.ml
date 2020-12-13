@@ -2,26 +2,22 @@ open Ast
 open Env
 open Infer
 open Printf
+open Exception
 
 type lvl_env = int Env.t
-
-exception RewriteFailure of string
-
-let rewrite_err msg =
-    raise @@ RewriteFailure msg
-
-let rewrite_err_at e msg =
-    raise @@ RewriteFailure (sprintf "at %s: %s" (expr_to_str e) msg)
 
 let rec rewrite e lvl inf env = match lvl with
     | 3 -> rewrite_f e inf env
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
     | 0 -> ENum 0.
-    | _ -> rewrite_err_at e @@ sprintf "invalid eval level `%d'" lvl
+    | _ -> rewrite_err @@ sprintf "at %s: invalid eval level `%d'" (expr_to_str e) lvl
 
 and rewrite_f e inf env = match e with
-    | EVar _x -> e
+    | EVar x ->
+        if try let _ = Env.find x inf in true with Not_found -> false; then
+            EVar (x ^ "_d") (* The variable is the name of a function *)
+        else EVar x
     | ENum _x -> e
     | EArray _xs -> e
 
@@ -45,9 +41,9 @@ and rewrite_s e inf env = match e with
             let lvl = Env.find x env in
             if lvl = 3 then EShape e
             else if lvl = 2 then e
-            else rewrite_err_at e @@ sprintf "invalid eval level `%d'" lvl
+            else rewrite_err @@ sprintf "at %s: invalid eval level `%d'" (expr_to_str e) lvl
         with Not_found ->
-            rewrite_err_at e @@ sprintf "key `%s' was not found" x
+            rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) x
     end
     | ENum _x -> EArray []
     | EArray xs -> EArray [ENum (float_of_int @@ List.length xs)]
@@ -83,7 +79,7 @@ and rewrite_d e inf env = match e with
             else if lvl = 1 then e
             else ENum 0.
         with Not_found ->
-            rewrite_err_at e @@ sprintf "key `%s' was not found" x
+            rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) x
     end
     | ENum _x -> ENum 0.
     | EArray _xs -> ENum 1.
@@ -127,7 +123,7 @@ and rewrite_apply e lvl inf env = match e with
     | EApply (EVar x, e2) -> (* function call *)
         let dem = Env.find x inf in
         let lvl' = Array.get dem lvl in
-        let fid = x ^ if lvl = 3 then ""
+        let fid = x ^ if lvl = 3 then "_f"
             else if lvl = 2 then "_s"
             else if lvl = 1 then "_d"
             else "_d"
@@ -136,7 +132,7 @@ and rewrite_apply e lvl inf env = match e with
     | EApply (EApply (EVar x, e1), e2) ->
         let dem = Env.find x inf in
         let lvl' = Array.get dem lvl in
-        let fid = x ^ if lvl' = 3 then ""
+        let fid = x ^ if lvl' = 3 then "_f"
             else if lvl' = 2 then "_s"
             else if lvl' = 1 then "_d"
             else "_d"
@@ -157,7 +153,7 @@ and rewrite_let e lvl inf env = match e with
             rewrite e2 lvl inf env
         else
             let lmb = ELambda (var, e1) in
-            ELetIn (fid, rewrite_f lmb inf env, 
+            ELetIn (fid ^ "_f", rewrite_f lmb inf env, 
             ELetIn (fid ^ "_s", rewrite_s lmb inf env,
             ELetIn (fid ^ "_d", rewrite_d lmb inf env,
                 rewrite e2 lvl inf env')))

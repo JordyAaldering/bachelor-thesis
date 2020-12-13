@@ -1,6 +1,7 @@
 open Ast
 open Lexer
 open Printf
+open Exception
 
 let opt_get x = match x with
     | Some x -> x
@@ -18,9 +19,6 @@ let op_prec token = match token with
     | MULT
     | DIV -> 4
     | _ -> 5
-
-let parse_err msg =
-    raise @@ ParseFailure msg
 
 (* Stack to keep tokens that we have peeked at but not consumed yet *)
 let token_stack = ref []
