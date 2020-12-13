@@ -1,3 +1,0 @@
-let v = [1, 2, 3] in
-let w = shape v in
-shape w

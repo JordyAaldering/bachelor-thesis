@@ -1,0 +1,9 @@
+let hanoi = \x.
+    if x <= 1 then
+        1
+    else
+        2 * hanoi (x - 1) + 1
+in
+
+let x = hanoi 100 in
+dim x

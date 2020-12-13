@@ -43,10 +43,10 @@ let rec sd e dem env = match e with
     | ELetIn (fun_id, ELambda(x, e1), e2) ->
         let dem' = pv (ELambda (x, e1)) env in
         let dem' = Array.map (Array.get dem') dem in
-        let env' = Env.add fun_id dem' env in
-        let env2 = sd e2 dem env' in
-        let env2' = Env.remove x env2 in
-        pv_env_union env' env2'
+        let env1 = Env.add fun_id dem' env in
+        let env2 = sd e2 dem env1 in
+        let env2 = Env.remove x env2 in
+        pv_env_union env1 env2
     | ELetIn (x, e1, e2) ->
         let dem' = pv (ELambda (x, e2)) env in
         let dem' = Array.map (Array.get dem') dem in
