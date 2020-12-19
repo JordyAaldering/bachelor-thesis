@@ -16,7 +16,7 @@ let rec rewrite e lvl inf env = match lvl with
 and rewrite_f e inf env = match e with
     | EVar x ->
         if try let _ = Env.find x inf in true with Not_found -> false; then
-            EVar (x ^ "_d") (* The variable is the name of a function *)
+            EVar (x ^ "_f") (* The variable is the name of a function *)
         else EVar x
     | ENum _x -> e
     | EArray _xs -> e
@@ -142,7 +142,7 @@ and rewrite_apply e lvl inf env = match e with
         let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
         EApply (rewrite e1 lvl' inf env, rewrite e2 lvl' inf env)
-    | _ -> printf "%s\n" (expr_to_str e); assert false
+    | _ -> assert false
 
 and rewrite_let e lvl inf env = match e with
     | ELetIn (fid, ELambda (var, e1), e2) ->
@@ -168,7 +168,10 @@ and rewrite_let e lvl inf env = match e with
     | _ -> assert false
 
 and rewrite_if e lvl inf env = match e with
-    | EIfThen (ec, et, ef) -> EIfThen (rewrite_f ec inf env, rewrite et lvl inf env, rewrite ef lvl inf env)
+    | EIfThen (ec, et, ef) ->
+        EIfThen (rewrite_f ec inf env,
+            rewrite et lvl inf env,
+            rewrite ef lvl inf env)
     | _ -> assert false
 
 let rewrite_prog e inf =

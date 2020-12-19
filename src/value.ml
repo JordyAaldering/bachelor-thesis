@@ -34,7 +34,6 @@ let value_sel v iv = match v, iv with
         let shp_vec = List.rev shp in
         let iv_vec = List.rev @@ List.map int_of_float idx in
         let i = row_major 1 0 shp_vec iv_vec in
-        printf "%d\n" i;
         Vect ([], [List.nth data i])
     | _ -> value_err @@ sprintf "invalid sel arguments %s and %s"
             (value_to_str iv) (value_to_str v)

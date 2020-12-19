@@ -2,10 +2,6 @@ let suc = \x.
     x + [1, 1, 1]
 in
 
-let shp = \x.
-    shape x
-in
-
 let v = [3, 4, 5] in
-let w = shp v in
+let w = (\x. shape x) v in
 dim w
