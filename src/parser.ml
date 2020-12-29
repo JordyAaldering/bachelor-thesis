@@ -198,7 +198,7 @@ let parse_prog lexbuf =
     token_stack := [];
     match parse_expr lexbuf with
         | Some e ->
-            printf "%s\n" (expr_to_str ~sep:"\n" e);
+            printf "%s\n" (expr_to_str ~newline:true e);
             e
         | None -> parse_err "parser returned None"
  
