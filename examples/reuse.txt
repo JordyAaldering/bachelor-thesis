@@ -1,9 +1,10 @@
-let suc = \x.
-    x + 1
+let add = \x.\y.
+    x + y
 in
 
 let v = [2, 3, 4] in
-let w = shape suc v in
-let p = dim suc v in
-let q = w + [p] in
-q.([0])
+let w = [2, 3, 4] in
+let p = shape add v w in
+let q = dim add v w in
+let r = p + [q] in
+r.([0])
