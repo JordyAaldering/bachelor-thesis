@@ -9,7 +9,7 @@ let shp_to_str shp =
     String.concat ", " (List.map string_of_int shp)
 
 let data_to_str data =
-    String.concat ", " (List.map string_of_float data)
+    String.concat ", " (List.map (sprintf "%g") data)
 
 let value_to_str v = match v with
     | Vect (shp, data) -> sprintf "<[%s], [%s]>"

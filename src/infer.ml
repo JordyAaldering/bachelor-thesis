@@ -21,7 +21,7 @@ let pv_env_union =
 
 let rec sd e dem env = match e with
     | EVar x -> Env.add x dem env
-    | ENum _x -> env
+    | EFloat _x -> env
     | EArray _xs -> env
 
     | ELambda (x, e1) ->

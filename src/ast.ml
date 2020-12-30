@@ -2,7 +2,7 @@ open Printf
 
 type expr =
     | EVar of string
-    | ENum of float
+    | EFloat of float
     | EArray of expr list
     | EApply of expr * expr
     | ELambda of string * expr
@@ -31,34 +31,7 @@ and uop =
     | OpNeg
     | OpNot
 
-let rec expr_to_str ?(newline=false) e = match e with
-    | EVar x -> x
-    | ENum x -> string_of_float x
-    | EArray xs -> sprintf "[%s]"
-        (String.concat ", " (List.map expr_to_str xs))
-
-    | EApply (e1, e2) -> sprintf "(%s) (%s)"
-        (expr_to_str ~newline:newline e1) (expr_to_str ~newline:newline e2)
-    | ELambda (x, e) -> sprintf "\\%s. %s"
-        x (expr_to_str ~newline:newline e)
-    | ELetIn (x, e1, e2) -> sprintf "let %s = %s in%s%s"
-        x (expr_to_str ~newline:newline e1) (if newline then "\n" else " ") (expr_to_str ~newline:newline e2)
-    | EIfThen (e1, e2, e3) -> sprintf "if %s then %s else %s"
-        (expr_to_str ~newline:newline e1) (expr_to_str ~newline:newline e2) (expr_to_str ~newline:newline e3)
-
-    | EBinary (op, e1, e2) -> sprintf "(%s) %s (%s)"
-        (expr_to_str ~newline:newline e1) (bop_to_str op) (expr_to_str ~newline:newline e2)
-    | EUnary (op, e1) -> sprintf "%s(%s)"
-        (uop_to_str op) (expr_to_str ~newline:newline e1)
-    | ESel (e1, e2) -> sprintf "sel (%s) (%s)"
-        (expr_to_str ~newline:newline e1) (expr_to_str ~newline:newline e2)
-    | EShape e1 -> sprintf "shape (%s)"
-        (expr_to_str ~newline:newline e1)
-    | EDim e1 -> sprintf "dim (%s)"
-        (expr_to_str ~newline:newline e1)
-    | ERead -> "read"
-
-and bop_to_str bop = match bop with
+let bop_to_str op = match op with
     | OpAdd -> "+"
     | OpMin -> "-"
     | OpMul -> "*"
@@ -70,6 +43,40 @@ and bop_to_str bop = match bop with
     | OpGt -> ">"
     | OpGe -> ">="
 
-and uop_to_str uop = match uop with
+let uop_to_str op = match op with
     | OpNeg -> "-"
     | OpNot -> "!"
+
+let rec expr_to_str ?(newline=false) e = match e with
+    | EVar s -> s
+    | EFloat x -> sprintf "%g" x
+    | EArray xs -> sprintf "[%s]"
+        (String.concat ", " (List.map expr_to_str xs))
+
+    | EApply (e1, e2) -> sprintf "%s %s"
+        (decide_paren ~newline:newline e1) (decide_paren ~newline:newline e2)
+    | ELambda (x, e) -> sprintf "\\%s. %s"
+        x (expr_to_str ~newline:newline e)
+    | ELetIn (x, e1, e2) -> sprintf "let %s = %s in%s%s"
+        x (expr_to_str ~newline:newline e1) (if newline then "\n" else " ") (expr_to_str ~newline:newline e2)
+    | EIfThen (e1, e2, e3) -> sprintf "if %s then %s else %s"
+        (expr_to_str ~newline:newline e1) (expr_to_str ~newline:newline e2) (expr_to_str ~newline:newline e3)
+
+    | EBinary (op, e1, e2) -> sprintf "%s %s %s"
+        (decide_paren ~newline:newline e1) (bop_to_str op) (decide_paren ~newline:newline e2)
+    | EUnary (op, e1) -> sprintf "%s%s"
+        (uop_to_str op) (decide_paren ~newline:newline e1)
+    | ESel (e1, e2) -> sprintf "%s.(%s)"
+        (decide_paren ~newline:newline e1) (expr_to_str ~newline:newline e2)
+    | EShape e1 -> sprintf "shape %s"
+        (decide_paren ~newline:newline e1)
+    | EDim e1 -> sprintf "dim %s"
+        (decide_paren ~newline:newline e1)
+    | ERead -> "read"
+
+and decide_paren ?(newline=false) e = match e with
+    | EVar _
+    | EFloat _
+    | EArray _
+    | ERead -> expr_to_str ~newline:newline e
+    | _ -> sprintf "(%s)" (expr_to_str ~newline:newline e)

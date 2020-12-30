@@ -45,7 +45,7 @@ let token_to_str tok = match tok with
     (* variables *)
     | ID s      -> s
     | INT x     -> string_of_int x
-    | FLOAT x   -> string_of_float x
+    | FLOAT x   -> sprintf "%g" x
     (* expressions *)
     | LAMBDA    -> "\\"
     | LET       -> "let"

@@ -62,7 +62,7 @@ let ptr_unary st op p =
 let rec eval_expr e st env = match e with
     | EVar x ->
         (st, Env.find x env)
-    | ENum x ->
+    | EFloat x ->
         add_fresh_value st (Vect ([], [x]))
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in

@@ -10,7 +10,7 @@ let rec rewrite e lvl inf env = match lvl with
     | 3 -> rewrite_f e inf env
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
-    | 0 -> ENum 0.
+    | 0 -> EFloat 0.
     | _ -> rewrite_err @@ sprintf "at %s: invalid eval level `%d'" (expr_to_str e) lvl
 
 and rewrite_f e inf env = match e with
@@ -18,7 +18,7 @@ and rewrite_f e inf env = match e with
         if try let _ = Env.find x inf in true with Not_found -> false; then
             EVar (x ^ "_f") (* The variable is the name of a function *)
         else EVar x
-    | ENum _x -> e
+    | EFloat _x -> e
     | EArray _xs -> e
 
     | ELambda _ -> rewrite_lambda e 3 inf env
@@ -46,8 +46,8 @@ and rewrite_s e inf env = match e with
         with Not_found ->
             rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) x
     end
-    | ENum _x -> EArray []
-    | EArray xs -> EArray [ENum (float_of_int @@ List.length xs)]
+    | EFloat _x -> EArray []
+    | EArray xs -> EArray [EFloat (float_of_int @@ List.length xs)]
 
     | ELambda _ -> rewrite_lambda e 2 inf env
     | EApply _ -> rewrite_apply e 2 inf env
@@ -66,7 +66,7 @@ and rewrite_s e inf env = match e with
     end
     | ESel _ -> EArray []
     | EShape e1 -> EArray [rewrite_d e1 inf env]
-    | EDim _ -> ENum 1.
+    | EDim _ -> EFloat 1.
     | ERead -> ERead
 
 and rewrite_d e inf env = match e with
@@ -77,14 +77,14 @@ and rewrite_d e inf env = match e with
         begin try
             let lvl = Env.find x env in
             if lvl = 3 then EDim e
-            else if lvl = 2 then ESel (EShape e, ENum 0.)
+            else if lvl = 2 then ESel (EShape e, EFloat 0.)
             else if lvl = 1 then e
-            else ENum 0.
+            else EFloat 0.
         with Not_found ->
             rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) x
     end
-    | ENum _x -> ENum 0.
-    | EArray _xs -> ENum 1.
+    | EFloat _x -> EFloat 0.
+    | EArray _xs -> EFloat 1.
 
     | ELambda _ -> rewrite_lambda e 1 inf env
     | EApply _ -> rewrite_apply e 1 inf env
@@ -95,15 +95,15 @@ and rewrite_d e inf env = match e with
         | OpAdd | OpMin | OpMul | OpDiv
             -> rewrite_d e1 inf env
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
-            -> ENum 0.
+            -> EFloat 0.
     end
     | EUnary (op, e1) -> begin match op with
         | OpNeg -> rewrite_d e1 inf env
-        | OpNot -> ENum 0.
+        | OpNot -> EFloat 0.
     end
-    | ESel _ -> ENum 0.
-    | EShape _ -> ENum 1.
-    | EDim _ -> ENum 0.
+    | ESel _ -> EFloat 0.
+    | EShape _ -> EFloat 1.
+    | EDim _ -> EFloat 0.
     | ERead -> ERead
 
 and rewrite_lambda e lvl inf env = match e with
