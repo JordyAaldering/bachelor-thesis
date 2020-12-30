@@ -18,6 +18,7 @@ type token =
     | IF
     | THEN
     | ELSE
+    (* primitive functions *)
     | SHAPE
     | DIM
     | READ
@@ -53,6 +54,7 @@ let token_to_str tok = match tok with
     | IF        -> "if"
     | THEN      -> "then"
     | ELSE      -> "else"
+    (* primitive functions *)
     | SHAPE     -> "shape"
     | DIM       -> "dim"
     | READ      -> "read"

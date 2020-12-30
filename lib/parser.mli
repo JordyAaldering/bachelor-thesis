@@ -10,9 +10,9 @@ val parse_application : Ast.expr -> lexbuf -> Ast.expr
 
 val parse_lambda : lexbuf -> Ast.expr option
 
-val parse_letin : lexbuf -> Ast.expr option
+val parse_let : lexbuf -> Ast.expr option
 
-val parse_ifthen : lexbuf -> Ast.expr option
+val parse_cond : lexbuf -> Ast.expr option
 
 val parse_binary : lexbuf -> Ast.expr option
 
