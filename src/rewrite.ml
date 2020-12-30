@@ -8,22 +8,24 @@ let rec rewrite e lvl inf env = match lvl with
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
     | 0 -> EFloat 0.
-    | _ -> rewrite_err @@ sprintf "%s has invalid eval level `%d'"
+    | _ -> rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
         (expr_to_str e) lvl
 
 and rewrite_f e inf env = match e with
     (* variables *)
-    | EVar x ->
-        if try let _ = Env.find x inf in true with Not_found -> false; then
-            EVar (x ^ "_f") (* The variable is the name of a function *)
-        else EVar x
-    | EFloat _x -> e
-    | EArray _xs -> e
+    | EVar s -> (try
+            let _ = Env.find s inf in
+            (* The variable is the name of a function *)
+            EVar (s ^ "_f")
+        with Not_found -> EVar s
+    )
+    | EFloat _ -> e
+    | EArray _ -> e
     (* expressions *)
-    | ELambda _ -> rewrite_lambda e 3 inf env
-    | EApply _ -> rewrite_apply e 3 inf env
-    | ELetIn _ -> rewrite_let e 3 inf env
-    | EIfThen _ -> rewrite_if e 3 inf env
+    | ELambda (s, e1) -> rewrite_lambda s e1 3 inf env
+    | EApply (e1, e2) -> rewrite_apply e1 e2 3 inf env
+    | ELet (s, e1, e2) -> rewrite_let s e1 e2 3 inf env
+    | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 3 inf env
     (* operands *)
     | EBinary (op, e1, e2) -> EBinary (op, rewrite_f e1 inf env, rewrite_f e2 inf env)
     | EUnary (op, e1) -> EUnary (op, rewrite_f e1 inf env)
@@ -34,31 +36,30 @@ and rewrite_f e inf env = match e with
     | ERead -> ERead
 
 and rewrite_s e inf env = match e with
-    | EVar x ->
-        if try let _ = Env.find x inf in true with Not_found -> false; then
-            EVar (x ^ "_s") (* The variable is the name of a function *)
-        else (
-            try
-                let lvl = Env.find x env in
+    | EVar s -> (try
+            let _ = Env.find s inf in
+            (* The variable is the name of a function *)
+            EVar (s ^ "_s")
+        with Not_found -> (try
+                let lvl = Env.find s env in
                 if lvl = 3 then EShape e
                 else if lvl = 2 then e
                 else rewrite_err @@ sprintf "at %s: invalid eval level `%d'" (expr_to_str e) lvl
             with Not_found ->
-                rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) x
+                rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) s
         )
-    | EFloat _x -> EArray []
+    )
+    | EFloat _ -> EArray []
     | EArray xs -> EArray [EFloat (float_of_int @@ List.length xs)]
     (* expressions *)
-    | ELambda _ -> rewrite_lambda e 2 inf env
-    | EApply _ -> rewrite_apply e 2 inf env
-    | ELetIn _ -> rewrite_let e 2 inf env
-    | EIfThen _ -> rewrite_if e 2 inf env
+    | ELambda (s, e1) -> rewrite_lambda s e1 2 inf env
+    | EApply (e1, e2) -> rewrite_apply e1 e2 2 inf env
+    | ELet (s, e1, e2) -> rewrite_let s e1 e2 2 inf env
+    | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 2 inf env
     (* operands *)
-    | EBinary (op, e1, _e2) -> (match op with
-        | OpAdd | OpMin | OpMul | OpDiv
-            -> rewrite_s e1 inf env
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
-            -> EArray []
+    | EBinary (op, e1, _) -> (match op with
+        | OpAdd | OpMin | OpMul | OpDiv -> rewrite_s e1 inf env
+        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe -> EArray []
     )
     | EUnary (op, e1) -> (match op with
         | OpNeg -> rewrite_s e1 inf env
@@ -71,32 +72,31 @@ and rewrite_s e inf env = match e with
     | ERead -> ERead
 
 and rewrite_d e inf env = match e with
-    | EVar x ->
-        if try let _ = Env.find x inf in true with Not_found -> false; then
-            EVar (x ^ "_d") (* The variable is the name of a function *)
-        else (
-            try
-                let lvl = Env.find x env in
+    | EVar s -> (try
+            let _ = Env.find s inf in
+            (* The variable is the name of a function *)
+            EVar (s ^ "_d")
+        with Not_found -> (try
+                let lvl = Env.find s env in
                 if lvl = 3 then EDim e
                 else if lvl = 2 then ESel (EShape e, EFloat 0.)
                 else if lvl = 1 then e
                 else EFloat 0.
             with Not_found ->
-                rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) x
+                rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) s
         )
-    | EFloat _x -> EFloat 0.
-    | EArray _xs -> EFloat 1.
+    )
+    | EFloat _ -> EFloat 0.
+    | EArray _ -> EFloat 1.
     (* expressions *)
-    | ELambda _ -> rewrite_lambda e 1 inf env
-    | EApply _ -> rewrite_apply e 1 inf env
-    | ELetIn _ -> rewrite_let e 1 inf env
-    | EIfThen _ -> rewrite_if e 1 inf env
+    | ELambda (s, e1) -> rewrite_lambda s e1 1 inf env
+    | EApply (e1, e2) -> rewrite_apply e1 e2 1 inf env
+    | ELet (s, e1, e2) -> rewrite_let s e1 e2 1 inf env
+    | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 1 inf env
     (* operands *)
-    | EBinary (op, e1, _e2) -> (match op with
-        | OpAdd | OpMin | OpMul | OpDiv
-            -> rewrite_d e1 inf env
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
-            -> EFloat 0.
+    | EBinary (op, e1, _) -> (match op with
+        | OpAdd | OpMin | OpMul | OpDiv -> rewrite_d e1 inf env
+        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe -> EFloat 0.
     )
     | EUnary (op, e1) -> (match op with
         | OpNeg -> rewrite_d e1 inf env
@@ -108,76 +108,65 @@ and rewrite_d e inf env = match e with
     | EDim _ -> EFloat 0.
     | ERead -> ERead
 
-and rewrite_lambda e lvl inf env = match e with
-    | ELambda (x, e1) ->
-        let dem = pv e inf in
-        let lvl' = Array.get dem lvl in
-        let env' = Env.add x lvl' env in
-        ELambda (x, rewrite e1 lvl inf env')
-    | _ -> assert false
+and rewrite_lambda s e1 lvl inf env =
+    let dem = pv (ELambda (s, e1)) inf in
+    let lvl' = Array.get dem lvl in
+    let env' = Env.add s lvl' env in
+    ELambda (s, rewrite e1 lvl inf env')
 
-and rewrite_apply e lvl inf env = match e with
-    | EApply (ELambda (x, e1), e2) ->
-        let dem = pv (ELambda (x, e1)) inf in
+and rewrite_apply e1 e2 lvl inf env = match e1 with
+    | ELambda (s, e') ->
+        let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
         if lvl' = 0 then
-            rewrite e1 lvl inf env
+            rewrite e' lvl inf env
         else
-            let env' = Env.add x lvl' env in
-            EApply (ELambda (x, rewrite e1 lvl inf env'), rewrite e2 lvl' inf env)
-    | EApply (EVar x, e2) -> (* function call *)
-        let dem = Env.find x inf in
+            let env' = Env.add s lvl' env in
+            EApply (ELambda (s, rewrite e' lvl inf env'), rewrite e2 lvl' inf env)
+    | EVar s -> (* function call *)
+        let dem = Env.find s inf in
         let lvl' = Array.get dem lvl in
-        let fid = x ^ if lvl = 3 then "_f"
+        let fid = s ^ if lvl = 3 then "_f"
             else if lvl = 2 then "_s"
             else if lvl = 1 then "_d"
             else "_d"
         in
         EApply (EVar fid, rewrite e2 lvl' inf env)
-    | EApply (EApply (EVar x, e1), e2) ->
-        let dem = Env.find x inf in
+    | EApply (EVar s, e') ->
+        let dem = Env.find s inf in
         let lvl' = Array.get dem lvl in
-        let fid = x ^ if lvl' = 3 then "_f"
+        let fid = s ^ if lvl' = 3 then "_f"
             else if lvl' = 2 then "_s"
             else if lvl' = 1 then "_d"
             else "_d"
         in
-        EApply (EApply (EVar fid, rewrite e1 lvl' inf env), rewrite e2 lvl' inf env)
-    | EApply (e1, e2) ->
+        EApply (EApply (EVar fid, rewrite e' lvl' inf env), rewrite e2 lvl' inf env)
+    | _ ->
         let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
         EApply (rewrite e1 lvl' inf env, rewrite e2 lvl' inf env)
-    | _ -> assert false
 
-and rewrite_let e lvl inf env = match e with
-    | ELetIn (fid, ELambda (var, e1), e2) ->
-        let dem = pv (ELambda (fid, e2)) inf in
-        let lvl' = Array.get dem lvl in
-        let env' = Env.add fid lvl' env in
-        if lvl' = 0 then
-            rewrite e2 lvl inf env
-        else
-            let lmb = ELambda (var, e1) in
-            ELetIn (fid ^ "_f", rewrite_f lmb inf env, 
-            ELetIn (fid ^ "_s", rewrite_s lmb inf env,
-            ELetIn (fid ^ "_d", rewrite_d lmb inf env,
+and rewrite_let s e1 e2 lvl inf env =
+    let dem = pv (ELambda (s, e2)) inf in
+    let lvl' = Array.get dem lvl in
+    let env' = Env.add s lvl' env in
+    if lvl' = 0 then
+        rewrite e2 lvl inf env'
+    else (match e1 with
+        | ELambda _ ->
+            ELet (s ^ "_f", rewrite_f e1 inf env, 
+            ELet (s ^ "_s", rewrite_s e1 inf env,
+            ELet (s ^ "_d", rewrite_d e1 inf env,
                 rewrite e2 lvl inf env')))
-    | ELetIn (x, e1, e2) ->
-        let dem = pv (ELambda (x, e2)) inf in
-        let lvl' = Array.get dem lvl in
-        let env' = Env.add x lvl' env in
-        if lvl' = 0 then
-            rewrite e2 lvl inf env'
-        else
-            ELetIn (x, rewrite e1 lvl' inf env, rewrite e2 lvl inf env')
-    | _ -> assert false
+        | _ ->
+            ELet (s, rewrite e1 lvl' inf env,
+                rewrite e2 lvl inf env')
+    )
 
-and rewrite_if e lvl inf env = match e with
-    | EIfThen (ec, et, ef) ->
-        EIfThen (rewrite_f ec inf env,
-            rewrite et lvl inf env,
-            rewrite ef lvl inf env)
-    | _ -> assert false
+and rewrite_if e1 e2 e3 lvl inf env =
+    ECond (rewrite_f e1 inf env,
+        rewrite e2 lvl inf env,
+        rewrite e3 lvl inf env)
 
 let rewrite_prog e inf =
     let e = rewrite_f e inf Env.empty in

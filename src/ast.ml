@@ -8,8 +8,8 @@ type expr =
     (* expressions *)
     | EApply of expr * expr
     | ELambda of string * expr
-    | ELetIn of string * expr * expr
-    | EIfThen of expr * expr * expr
+    | ELet of string * expr * expr
+    | ECond of expr * expr * expr
     (* operands *)
     | EBinary of bop * expr * expr
     | EUnary of uop * expr
@@ -62,9 +62,9 @@ let rec expr_to_str ?(newline=false) e = match e with
         (decide_paren ~newline:newline e1) (decide_paren ~newline:newline e2)
     | ELambda (x, e) -> sprintf "\\%s. %s"
         x (expr_to_str ~newline:newline e)
-    | ELetIn (x, e1, e2) -> sprintf "let %s = %s in%s%s"
+    | ELet (x, e1, e2) -> sprintf "let %s = %s in%s%s"
         x (expr_to_str ~newline:newline e1) (if newline then "\n" else " ") (expr_to_str ~newline:newline e2)
-    | EIfThen (e1, e2, e3) -> sprintf "if %s then %s else %s"
+    | ECond (e1, e2, e3) -> sprintf "if %s then %s else %s"
         (expr_to_str ~newline:newline e1) (expr_to_str ~newline:newline e2) (expr_to_str ~newline:newline e3)
     (* operands *)
     | EBinary (op, e1, e2) -> sprintf "%s %s %s"

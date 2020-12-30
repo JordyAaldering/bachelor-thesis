@@ -77,12 +77,12 @@ let rec eval_expr e st env = match e with
         eval_expr body st (Env.add x p2 env')
     | ELambda (s, e1) ->
         add_fresh_value st (VClosure (s, e1, env))
-    | ELetIn (x, e1, e2) ->
+    | ELet (x, e1, e2) ->
         let pname = create_fresh_ptr () in
         let st, p1 = eval_expr e1 st (Env.add x pname env) in
         let st = update_let_ptr st pname p1 in
         eval_expr e2 st (Env.add x p1 env)
-    | EIfThen (e1, e2, e3) ->
+    | ECond (e1, e2, e3) ->
         let st, p1 = eval_expr e1 st env in
         let v = Env.find p1 st in
         eval_expr (if value_is_truthy v then e2 else e3) st env

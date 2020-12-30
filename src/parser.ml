@@ -119,7 +119,7 @@ and parse_let lexbuf =
     let e1 = expect_expr lexbuf in
     expect_token lexbuf IN;
     let e2 = expect_expr lexbuf in
-    Some (ELetIn (s, e1, e2))
+    Some (ELet (s, e1, e2))
 
 and parse_cond lexbuf =
     let e1 = expect_expr lexbuf in
@@ -127,7 +127,7 @@ and parse_cond lexbuf =
     let e2 = expect_expr lexbuf in
     expect_token lexbuf ELSE;
     let e3 = expect_expr lexbuf in
-    Some (EIfThen (e1, e2, e3))
+    Some (ECond (e1, e2, e3))
 
 and parse_binary lexbuf =
     let rec resolve_stack s prec =

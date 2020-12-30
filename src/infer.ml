@@ -18,8 +18,8 @@ let rec sd e dem env = match e with
         let dem' = try Env.find x env'
             with Not_found -> [|0; 0; 0; 0|] in
         Env.add x dem' env'
-    | EApply (EVar fun_id, e2) ->
-        let dem' = try Env.find fun_id env
+    | EApply (EVar fid, e2) ->
+        let dem' = try Env.find fid env
             with Not_found -> [|0; 1; 2; 3|] in
         let dem' = Array.map (Array.get dem') dem in
         sd e2 dem' env
@@ -28,20 +28,20 @@ let rec sd e dem env = match e with
         let dem' = pv e1 env in
         let dem' = Array.map (Array.get dem') dem in
         sd e2 dem' env
-    | ELetIn (fun_id, ELambda(s, e1), e2) ->
+    | ELet (fid, ELambda(s, e1), e2) ->
         let dem' = pv (ELambda (s, e1)) env in
         let dem' = Array.map (Array.get dem') dem in
-        let env1 = Env.add fun_id dem' env in
+        let env1 = Env.add fid dem' env in
         let env2 = sd e2 dem env1 in
         let env2 = Env.remove s env2 in
         pv_env_union env1 env2
-    | ELetIn (s, e1, e2) ->
+    | ELet (s, e1, e2) ->
         let dem' = pv (ELambda (s, e2)) env in
         let dem' = Array.map (Array.get dem') dem in
         let env1 = sd e1 dem' env in
         let env2 = Env.remove s @@ sd e2 dem env in
         pv_env_union env1 env2
-    | EIfThen (e1, e2, e3) ->
+    | ECond (e1, e2, e3) ->
         let env1 = sd e1 [|0; 3; 3; 3|] env in
         let env2 = sd e2 dem env in
         let env3 = sd e3 dem env in
@@ -77,8 +77,7 @@ and pv e env = match e with
     | EApply (EVar s, e1) -> (try
             let env' = sd e1 [|0; 1; 2; 3|] env in
             Env.find s env'
-        with Not_found ->
-            [|0; 1; 2; 3|]
+        with Not_found -> [|0; 1; 2; 3|]
     )
     | EApply (e1, e2) ->
         let env' = sd e2 [|0; 1; 2; 3|] env in
