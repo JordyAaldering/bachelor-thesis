@@ -62,7 +62,7 @@ let rec eval_expr e st env = match e with
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let float = (match ptr_val with
-                    | VArray (_, [x]) -> x
+                    | VArray ([], [x]) -> x
                     | _ -> eval_err @@ sprintf "invalid value in list `%s'"
                             (value_to_str ptr_val)
                 ) in
