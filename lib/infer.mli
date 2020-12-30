@@ -10,4 +10,4 @@ val sd : Ast.expr -> int array -> pv_env -> pv_env
 
 val pv : Ast.expr -> pv_env -> int array
 
-val infer_prog : Ast.expr -> pv_env
+val infer : Ast.expr -> pv_env

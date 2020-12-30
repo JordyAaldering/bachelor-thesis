@@ -10,7 +10,7 @@ let eval_orig e =
 
 let eval_rewrite e =
     printf "\n--- REWRITE ---\n";
-    let env = infer_prog e in
+    let env = infer e in
     let e = rewrite_prog e env in
     eval_prog e
 
