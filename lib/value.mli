@@ -4,11 +4,11 @@ val value_err : string -> unit
 
 val value_to_str : value -> string
 
-val value_sel : value -> value -> value
+val sel : value -> value -> value
 
-val value_shape : value -> value
+val shape : value -> value
 
-val value_dim : value -> value
+val dim : value -> value
 
 val value_neg : value -> value
 

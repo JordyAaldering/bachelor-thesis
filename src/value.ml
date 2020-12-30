@@ -1,3 +1,4 @@
+open Ast
 open Env
 open Printf
 
@@ -8,7 +9,7 @@ let value_err msg =
 
 type value =
     | VArray of int list * float list
-    | VClosure of string * Ast.expr * string Env.t
+    | VClosure of string * expr * string Env.t
 
 let shp_to_str shp =
     String.concat ", " (List.map string_of_int shp)
@@ -17,10 +18,11 @@ let data_to_str data =
     String.concat ", " (List.map (sprintf "%g") data)
 
 let value_to_str v = match v with
+    | VArray ([], [x]) -> sprintf "%g" x
     | VArray (shp, data) -> sprintf "<[%s], [%s]>"
         (shp_to_str shp) (data_to_str data)
     | VClosure (s, e, env) -> sprintf "{\\%s.%s, %s}"
-        s (Ast.expr_to_str e) (ptr_env_to_str env)
+        s (expr_to_str e) (ptr_env_to_str env)
 
 let extract_value v = match v with
     | VArray (shp, data) -> (shp, data)
@@ -33,9 +35,9 @@ let extract_closure v = match v with
 
 (** Primitive Functions **)
 
-let value_sel v iv = match v, iv with
-    | VArray (_shp, xs), VArray ([], [i]) ->
-        VArray ([], [List.nth xs (int_of_float i)])
+let sel v iv = match v, iv with
+    | VArray (_, data), VArray ([], [i]) ->
+        VArray ([], [List.nth data (int_of_float i)])
     | VArray (shp, data), VArray (_, idx) ->
         let rec row_major sprod res shp iv = match shp, iv with
             | [], [] -> res
@@ -51,11 +53,11 @@ let value_sel v iv = match v, iv with
     | _ -> value_err @@ sprintf "invalid sel arguments %s and %s"
             (value_to_str iv) (value_to_str v)
 
-let value_shape v = match v with
+let shape v = match v with
     | VArray (shp, _) -> VArray ([List.length shp], List.map float_of_int shp)
     | _ -> value_err @@ sprintf "invalid shape argument %s" (value_to_str v)
 
-let value_dim v = match v with
+let dim v = match v with
     | VArray (shp, _) -> VArray ([], [float_of_int @@ List.length shp])
     | _ -> value_err @@ sprintf "invalid dim argument %s" (value_to_str v)
 
@@ -95,7 +97,7 @@ let value_div v1 v2 = match v1, v2 with
 
 
 let value_is_truthy v = match v with
-    | VArray (_, data) -> List.for_all ((<>) 0.) data
+    | VArray (_, data) -> List.exists ((<>) 0.) data
     | _ -> false
 
 let value_not v =

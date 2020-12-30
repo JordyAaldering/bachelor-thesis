@@ -100,15 +100,15 @@ let rec eval_expr e st env = match e with
     | ESel (e1, e2) ->
         let st, v1 = eval_expr e1 st env in
         let st, iv = eval_expr e2 st env in
-        let v2 = value_sel (Env.find v1 st) (Env.find iv st) in
+        let v2 = sel (Env.find v1 st) (Env.find iv st) in
         add_fresh_value st v2
     | EShape e1 ->
         let st, p = eval_expr e1 st env in
-        let v = value_shape (Env.find p st) in
+        let v = shape (Env.find p st) in
         add_fresh_value st v
     | EDim e1 ->
         let st, p = eval_expr e1 st env in
-        let v = value_dim (Env.find p st) in
+        let v = dim (Env.find p st) in
         add_fresh_value st v
     | ERead ->
         printf "> ";
