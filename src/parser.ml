@@ -1,7 +1,7 @@
 open Ast
+open Token
 open Lexer
 open Printf
-open Exception
 
 let opt_get x = match x with
     | Some x -> x
@@ -14,9 +14,9 @@ let op_prec token = match token with
     | LE
     | GT
     | GE -> 2
-    | PLUS
+    | ADD
     | MIN -> 3
-    | MULT
+    | MUL
     | DIV -> 4
     | _ -> 5
 
@@ -47,7 +47,7 @@ let match_token lexbuf expected =
 let expect_id lexbuf =
     let t = get_token lexbuf in
     match t with
-        | ID _x -> t
+        | ID _s -> t
         | _ -> parse_err @@ sprintf "expected identifier, found `%s' instead"
                 (token_to_str t)
 
@@ -55,13 +55,12 @@ let expect_token lexbuf expected =
     let t = get_token lexbuf in
     if t <> expected then
         parse_err @@ sprintf "expected token `%s', found `%s' instead"
-            (token_to_str expected) (token_to_str t);
-    ()
+            (token_to_str expected) (token_to_str t)
 
 let rec parse_primary lexbuf =
     let t = get_token lexbuf in
     match t with
-        | ID x -> Some (EVar x)
+        | ID s -> Some (EVar s)
         | INT x -> Some (ENum (float_of_int x))
         | FLOAT x -> Some (ENum x)
         | LAMBDA -> parse_lambda lexbuf
@@ -69,10 +68,10 @@ let rec parse_primary lexbuf =
         | IF -> parse_ifthen lexbuf
         | SHAPE -> parse_shape lexbuf
         | DIM -> parse_dim lexbuf
+        | READ -> Some ERead
         | LSQUARE ->
-            let lst = if peek_token lexbuf <> RSQUARE then
-                    parse_array lexbuf parse_expr
-                else []
+            let lst = if peek_token lexbuf = RSQUARE
+                then [] else parse_array lexbuf parse_expr
             in
             expect_token lexbuf RSQUARE;
             Some (EArray (List.map opt_get lst))

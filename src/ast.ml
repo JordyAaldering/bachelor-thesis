@@ -13,6 +13,7 @@ type expr =
     | ESel of expr * expr
     | EShape of expr
     | EDim of expr
+    | ERead
 
 and bop =
     | OpAdd
@@ -55,6 +56,7 @@ let rec expr_to_str ?(newline=false) e = match e with
         (expr_to_str ~newline:newline e1)
     | EDim e1 -> sprintf "dim (%s)"
         (expr_to_str ~newline:newline e1)
+    | ERead -> "read"
 
 and bop_to_str bop = match bop with
     | OpAdd -> "+"
