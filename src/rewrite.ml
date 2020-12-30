@@ -44,9 +44,11 @@ and rewrite_s e inf env = match e with
                 let lvl = Env.find s env in
                 if lvl = 3 then EShape e
                 else if lvl = 2 then e
-                else rewrite_err @@ sprintf "at %s: invalid eval level `%d'" (expr_to_str e) lvl
+                else rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
+                        (expr_to_str e) lvl
             with Not_found ->
-                rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) s
+                rewrite_err @@ sprintf "at %s: key `%s' was not found"
+                    (expr_to_str e) s
         )
     )
     | EFloat _ -> EArray []
@@ -58,8 +60,10 @@ and rewrite_s e inf env = match e with
     | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 2 inf env
     (* operands *)
     | EBinary (op, e1, _) -> (match op with
-        | OpAdd | OpMin | OpMul | OpDiv -> rewrite_s e1 inf env
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe -> EArray []
+        | OpAppend | OpAdd | OpMin | OpMul | OpDiv 
+            -> rewrite_s e1 inf env
+        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
+            -> EArray []
     )
     | EUnary (op, e1) -> (match op with
         | OpNeg -> rewrite_s e1 inf env
@@ -83,7 +87,8 @@ and rewrite_d e inf env = match e with
                 else if lvl = 1 then e
                 else EFloat 0.
             with Not_found ->
-                rewrite_err @@ sprintf "at %s: key `%s' was not found" (expr_to_str e) s
+                rewrite_err @@ sprintf "at %s: key `%s' was not found"
+                    (expr_to_str e) s
         )
     )
     | EFloat _ -> EFloat 0.
@@ -95,8 +100,10 @@ and rewrite_d e inf env = match e with
     | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 1 inf env
     (* operands *)
     | EBinary (op, e1, _) -> (match op with
-        | OpAdd | OpMin | OpMul | OpDiv -> rewrite_d e1 inf env
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe -> EFloat 0.
+        | OpAppend | OpAdd | OpMin | OpMul | OpDiv
+            -> rewrite_d e1 inf env
+        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
+            -> EFloat 0.
     )
     | EUnary (op, e1) -> (match op with
         | OpNeg -> rewrite_d e1 inf env

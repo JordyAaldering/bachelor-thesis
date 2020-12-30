@@ -64,6 +64,15 @@ let dim v = match v with
 
 (** Predicates **)
 
+let value_append v1 v2 = match v1, v2 with
+    | VArray (shp, xs), VArray ([], ys)
+    | VArray ([], xs), VArray (shp, ys) ->
+        VArray (shp @ [1], xs @ ys)
+    | VArray (shp1, xs), VArray (shp2, ys) ->
+        VArray (shp1 @ shp2, xs @ ys)
+    | _ -> value_err @@ sprintf "invalid arguments %s and %s"
+            (value_to_str v1) (value_to_str v2)
+
 let value_neg v = match v with
     | VArray (shp, data) -> VArray (shp, List.map (fun x -> -. x) data)
     | _ -> value_err @@ sprintf "invalid argument %s" (value_to_str v)

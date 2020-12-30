@@ -2,8 +2,9 @@ let hanoi = \x.
     if x <= 1 then
         1
     else
-        2 * hanoi (x - 1) + 1
+        let v = hanoi (x - 1) in
+        2 * v.(0) + 1 ++ v
 in
 
 let x = hanoi 100 in
-dim x
+x

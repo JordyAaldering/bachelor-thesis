@@ -34,6 +34,7 @@ let ptr_binary st op p1 p2 =
     let v1 = Env.find p1 st in
     let v2 = Env.find p2 st in
     match op with
+        | OpAppend -> value_append v1 v2
         | OpAdd -> value_add v1 v2
         | OpMin -> value_add v1 (value_neg v2)
         | OpMul -> value_mul v1 v2
@@ -61,7 +62,7 @@ let rec eval_expr e st env = match e with
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let float = (match ptr_val with
-                    | VArray ([], [x]) -> x
+                    | VArray (_, [x]) -> x
                     | _ -> eval_err @@ sprintf "invalid value in list `%s'"
                             (value_to_str ptr_val)
                 ) in

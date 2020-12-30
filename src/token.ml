@@ -23,6 +23,7 @@ type token =
     | DIM
     | READ
     (* operands *)
+    | APPEND
     | ADD
     | MIN
     | MUL
@@ -59,6 +60,7 @@ let token_to_str tok = match tok with
     | DIM       -> "dim"
     | READ      -> "read"
     (* operands *)
+    | APPEND    -> "++"
     | ADD       -> "+"
     | MIN       -> "-"
     | MUL       -> "*"
@@ -79,6 +81,7 @@ let token_to_str tok = match tok with
     | EOF       -> "EOF"
 
 let is_op tok = match tok with
+    | APPEND
     | ADD
     | MIN
     | MUL
@@ -98,21 +101,24 @@ let op_prec tok = match tok with
     | LE
     | GT
     | GE -> 2
+    | APPEND -> 3
     | ADD
-    | MIN -> 3
+    | MIN -> 4
     | MUL
-    | DIV -> 4
-    | _ -> 5
+    | DIV -> 5
+    | _ -> 6
 
 let op_to_binop tok = match tok with
-    | ADD  -> OpAdd
-    | MIN  -> OpMin
-    | MUL  -> OpMul
-    | DIV  -> OpDiv
-    | EQ   -> OpEq
-    | NE   -> OpNe
-    | LT   -> OpLt
-    | LE   -> OpLe
-    | GT   -> OpGt
-    | GE   -> OpGe
-    | _ -> parse_err @@ sprintf "token `%s' is not a binary operand" (token_to_str tok)
+    | APPEND -> OpAppend
+    | ADD    -> OpAdd
+    | MIN    -> OpMin
+    | MUL    -> OpMul
+    | DIV    -> OpDiv
+    | EQ     -> OpEq
+    | NE     -> OpNe
+    | LT     -> OpLt
+    | LE     -> OpLe
+    | GT     -> OpGt
+    | GE     -> OpGe
+    | _ -> parse_err @@ sprintf "token `%s' is not a binary operand"
+            (token_to_str tok)

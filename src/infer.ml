@@ -84,18 +84,21 @@ and pv e env = match e with
         pv e1 env'
     (* operands *)
     | EBinary (op, _, _) -> (match op with
-        | OpAdd | OpMin | OpMul | OpDiv -> [|0; 1; 2; 3|]
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe -> [|0; 0; 0; 3|]
+        | OpAppend | OpAdd | OpMin | OpMul | OpDiv
+            -> [|0; 1; 2; 3|]
+        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
+            -> [|0; 0; 0; 3|]
     )
     | EUnary (op, _) -> (match op with
         | OpNeg -> [|0; 1; 2; 3|]
         | OpNot -> [|0; 0; 0; 3|]
     )
     (* primitive functions *)
-    | ESel _ -> [|0; 2; 2; 3|]
+    | ESel _   -> [|0; 2; 2; 3|]
     | EShape _ -> [|0; 0; 1; 2|]
-    | EDim _ -> [|0; 0; 0; 1|]
-    | _ -> rewrite_err @@ sprintf "invalid PV argument `%s'"
+    | EDim _   -> [|0; 0; 0; 1|]
+
+    | _ -> rewrite_err @@ sprintf "invalid pv argument `%s'"
             (expr_to_str e)
 
 let infer e =

@@ -20,6 +20,7 @@ type expr =
     | ERead
 
 and bop =
+    | OpAppend
     | OpAdd
     | OpMin
     | OpMul
@@ -36,16 +37,17 @@ and uop =
     | OpNot
 
 let bop_to_str op = match op with
-    | OpAdd -> "+"
-    | OpMin -> "-"
-    | OpMul -> "*"
-    | OpDiv -> "/"
-    | OpEq -> "="
-    | OpNe -> "!="
-    | OpLt -> "<"
-    | OpLe -> "<="
-    | OpGt -> ">"
-    | OpGe -> ">="
+    | OpAppend -> "++"
+    | OpAdd    -> "+"
+    | OpMin    -> "-"
+    | OpMul    -> "*"
+    | OpDiv    -> "/"
+    | OpEq     -> "="
+    | OpNe     -> "!="
+    | OpLt     -> "<"
+    | OpLe     -> "<="
+    | OpGt     -> ">"
+    | OpGe     -> ">="
 
 let uop_to_str op = match op with
     | OpNeg -> "-"
