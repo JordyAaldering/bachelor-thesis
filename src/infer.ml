@@ -80,6 +80,8 @@ let rec sd e dem env = match e with
         let dem' = pv e env in
         let dem' = Array.map (Array.get dem') dem in
         sd e1 dem' env
+    
+    | ERead -> env
 
 and pv e env = match e with
     | ELambda (x, e1)

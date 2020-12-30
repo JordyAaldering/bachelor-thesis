@@ -118,6 +118,10 @@ let rec eval_expr e st env = match e with
         let st, p = eval_expr e1 st env in
         let v = value_dim (Env.find p st) in
         add_fresh_value st v
+    | ERead ->
+        printf "> ";
+        let x = float_of_string @@ read_line () in
+        add_fresh_value st (Vect ([], [x]))
 
 and eval_expr_lst es st env = match es with
     | [] -> (st, [])

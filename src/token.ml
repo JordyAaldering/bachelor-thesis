@@ -11,7 +11,6 @@ type token =
     | ID of string
     | INT of int
     | FLOAT of float
-    | STRING of string
     (* expressions *)
     | LAMBDA
     | LET
@@ -47,7 +46,6 @@ let token_to_str tok = match tok with
     | ID s      -> s
     | INT x     -> string_of_int x
     | FLOAT x   -> string_of_float x
-    | STRING s  -> s
     (* expressions *)
     | LAMBDA    -> "\\"
     | LET       -> "let"

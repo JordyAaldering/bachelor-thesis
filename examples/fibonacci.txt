@@ -4,5 +4,6 @@ let fib = \x.
     else fib (x - 2) + fib (x - 1)
 in
 
-let x = fib 20 in
-shape x
+let amount = read in
+let res = fib amount in
+shape res

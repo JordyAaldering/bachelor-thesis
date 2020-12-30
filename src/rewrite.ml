@@ -31,6 +31,7 @@ and rewrite_f e inf env = match e with
     | ESel (e1, e2) -> ESel (rewrite_f e1 inf env, rewrite_f e2 inf env)
     | EShape e1 -> rewrite_s e1 inf env
     | EDim e1 -> rewrite_d e1 inf env
+    | ERead -> ERead
 
 and rewrite_s e inf env = match e with
     | EVar x ->
@@ -66,6 +67,7 @@ and rewrite_s e inf env = match e with
     | ESel _ -> EArray []
     | EShape e1 -> EArray [rewrite_d e1 inf env]
     | EDim _ -> ENum 1.
+    | ERead -> ERead
 
 and rewrite_d e inf env = match e with
     | EVar x ->
@@ -102,6 +104,7 @@ and rewrite_d e inf env = match e with
     | ESel _ -> ENum 0.
     | EShape _ -> ENum 1.
     | EDim _ -> ENum 0.
+    | ERead -> ERead
 
 and rewrite_lambda e lvl inf env = match e with
     | ELambda (x, e1) ->
