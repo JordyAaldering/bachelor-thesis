@@ -1,19 +1,4 @@
-exception ValueFailure of string
 
-let value_err msg =
-    raise @@ ValueFailure msg
-
-
-exception ParseFailure of string
-
-let parse_err msg =
-    raise @@ ParseFailure msg
-
-
-exception EvalFailure of string
-
-let eval_err msg =
-    raise @@ EvalFailure msg
 
 
 exception InferenceFailure of string

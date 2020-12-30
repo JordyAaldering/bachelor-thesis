@@ -1,9 +1,13 @@
 open Printf
-open Exception
+
+exception ValueError of string
+
+let value_err msg =
+    raise @@ ValueError msg
 
 type value =
     | Vect of int list * float list
-    | Closure of Ast.expr * Env.ptr_env
+    | Closure of string * Ast.expr * Env.ptr_env
 
 let shp_to_str shp =
     String.concat ", " (List.map string_of_int shp)
@@ -14,8 +18,16 @@ let data_to_str data =
 let value_to_str v = match v with
     | Vect (shp, data) -> sprintf "<[%s], [%s]>"
         (shp_to_str shp) (data_to_str data)
-    | Closure (e, env) -> sprintf "{%s, %s}"
-        (Ast.expr_to_str e) (Env.ptr_env_to_str env)
+    | Closure (s, e, env) -> sprintf "{\\%s.%s, %s}"
+        s (Ast.expr_to_str e) (Env.ptr_env_to_str env)
+
+let extract_value v = match v with
+    | Vect (shp, data) -> (shp, data)
+    | _ -> value_err "invalid extract argument"
+
+let extract_closure v = match v with
+    | Closure (s, e, env) -> (s, e, env)
+    | _ -> value_err "invalid extract argument"
 
 
 (** Primitive Functions **)
@@ -51,7 +63,7 @@ let value_dim v = match v with
 
 let value_neg v = match v with
     | Vect (shp, data) -> Vect (shp, List.map (fun x -> -. x) data)
-    | _ -> value_err @@ sprintf "invalid neg argument %s" (value_to_str v)
+    | _ -> value_err @@ sprintf "invalid argument %s" (value_to_str v)
 
 let value_add v1 v2 = match v1, v2 with
     | Vect ([], [c]), Vect (shp, xs)
@@ -59,7 +71,7 @@ let value_add v1 v2 = match v1, v2 with
         Vect (shp, List.map ((+.) c) xs)
     | Vect (shp1, xs), Vect (_shp2, ys) ->
         Vect (shp1, List.map2 (+.) xs ys)
-    | _ -> value_err @@ sprintf "invalid add arguments %s and %s"
+    | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 let value_mul v1 v2 = match v1, v2 with
@@ -68,7 +80,7 @@ let value_mul v1 v2 = match v1, v2 with
         Vect (shp, List.map (( *.) c) xs)
     | Vect (shp1, xs), Vect (_shp2, ys) ->
         Vect (shp1, List.map2 ( *.) xs ys)
-    | _ -> value_err @@ sprintf "invalid mul arguments %s and %s"
+    | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 let value_div v1 v2 = match v1, v2 with
@@ -77,7 +89,7 @@ let value_div v1 v2 = match v1, v2 with
         Vect (shp, List.map ((/.) c) xs)
     | Vect (shp1, xs), Vect (_shp2, ys) ->
         Vect (shp1, List.map2 (/.) xs ys)
-    | _ -> value_err @@ sprintf "invalid div arguments %s and %s"
+    | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 
@@ -124,14 +136,3 @@ let value_lt v1 v2 = match v1, v2 with
         Vect ([], [if List.for_all2 (<) xs ys then 1. else 0.])
     | _ -> value_err @@ sprintf "invalid lt arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
-
-
-(** Conversions **)
-
-let value_to_pair v = match v with
-    | Vect (shp, data) -> (shp, data)
-    | _ -> value_err "can only get pair of a vector"
-
-let closure_to_triple v = match v with
-    | Closure (ELambda (x, body), env) -> (x, body, env)
-    | _ -> value_err "can only get triple of a closure of a lambda expression"

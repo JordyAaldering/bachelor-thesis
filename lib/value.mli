@@ -28,6 +28,6 @@ val value_gt : value -> value -> value
 
 val value_lt : value -> value -> value
 
-val value_to_pair : value -> (int list * float list)
+val extract_value : value -> (int list * float list)
 
-val closure_to_triple : value -> (string * Ast.expr * Env.ptr_env)
+val extract_closure : value -> (string * Ast.expr * Env.ptr_env)

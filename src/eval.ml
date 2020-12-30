@@ -2,9 +2,11 @@ open Ast
 open Env
 open Value
 open Printf
-open Exception
 
-type val_env = value Env.t
+exception EvalError of string
+
+let eval_err msg =
+    raise @@ EvalError msg
 
 let ptr_count = ref 0
 
@@ -29,14 +31,13 @@ let add_fresh_value st v =
 let update_let_ptr st p_old p_new =
     let value_updater v =
         match v with
-            | Closure (x, env) ->
+            | Closure (s, e, env) ->
                 let env' = Env.map (fun p ->
                     if p = p_old then p_new else p
                 ) env in
-                Closure (x, env')
+                Closure (s, e, env')
             | _ -> v
-    in
-    Env.map value_updater st
+    in Env.map value_updater st
 
 let ptr_binary st op p1 p2 =
     let v1 = Env.find p1 st in
@@ -60,32 +61,31 @@ let ptr_unary st op p =
         | OpNot -> value_not v
 
 let rec eval_expr e st env = match e with
-    | EVar x ->
-        (st, Env.find x env)
-    | EFloat x ->
-        add_fresh_value st (Vect ([], [x]))
+    (* variables *)
+    | EVar x -> (st, Env.find x env)
+    | EFloat x -> add_fresh_value st (Vect ([], [x]))
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
         let shp = [List.length ptr_lst] in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
-                let float = begin match ptr_val with
+                let float = (match ptr_val with
                     | Vect ([], [x]) -> x
                     | _ -> eval_err @@ sprintf "invalid value in list `%s'"
                             (value_to_str ptr_val)
-                end in
+                ) in
                 float :: val_lst
             ) ptr_lst []
         in
         add_fresh_value st (Vect (shp, data))
-
+    (* expressions *)
     | EApply (e1, e2) ->
         let st, p1 = eval_expr e1 st env in
         let st, p2 = eval_expr e2 st env in
-        let x, body, env' = closure_to_triple (Env.find p1 st) in
+        let x, body, env' = extract_closure (Env.find p1 st) in
         eval_expr body st (Env.add x p2 env')
-    | ELambda (_x, _e1) ->
-        add_fresh_value st (Closure (e, env))
+    | ELambda (s, e1) ->
+        add_fresh_value st (Closure (s, e1, env))
     | ELetIn (x, e1, e2) ->
         let pname = create_fresh_ptr () in
         let st, p1 = eval_expr e1 st (Env.add x pname env) in
@@ -95,7 +95,7 @@ let rec eval_expr e st env = match e with
         let st, p1 = eval_expr e1 st env in
         let v = Env.find p1 st in
         eval_expr (if value_is_truthy v then e2 else e3) st env
-
+    (* operands *)
     | EBinary (op, e1, e2) ->
         let st, p1 = eval_expr e1 st env in
         let st, p2 = eval_expr e2 st env in
@@ -105,6 +105,7 @@ let rec eval_expr e st env = match e with
         let st, p = eval_expr e1 st env in
         let v = ptr_unary st op p in
         add_fresh_value st v
+    (* primitive functions *)
     | ESel (e1, e2) ->
         let st, v1 = eval_expr e1 st env in
         let st, iv = eval_expr e2 st env in
@@ -133,5 +134,4 @@ and eval_expr_lst es st env = match es with
 let eval_prog e =
     ptr_count := 0;
     let st, p = eval_expr e Env.empty Env.empty in
-    (*printf "Environment:\n%s\n\n" (st_to_str st);*)
-    printf "Result:\n%s = %s\n" p (value_to_str (Env.find p st))
+    printf "%s\n" (value_to_str (Env.find p st))
