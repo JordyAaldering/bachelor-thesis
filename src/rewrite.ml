@@ -2,9 +2,6 @@ open Ast
 open Env
 open Infer
 open Printf
-open Exception
-
-type lvl_env = int Env.t
 
 let rec rewrite e lvl inf env = match lvl with
     | 3 -> rewrite_f e inf env

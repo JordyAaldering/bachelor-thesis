@@ -1,23 +1,11 @@
 open Ast
 open Env
 open Printf
-open Exception
 
-type pv_env = int array Env.t
+exception RewriteError of string
 
-let pv_env_to_str env =
-    if Env.is_empty env then "[]"
-    else
-        Env.fold (fun k v tail ->
-            sprintf "%s -> %s%s" k
-                (sprintf "[%s]" (String.concat ", " @@ Array.to_list @@ Array.map string_of_int v))
-                (if tail = "" then "" else ", " ^ tail)
-        ) env ""
-
-let pv_env_union =
-    Env.union (fun _key x y ->
-        Some (Array.map2 max x y)
-    )
+let rewrite_err msg =
+    raise @@ RewriteError msg
 
 let rec sd e dem env = match e with
     | EVar x -> Env.add x dem env
@@ -109,7 +97,7 @@ and pv e env = match e with
     | EShape _e1 -> [|0; 0; 1; 2|]
     | EDim _e1   -> [|0; 0; 0; 1|]
 
-    | _ -> infer_err @@ sprintf "invalid PV argument `%s'"
+    | _ -> rewrite_err @@ sprintf "invalid PV argument `%s'"
             (expr_to_str e)
 
 let infer_prog e =

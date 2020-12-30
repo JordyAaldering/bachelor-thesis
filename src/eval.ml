@@ -14,15 +14,6 @@ let create_fresh_ptr () =
     ptr_count := !ptr_count + 1;
     sprintf "p%d" !ptr_count
 
-let st_to_str st =
-    if Env.is_empty st then "[]"
-    else
-        Env.fold (fun k v tail ->
-            sprintf "%s -> %s%s" k
-                (value_to_str v)
-                (if tail = "" then "" else (", " ^ tail))
-        ) st ""
-
 let add_fresh_value st v =
     let p = create_fresh_ptr () in
     let st = Env.add p v st in
@@ -31,11 +22,11 @@ let add_fresh_value st v =
 let update_let_ptr st p_old p_new =
     let value_updater v =
         match v with
-            | Closure (s, e, env) ->
+            | VClosure (s, e, env) ->
                 let env' = Env.map (fun p ->
                     if p = p_old then p_new else p
                 ) env in
-                Closure (s, e, env')
+                VClosure (s, e, env')
             | _ -> v
     in Env.map value_updater st
 
@@ -63,21 +54,21 @@ let ptr_unary st op p =
 let rec eval_expr e st env = match e with
     (* variables *)
     | EVar x -> (st, Env.find x env)
-    | EFloat x -> add_fresh_value st (Vect ([], [x]))
+    | EFloat x -> add_fresh_value st (VArray ([], [x]))
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
         let shp = [List.length ptr_lst] in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let float = (match ptr_val with
-                    | Vect ([], [x]) -> x
+                    | VArray ([], [x]) -> x
                     | _ -> eval_err @@ sprintf "invalid value in list `%s'"
                             (value_to_str ptr_val)
                 ) in
                 float :: val_lst
             ) ptr_lst []
         in
-        add_fresh_value st (Vect (shp, data))
+        add_fresh_value st (VArray (shp, data))
     (* expressions *)
     | EApply (e1, e2) ->
         let st, p1 = eval_expr e1 st env in
@@ -85,7 +76,7 @@ let rec eval_expr e st env = match e with
         let x, body, env' = extract_closure (Env.find p1 st) in
         eval_expr body st (Env.add x p2 env')
     | ELambda (s, e1) ->
-        add_fresh_value st (Closure (s, e1, env))
+        add_fresh_value st (VClosure (s, e1, env))
     | ELetIn (x, e1, e2) ->
         let pname = create_fresh_ptr () in
         let st, p1 = eval_expr e1 st (Env.add x pname env) in
@@ -122,7 +113,7 @@ let rec eval_expr e st env = match e with
     | ERead ->
         printf "> ";
         let x = float_of_string @@ read_line () in
-        add_fresh_value st (Vect ([], [x]))
+        add_fresh_value st (VArray ([], [x]))
 
 and eval_expr_lst es st env = match es with
     | [] -> (st, [])

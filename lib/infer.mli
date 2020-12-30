@@ -1,6 +1,6 @@
 type pv_env
 
-val infer_err : string -> unit
+val rewrite_err : string -> unit
 
 val pv_env_to_str : pv_env -> string
 
