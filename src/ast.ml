@@ -62,10 +62,10 @@ let rec expr_to_str e = match e with
     (* expressions *)
     | EApply (e1, e2) -> sprintf "%s %s"
         (decide_paren e1) (decide_paren e2)
-    | ELambda (x, e) -> sprintf "\\%s. %s"
-        x (expr_to_str e)
-    | ELet (x, e1, e2) -> sprintf "let %s = %s in %s"
-        x (expr_to_str e1) (expr_to_str e2)
+    | ELambda (s, e) -> sprintf "\\%s. %s"
+        s (expr_to_str e)
+    | ELet (s, e1, e2) -> sprintf "let %s = %s in %s"
+        s (expr_to_str e1) (expr_to_str e2)
     | ECond (e1, e2, e3) -> sprintf "if %s then %s else %s"
         (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
     (* operands *)
