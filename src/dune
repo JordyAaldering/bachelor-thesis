@@ -2,5 +2,4 @@
 
 (library
     (name src)
-    (libraries lib)
 )

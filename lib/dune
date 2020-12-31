@@ -1,5 +1,0 @@
-(library
-    (name lib)
-    (modules_without_implementation
-        ast env eval infer parser rewrite value)
-)
