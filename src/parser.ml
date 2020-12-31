@@ -160,11 +160,12 @@ and parse_binary lexbuf =
 and parse_unary lexbuf =
     parse_postfix lexbuf
 
-let parse_prog lexbuf =
+let parse_prog file =
     token_stack := [];
+    let lexbuf = Lexing.from_channel file in
     match parse_expr lexbuf with
         | Some e ->
-            printf "%s\n" (expr_to_str ~newline:true e);
+            printf "%s\n" (expr_to_str e);
             e
         | None -> parse_err "parser returned None"
  

@@ -1,6 +1,5 @@
 open Src.Parser
 open Src.Eval
-open Src.Infer
 open Src.Rewrite
 open Printf
 
@@ -10,14 +9,12 @@ let eval_orig e =
 
 let eval_rewrite e =
     printf "\n--- REWRITE ---\n";
-    let env = infer e in
-    let e = rewrite_prog e env in
+    let e = rewrite_prog e in
     eval_prog e
 
 let () =
     let file = open_in (Sys.argv.(1) ^ ".txt") in
-    let lexbuf = Lexing.from_channel file in
-    let e = parse_prog lexbuf in
+    let e = parse_prog file in
         eval_orig e;
         eval_rewrite e;
         close_in file

@@ -53,7 +53,7 @@ let uop_to_str op = match op with
     | OpNeg -> "-"
     | OpNot -> "!"
 
-let rec expr_to_str ?(newline=false) e = match e with
+let rec expr_to_str e = match e with
     (* variables *)
     | EVar s -> s
     | EFloat x -> sprintf "%g" x
@@ -61,30 +61,30 @@ let rec expr_to_str ?(newline=false) e = match e with
         (String.concat ", " (List.map expr_to_str xs))
     (* expressions *)
     | EApply (e1, e2) -> sprintf "%s %s"
-        (decide_paren ~newline:newline e1) (decide_paren ~newline:newline e2)
+        (decide_paren e1) (decide_paren e2)
     | ELambda (x, e) -> sprintf "\\%s. %s"
-        x (expr_to_str ~newline:newline e)
-    | ELet (x, e1, e2) -> sprintf "let %s = %s in%s%s"
-        x (expr_to_str ~newline:newline e1) (if newline then "\n" else " ") (expr_to_str ~newline:newline e2)
+        x (expr_to_str e)
+    | ELet (x, e1, e2) -> sprintf "let %s = %s in %s"
+        x (expr_to_str e1) (expr_to_str e2)
     | ECond (e1, e2, e3) -> sprintf "if %s then %s else %s"
-        (expr_to_str ~newline:newline e1) (expr_to_str ~newline:newline e2) (expr_to_str ~newline:newline e3)
+        (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
     (* operands *)
     | EBinary (op, e1, e2) -> sprintf "%s %s %s"
-        (decide_paren ~newline:newline e1) (bop_to_str op) (decide_paren ~newline:newline e2)
+        (decide_paren e1) (bop_to_str op) (decide_paren e2)
     | EUnary (op, e1) -> sprintf "%s%s"
-        (uop_to_str op) (decide_paren ~newline:newline e1)
+        (uop_to_str op) (decide_paren e1)
     (* primitive functions *)
     | ESel (e1, e2) -> sprintf "%s.(%s)"
-        (decide_paren ~newline:newline e1) (expr_to_str ~newline:newline e2)
+        (decide_paren e1) (expr_to_str e2)
     | EShape e1 -> sprintf "shape %s"
-        (decide_paren ~newline:newline e1)
+        (decide_paren e1)
     | EDim e1 -> sprintf "dim %s"
-        (decide_paren ~newline:newline e1)
+        (decide_paren e1)
     | ERead -> "read"
 
-and decide_paren ?(newline=false) e = match e with
+and decide_paren e = match e with
     | EVar _
     | EFloat _
     | EArray _
-    | ERead -> expr_to_str ~newline:newline e
-    | _ -> sprintf "(%s)" (expr_to_str ~newline:newline e)
+    | ERead -> expr_to_str e
+    | _ -> sprintf "(%s)" (expr_to_str e)

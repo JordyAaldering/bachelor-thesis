@@ -175,7 +175,8 @@ and rewrite_if e1 e2 e3 lvl inf env =
         rewrite e2 lvl inf env,
         rewrite e3 lvl inf env)
 
-let rewrite_prog e inf =
+let rewrite_prog e =
+    let inf = infer e in
     let e = rewrite_f e inf Env.empty in
-    printf "Rewrite:\n%s\n\n" (expr_to_str ~newline:true e);
+    printf "Rewrite:\n%s\n\n" (expr_to_str e);
     e

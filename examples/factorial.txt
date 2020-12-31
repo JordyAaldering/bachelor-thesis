@@ -6,4 +6,4 @@ let fac = \x.
 in
 
 let x = fac 100 in
-shape x
+x
