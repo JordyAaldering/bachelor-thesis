@@ -3,7 +3,7 @@ open Env
 open Infer
 open Printf
 
-let rec rewrite e lvl inf env = match lvl with
+let rec rewrite_lvl e lvl inf env = match lvl with
     | 3 -> rewrite_f e inf env
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
@@ -119,17 +119,17 @@ and rewrite_lambda s e1 lvl inf env =
     let dem = pv (ELambda (s, e1)) inf in
     let lvl' = Array.get dem lvl in
     let env' = Env.add s lvl' env in
-    ELambda (s, rewrite e1 lvl inf env')
+    ELambda (s, rewrite_lvl e1 lvl inf env')
 
 and rewrite_apply e1 e2 lvl inf env = match e1 with
     | ELambda (s, e') ->
         let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
         if lvl' = 0 then
-            rewrite e' lvl inf env
+            rewrite_lvl e' lvl inf env
         else
             let env' = Env.add s lvl' env in
-            EApply (ELambda (s, rewrite e' lvl inf env'), rewrite e2 lvl' inf env)
+            EApply (ELambda (s, rewrite_lvl e' lvl inf env'), rewrite_lvl e2 lvl' inf env)
     | EVar s -> (* function call *)
         let dem = Env.find s inf in
         let lvl' = Array.get dem lvl in
@@ -138,7 +138,7 @@ and rewrite_apply e1 e2 lvl inf env = match e1 with
             else if lvl = 1 then "_d"
             else "_d"
         in
-        EApply (EVar fid, rewrite e2 lvl' inf env)
+        EApply (EVar fid, rewrite_lvl e2 lvl' inf env)
     | EApply (EVar s, e') ->
         let dem = Env.find s inf in
         let lvl' = Array.get dem lvl in
@@ -147,35 +147,35 @@ and rewrite_apply e1 e2 lvl inf env = match e1 with
             else if lvl' = 1 then "_d"
             else "_d"
         in
-        EApply (EApply (EVar fid, rewrite e' lvl' inf env), rewrite e2 lvl' inf env)
+        EApply (EApply (EVar fid, rewrite_lvl e' lvl' inf env), rewrite_lvl e2 lvl' inf env)
     | _ ->
         let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
-        EApply (rewrite e1 lvl' inf env, rewrite e2 lvl' inf env)
+        EApply (rewrite_lvl e1 lvl' inf env, rewrite_lvl e2 lvl' inf env)
 
 and rewrite_let s e1 e2 lvl inf env =
     let dem = pv (ELambda (s, e2)) inf in
     let lvl' = Array.get dem lvl in
     let env' = Env.add s lvl' env in
     if lvl' = 0 then
-        rewrite e2 lvl inf env'
+        rewrite_lvl e2 lvl inf env'
     else (match e1 with
         | ELambda _ ->
             ELet (s ^ "_f", rewrite_f e1 inf env, 
             ELet (s ^ "_s", rewrite_s e1 inf env,
             ELet (s ^ "_d", rewrite_d e1 inf env,
-                rewrite e2 lvl inf env')))
+                rewrite_lvl e2 lvl inf env')))
         | _ ->
-            ELet (s, rewrite e1 lvl' inf env,
-                rewrite e2 lvl inf env')
+            ELet (s, rewrite_lvl e1 lvl' inf env,
+                rewrite_lvl e2 lvl inf env')
     )
 
 and rewrite_if e1 e2 e3 lvl inf env =
     ECond (rewrite_f e1 inf env,
-        rewrite e2 lvl inf env,
-        rewrite e3 lvl inf env)
+        rewrite_lvl e2 lvl inf env,
+        rewrite_lvl e3 lvl inf env)
 
-let rewrite_prog e =
+let rewrite e =
     let inf = infer e in
     let e = rewrite_f e inf Env.empty in
     printf "Rewrite:\n%s\n\n" (expr_to_str e);

@@ -123,7 +123,7 @@ and eval_expr_lst es st env = match es with
         let st, ys = eval_expr_lst xs st env in
         (st, y :: ys)
 
-let eval_prog e =
+let eval e =
     ptr_count := 0;
     let st, p = eval_expr e Env.empty Env.empty in
     printf "%s\n" (value_to_str (Env.find p st))

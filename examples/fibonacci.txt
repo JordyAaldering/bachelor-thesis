@@ -9,6 +9,5 @@ let fib = \x.
         v ++ lst
 in
 
-let amount = read in
-let res = fib amount in
-res
+let x = fib 100 in
+x
