@@ -9,7 +9,7 @@ let value_err msg =
 
 type value =
     | VArray of int list * float list
-    | VClosure of string * expr * string Env.t
+    | VClosure of string * expr * ptr_env
 
 let shp_to_str shp =
     String.concat ", " (List.map string_of_int shp)

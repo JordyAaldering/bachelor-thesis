@@ -5,21 +5,23 @@ open Printf
 
 exception EvalError of string
 
-let eval_err msg =
+type val_env = value Env.t
+
+let eval_err (msg: string) =
     raise @@ EvalError msg
 
-let ptr_count = ref 0
+let ptr_count : int ref = ref 0
 
 let create_fresh_ptr () =
     ptr_count := !ptr_count + 1;
     sprintf "p%d" !ptr_count
 
-let add_fresh_value st v =
+let add_fresh_value (st: val_env) (v: value) : (val_env * string) =
     let p = create_fresh_ptr () in
     let st = Env.add p v st in
     (st, p)
 
-let update_let_ptr st p_old p_new =
+let update_let_ptr (st: val_env) (p_old: string) (p_new: string) : val_env =
     let value_updater v =
         match v with
             | VClosure (s, e, env) ->
@@ -30,7 +32,7 @@ let update_let_ptr st p_old p_new =
             | _ -> v
     in Env.map value_updater st
 
-let ptr_list_shape ptr_lst st =
+let ptr_list_shape (st: val_env) (ptr_lst: string list) : int list =
     if ptr_lst = [] then
         []
     else
@@ -39,7 +41,7 @@ let ptr_list_shape ptr_lst st =
         let _, shp = extract_value shp in
         List.map int_of_float shp
 
-let ptr_binary st op p1 p2 =
+let ptr_binary (st: val_env) (op: bop) (p1: string) (p2: string) : value =
     let v1 = Env.find p1 st in
     let v2 = Env.find p2 st in
     match op with
@@ -55,20 +57,20 @@ let ptr_binary st op p1 p2 =
         | OpGt -> value_gt v1 v2
         | OpGe -> value_not @@ value_lt v1 v2
 
-let ptr_unary st op p =
+let ptr_unary (st: val_env) (op: uop) (p: string) : value =
     let v = Env.find p st in
     match op with
         | OpNeg -> value_neg v
         | OpNot -> value_not v
 
-let rec eval_expr e st env =
+let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     match e with
     (* variables *)
     | EVar x -> (st, Env.find x env)
     | EFloat x -> add_fresh_value st (VArray ([], [x]))
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
-        let shp = List.length ptr_lst :: ptr_list_shape ptr_lst st in
+        let shp = List.length ptr_lst :: ptr_list_shape st ptr_lst in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let floats = (match ptr_val with
@@ -126,15 +128,15 @@ let rec eval_expr e st env =
         let x = float_of_string @@ read_line () in
         add_fresh_value st (VArray ([], [x]))
 
-and eval_expr_lst es st env =
+and eval_expr_lst (es: expr list) (st: val_env) (env: ptr_env) : (val_env * string list) =
     match es with
     | [] -> (st, [])
     | x :: xs ->
-        let st, y = eval_expr x st env in
-        let st, ys = eval_expr_lst xs st env in
-        (st, y :: ys)
+        let st, p = eval_expr x st env in
+        let st, ps = eval_expr_lst xs st env in
+        (st, p :: ps)
 
-let eval e =
+let eval (e: expr) =
     ptr_count := 0;
     let st, p = eval_expr e Env.empty Env.empty in
     printf "%s\n" (value_to_str (Env.find p st))
