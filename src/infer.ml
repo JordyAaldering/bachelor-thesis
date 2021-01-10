@@ -4,10 +4,11 @@ open Printf
 
 exception RewriteError of string
 
-let rewrite_err msg =
+let rewrite_err (msg: string) =
     raise @@ RewriteError msg
 
-let rec sd e dem env = match e with
+let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
+    match e with
     (* variables *)
     | EVar s -> Env.add s dem env
     | EFloat _x -> env
@@ -71,7 +72,8 @@ let rec sd e dem env = match e with
         sd e1 dem' env
     | ERead -> env
 
-and pv e env = match e with
+and pv (e: expr) (env: pv_env) : int Array.t =
+    match e with
     (* expressions *)
     | ELambda (s, e1)
     | EApply (EVar s, e1) -> (try
@@ -101,7 +103,7 @@ and pv e env = match e with
     | _ -> rewrite_err @@ sprintf "invalid pv argument `%s'"
             (expr_to_str e)
 
-let infer e =
+let infer (e: expr) : pv_env =
     let env = sd e [|0; 1; 2; 3|] Env.empty in
     printf "Demand environment:\n%s\n\n" (pv_env_to_str env);
     env

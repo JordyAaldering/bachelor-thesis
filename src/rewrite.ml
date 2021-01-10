@@ -3,7 +3,10 @@ open Env
 open Infer
 open Printf
 
-let rec rewrite_lvl e lvl inf env = match lvl with
+type rw_env = int Env.t
+
+let rec rewrite_lvl (e: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
+    match lvl with
     | 3 -> rewrite_f e inf env
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
@@ -11,7 +14,8 @@ let rec rewrite_lvl e lvl inf env = match lvl with
     | _ -> rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
         (expr_to_str e) lvl
 
-and rewrite_f e inf env = match e with
+and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
+    match e with
     (* variables *)
     | EVar s -> (try
             let _ = Env.find s inf in
@@ -35,7 +39,8 @@ and rewrite_f e inf env = match e with
     | EDim e1 -> rewrite_d e1 inf env
     | ERead -> ERead
 
-and rewrite_s e inf env = match e with
+and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
+    match e with
     | EVar s -> (try
             let _ = Env.find s inf in
             (* The variable is the name of a function *)
@@ -75,7 +80,8 @@ and rewrite_s e inf env = match e with
     | EDim _ -> EFloat 1.
     | ERead -> ERead
 
-and rewrite_d e inf env = match e with
+and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
+    match e with
     | EVar s -> (try
             let _ = Env.find s inf in
             (* The variable is the name of a function *)
@@ -115,13 +121,14 @@ and rewrite_d e inf env = match e with
     | EDim _ -> EFloat 0.
     | ERead -> ERead
 
-and rewrite_lambda s e1 lvl inf env =
+and rewrite_lambda (s: string) (e1: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
     let dem = pv (ELambda (s, e1)) inf in
     let lvl' = Array.get dem lvl in
     let env' = Env.add s lvl' env in
     ELambda (s, rewrite_lvl e1 lvl inf env')
 
-and rewrite_apply e1 e2 lvl inf env = match e1 with
+and rewrite_apply (e1: expr) (e2: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
+    match e1 with
     | ELambda (s, e') ->
         let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
@@ -153,7 +160,7 @@ and rewrite_apply e1 e2 lvl inf env = match e1 with
         let lvl' = Array.get dem lvl in
         EApply (rewrite_lvl e1 lvl' inf env, rewrite_lvl e2 lvl' inf env)
 
-and rewrite_let s e1 e2 lvl inf env =
+and rewrite_let (s: string) (e1: expr) (e2: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
     let dem = pv (ELambda (s, e2)) inf in
     let lvl' = Array.get dem lvl in
     let env' = Env.add s lvl' env in
@@ -170,12 +177,12 @@ and rewrite_let s e1 e2 lvl inf env =
                 rewrite_lvl e2 lvl inf env')
     )
 
-and rewrite_if e1 e2 e3 lvl inf env =
+and rewrite_if (e1: expr) (e2: expr) (e3: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
     ECond (rewrite_f e1 inf env,
         rewrite_lvl e2 lvl inf env,
         rewrite_lvl e3 lvl inf env)
 
-let rewrite e =
+let rewrite (e: expr) : expr =
     let inf = infer e in
     let e = rewrite_f e inf Env.empty in
     printf "Rewrite:\n%s\n\n" (expr_to_str e);
