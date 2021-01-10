@@ -30,6 +30,15 @@ let update_let_ptr st p_old p_new =
             | _ -> v
     in Env.map value_updater st
 
+let ptr_list_shape ptr_lst st =
+    if ptr_lst = [] then
+        []
+    else
+        let vec = Env.find (List.hd ptr_lst) st in
+        let shp = shape vec in
+        let _, shp = extract_value shp in
+        List.map int_of_float shp
+
 let ptr_binary st op p1 p2 =
     let v1 = Env.find p1 st in
     let v2 = Env.find p2 st in
@@ -52,21 +61,22 @@ let ptr_unary st op p =
         | OpNeg -> value_neg v
         | OpNot -> value_not v
 
-let rec eval_expr e st env = match e with
+let rec eval_expr e st env =
+    match e with
     (* variables *)
     | EVar x -> (st, Env.find x env)
     | EFloat x -> add_fresh_value st (VArray ([], [x]))
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
-        let shp = [List.length ptr_lst] in
+        let shp = List.length ptr_lst :: ptr_list_shape ptr_lst st in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
-                let float = (match ptr_val with
-                    | VArray ([], [x]) -> x
+                let floats = (match ptr_val with
+                    | VArray (_, xs) -> xs
                     | _ -> eval_err @@ sprintf "invalid value in list `%s'"
                             (value_to_str ptr_val)
                 ) in
-                float :: val_lst
+                floats @ val_lst
             ) ptr_lst []
         in
         add_fresh_value st (VArray (shp, data))
@@ -116,7 +126,8 @@ let rec eval_expr e st env = match e with
         let x = float_of_string @@ read_line () in
         add_fresh_value st (VArray ([], [x]))
 
-and eval_expr_lst es st env = match es with
+and eval_expr_lst es st env =
+    match es with
     | [] -> (st, [])
     | x :: xs ->
         let st, y = eval_expr x st env in
