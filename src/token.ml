@@ -3,7 +3,7 @@ open Printf
 
 exception ParseError of string
 
-let parse_err msg =
+let parse_err (msg: string) =
     raise @@ ParseError msg
 
 type token =
@@ -43,7 +43,8 @@ type token =
     | RSQUARE
     | EOF
 
-let token_to_str tok = match tok with
+let token_to_str (tok: token) : string =
+    match tok with
     (* variables *)
     | ID s      -> s
     | INT x     -> string_of_int x
@@ -80,7 +81,8 @@ let token_to_str tok = match tok with
     | RSQUARE   -> "]"
     | EOF       -> "EOF"
 
-let is_op tok = match tok with
+let is_op (tok: token) : bool =
+    match tok with
     | APPEND
     | ADD
     | MIN
@@ -94,7 +96,8 @@ let is_op tok = match tok with
     | GE -> true
     | _ -> false
 
-let op_prec tok = match tok with
+let op_prec (tok: token) : int =
+    match tok with
     | EQ
     | NE -> 1
     | LT
@@ -108,7 +111,8 @@ let op_prec tok = match tok with
     | DIV -> 5
     | _ -> 6
 
-let op_to_binop tok = match tok with
+let op_to_binop (tok: token) : bop =
+    match tok with
     | APPEND -> OpAppend
     | ADD    -> OpAdd
     | MIN    -> OpMin

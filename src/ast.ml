@@ -36,7 +36,8 @@ and uop =
     | OpNeg
     | OpNot
 
-let bop_to_str op = match op with
+let bop_to_str (op: bop) : string =
+    match op with
     | OpAppend -> "++"
     | OpAdd    -> "+"
     | OpMin    -> "-"
@@ -49,11 +50,13 @@ let bop_to_str op = match op with
     | OpGt     -> ">"
     | OpGe     -> ">="
 
-let uop_to_str op = match op with
+let uop_to_str (op: uop) : string =
+    match op with
     | OpNeg -> "-"
     | OpNot -> "!"
 
-let rec expr_to_str e = match e with
+let rec expr_to_str (e: expr) : string =
+    match e with
     (* variables *)
     | EVar s -> s
     | EFloat x -> sprintf "%g" x
@@ -82,7 +85,8 @@ let rec expr_to_str e = match e with
         (decide_paren e1)
     | ERead -> "read"
 
-and decide_paren e = match e with
+and decide_paren (e: expr) : string =
+    match e with
     | EVar _
     | EFloat _
     | EArray _
