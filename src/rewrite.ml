@@ -41,6 +41,7 @@ and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
 
 and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     match e with
+    (* variables *)
     | EVar s -> (try
             let _ = Env.find s inf in
             (* The variable is the name of a function *)
@@ -82,6 +83,7 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
 
 and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     match e with
+    (* variables *)
     | EVar s -> (try
             let _ = Env.find s inf in
             (* The variable is the name of a function *)
