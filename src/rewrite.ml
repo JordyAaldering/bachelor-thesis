@@ -50,6 +50,7 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
                 let lvl = Env.find s env in
                 if lvl = 3 then EShape e
                 else if lvl = 2 then e
+                else if lvl = 1 then EFloat 0.
                 else rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
                         (expr_to_str e) lvl
             with Not_found ->

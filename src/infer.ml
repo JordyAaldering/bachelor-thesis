@@ -11,14 +11,14 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
     match e with
     (* variables *)
     | EVar s -> Env.add s dem env
-    | EFloat _x -> env
-    | EArray _xs -> env
+    | EFloat _ -> env
+    | EArray _ -> env
     (* expressions *)
     | ELambda (x, e1) ->
-        let env' = sd e1 dem env in
-        let dem' = try Env.find x env'
+        let env1 = sd e1 dem env in
+        let dem' = try Env.find x env1
             with Not_found -> [|0; 0; 0; 0|] in
-        Env.add x dem' env'
+        Env.add x dem' env1
     | EApply (EVar fid, e2) ->
         let dem' = try Env.find fid env
             with Not_found -> [|0; 1; 2; 3|] in
@@ -33,8 +33,7 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let dem' = pv (ELambda (s, e1)) env in
         let dem' = Array.map (Array.get dem') dem in
         let env1 = Env.add fid dem' env in
-        let env2 = sd e2 dem env1 in
-        let env2 = Env.remove s env2 in
+        let env2 = Env.remove s @@ sd e2 dem env1 in
         pv_env_union env1 env2
     | ELet (s, e1, e2) ->
         let dem' = pv (ELambda (s, e2)) env in
@@ -47,24 +46,16 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let env2 = sd e2 dem env in
         let env3 = sd e3 dem env in
         pv_env_union env1 (pv_env_union env2 env3)
-    (* operands *)
-    | EBinary (_op, e1, e2) ->
-        let dem' = pv e env in
-        let dem' = Array.map (Array.get dem') dem in
-        let env1 = sd e1 dem' env in
-        let env2 = sd e2 dem' env in
-        pv_env_union env1 env2
-    | EUnary (_op, e1) ->
-        let dem' = pv e env in
-        let dem' = Array.map (Array.get dem') dem in
-        sd e1 dem' env
+    (* operands, and *)
     (* primitive functions *)
+    | EBinary (_, e1, e2)
     | ESel (e1, e2) ->
         let dem' = pv e env in
         let dem' = Array.map (Array.get dem') dem in
         let env1 = sd e1 dem' env in
         let env2 = sd e2 dem' env in
         pv_env_union env1 env2
+    | EUnary (_, e1)
     | EShape e1
     | EDim e1 ->
         let dem' = pv e env in
@@ -99,7 +90,6 @@ and pv (e: expr) (env: pv_env) : int Array.t =
     | ESel _   -> [|0; 2; 2; 3|]
     | EShape _ -> [|0; 0; 1; 2|]
     | EDim _   -> [|0; 0; 0; 1|]
-
     | _ -> rewrite_err @@ sprintf "invalid pv argument `%s'"
             (expr_to_str e)
 

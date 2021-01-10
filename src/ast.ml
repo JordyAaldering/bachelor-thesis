@@ -67,7 +67,7 @@ let rec expr_to_str (e: expr) : string =
         (decide_paren e1) (decide_paren e2)
     | ELambda (s, e) -> sprintf "\\%s. %s"
         s (expr_to_str e)
-    | ELet (s, e1, e2) -> sprintf "let %s = %s in %s"
+    | ELet (s, e1, e2) -> sprintf "let %s = %s in\n%s"
         s (expr_to_str e1) (expr_to_str e2)
     | ECond (e1, e2, e3) -> sprintf "if %s then %s else %s"
         (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)

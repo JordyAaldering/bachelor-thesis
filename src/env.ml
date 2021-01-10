@@ -24,6 +24,6 @@ let pv_env_to_str (env: pv_env) : string =
         ) env ""
 
 let pv_env_union (env1: pv_env) (env2: pv_env) : pv_env =
-    Env.union (fun _key x y ->
+    Env.union (fun _k x y ->
         Some (Array.map2 max x y)
     ) env1 env2
