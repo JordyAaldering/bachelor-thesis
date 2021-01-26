@@ -40,6 +40,14 @@ let expect_id (lexbuf: lexbuf) : string =
         | _ -> parse_err @@ sprintf "expected identifier, found `%s'"
                 (token_to_str t)
 
+let expect_num (lexbuf: lexbuf) : float =
+    let t = get_token lexbuf in
+    match t with
+        | INT x -> float_of_int x
+        | FLOAT x -> x
+        | _ -> parse_err @@ sprintf "expected int or float, found `%s'"
+                (token_to_str t)
+
 let expect_token (lexbuf: lexbuf) (expected: token) =
     let t = get_token lexbuf in
     if t <> expected then
@@ -67,6 +75,7 @@ and parse_primary (lexbuf: lexbuf) : expr option =
         | LET -> parse_let lexbuf
         | IF -> parse_cond lexbuf
         (* primitive functions *)
+        | WITH -> parse_with lexbuf
         | SHAPE -> Some (EShape (expect_expr lexbuf))
         | DIM -> Some (EDim (expect_expr lexbuf))
         | READ -> Some ERead
@@ -161,6 +170,16 @@ and parse_binary (lexbuf: lexbuf) : expr option =
 
 and parse_unary (lexbuf: lexbuf) : expr option =
     parse_postfix lexbuf
+
+and parse_with (lexbuf: lexbuf) : expr option =
+    let e_min = expect_num lexbuf in
+    expect_token lexbuf LE;
+    let s_idx = expect_id lexbuf in
+    expect_token lexbuf LT;
+    let e_max = expect_num lexbuf in
+    expect_token lexbuf DO;
+    let e = expect_expr lexbuf in
+    Some (EWith (e_min, s_idx, e_max, e))
 
 let parse (path: string) : expr =
     token_stack := [];

@@ -62,6 +62,7 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let dem' = Array.map (Array.get dem') dem in
         sd e1 dem' env
     | ERead -> env
+    | _ -> env
 
 and pv (e: expr) (env: pv_env) : int Array.t =
     match e with

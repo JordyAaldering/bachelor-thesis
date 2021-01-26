@@ -123,6 +123,7 @@ let value_eq v1 v2 = match v1, v2 with
         else VArray ([], [0.])
     | _ -> VArray ([], [0.])
 
+(** True (1) if ALL values in v1 are greater than the corresponding values in v2 *)
 let value_gt v1 v2 = match v1, v2 with
     | VArray ([], [c]), VArray (_shp, xs) ->
         VArray ([], [if List.for_all ((>) c) xs then 1. else 0.])
@@ -137,6 +138,7 @@ let value_gt v1 v2 = match v1, v2 with
     | _ -> value_err @@ sprintf "invalid gt arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
+(** True (1) if ALL values in v1 are less than the corresponding values in v2 *)
 let value_lt v1 v2 = match v1, v2 with
     | VArray ([], [c]), VArray (_shp, xs) ->
         VArray ([], [if List.for_all ((<) c) xs then 1. else 0.])

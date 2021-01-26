@@ -1,0 +1,18 @@
+let take = \v.\a.
+    with 0 <= iv < v do
+        a.(iv)
+in
+
+let create = \s.\x.
+    with 0 <= iv < s do
+        x
+in
+
+let matmul = \dl.\dm.\v.
+    let maind = dm * v in
+    let lowerd = dl * take (shape dl) v in
+    let zeros = create (shape dm - shape dl) 0 in
+    maind + (zeros ++ lowerd)
+in
+
+matmul [1,2,3,4,5] [1,2,3,4,5] 5

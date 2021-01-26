@@ -71,6 +71,7 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
         let shp = List.length ptr_lst :: ptr_list_shape st ptr_lst in
+        printf "%s" (String.concat ", " (List.map (sprintf "%s") ptr_lst));
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let floats = (match ptr_val with
@@ -110,6 +111,21 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
         let v = ptr_unary st op p in
         add_fresh_value st v
     (* primitive functions *)
+    | EWith (min, s, max, e1) ->
+        let st, v_ptrs = eval_with s min max e1 st env
+        in
+        let shp = [List.length v_ptrs] in
+        let data = List.fold_right (fun ptr val_lst ->
+                let ptr_val = Env.find ptr st in
+                let floats = (match ptr_val with
+                    | VArray (_, xs) -> xs
+                    | _ -> eval_err @@ sprintf "invalid value in list `%s'"
+                            (value_to_str ptr_val)
+                ) in
+                floats @ val_lst
+            ) v_ptrs []
+        in
+        add_fresh_value st (VArray (shp, data))
     | ESel (e1, e2) ->
         let st, v1 = eval_expr e1 st env in
         let st, iv = eval_expr e2 st env in
@@ -135,6 +151,15 @@ and eval_expr_lst (es: expr list) (st: val_env) (env: ptr_env) : (val_env * stri
         let st, p = eval_expr x st env in
         let st, ps = eval_expr_lst xs st env in
         (st, p :: ps)
+
+and eval_with (s: string) (cur: float) (max: float) (e: expr) (st: val_env) (env: ptr_env) : (val_env * string list) =
+    if (cur < max) then
+        let st, p = add_fresh_value st (VArray ([], [cur])) in
+        let st, p_cur = eval_expr e st (Env.add s p env) in
+        let st, ps = eval_with s (cur +. 1.) max e st env in
+        (st, p_cur :: ps)
+    else
+        (st, [])
 
 let eval (e: expr) =
     ptr_count := 0;

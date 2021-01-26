@@ -28,6 +28,8 @@ rule token = parse
     | "then"    { THEN }
     | "else"    { ELSE }
     (* primitive functions *)
+    | "with"    { WITH }
+    | "do"      { DO }
     | "shape"   { SHAPE }
     | "dim"     { DIM }
     | "read"    { READ }
