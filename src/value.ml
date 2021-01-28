@@ -93,12 +93,17 @@ let value_neg v = match v with
     | _ -> value_err @@ sprintf "invalid argument %s" (value_to_str v)
 
 let value_add v1 v2 = match v1, v2 with
+    (* adding an empty array *)
+    | v, VArray ([0], [])
+    | VArray ([0], []), v -> v
+    (* adding a constant *)
     | VArray ([], [c]), VArray (shp, xs)
     | VArray (shp, xs), VArray ([], [c]) ->
         VArray (shp, List.map ((+.) c) xs)
-    | VArray (shp1, xs), VArray (_shp2, ys) ->
+    (* adding two arrays *)
+    | VArray (shp, xs), VArray (_, ys) ->
         assert_shape_eq "+" v1 v2;
-        VArray (shp1, List.map2 (+.) xs ys)
+        VArray (shp, List.map2 (+.) xs ys)
     | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 

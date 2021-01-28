@@ -39,7 +39,7 @@ and uop =
 
 let bop_to_str (op: bop) : string =
     match op with
-    | OpConcat -> "++"
+    | OpConcat -> "@"
     | OpAdd    -> "+"
     | OpMin    -> "-"
     | OpMul    -> "*"

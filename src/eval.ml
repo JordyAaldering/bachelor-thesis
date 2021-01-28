@@ -99,17 +99,6 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
         let st, p1 = eval_expr e1 st env in
         let v = Env.find p1 st in
         eval_expr (if value_is_truthy v then e2 else e3) st env
-    (* operands *)
-    | EBinary (op, e1, e2) ->
-        let st, p1 = eval_expr e1 st env in
-        let st, p2 = eval_expr e2 st env in
-        let v = ptr_binary st op p1 p2 in
-        add_fresh_value st v
-    | EUnary (op, e1) ->
-        let st, p = eval_expr e1 st env in
-        let v = ptr_unary st op p in
-        add_fresh_value st v
-    (* primitive functions *)
     | EWith (min, s, max, e1) ->
         let st, p_min = eval_expr min st env in
         let st, p_max = eval_expr max st env in
@@ -127,6 +116,17 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
             ) v_ptrs []
         in
         add_fresh_value st (VArray (shp, data))
+    (* operands *)
+    | EBinary (op, e1, e2) ->
+        let st, p1 = eval_expr e1 st env in
+        let st, p2 = eval_expr e2 st env in
+        let v = ptr_binary st op p1 p2 in
+        add_fresh_value st v
+    | EUnary (op, e1) ->
+        let st, p = eval_expr e1 st env in
+        let v = ptr_unary st op p in
+        add_fresh_value st v
+    (* primitive functions *)
     | ESel (e1, e2) ->
         let st, v1 = eval_expr e1 st env in
         let st, iv = eval_expr e2 st env in
