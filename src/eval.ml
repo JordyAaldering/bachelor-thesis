@@ -71,7 +71,6 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     | EArray es ->
         let st, ptr_lst = eval_expr_lst es st env in
         let shp = List.length ptr_lst :: ptr_list_shape st ptr_lst in
-        printf "%s" (String.concat ", " (List.map (sprintf "%s") ptr_lst));
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let floats = (match ptr_val with
@@ -112,7 +111,9 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
         add_fresh_value st v
     (* primitive functions *)
     | EWith (min, s, max, e1) ->
-        let st, v_ptrs = eval_with s min max e1 st env
+        let st, p_min = eval_expr min st env in
+        let st, p_max = eval_expr max st env in
+        let st, v_ptrs = eval_with s (Env.find p_min st) (Env.find p_max st) e1 st env
         in
         let shp = [List.length v_ptrs] in
         let data = List.fold_right (fun ptr val_lst ->
@@ -152,11 +153,12 @@ and eval_expr_lst (es: expr list) (st: val_env) (env: ptr_env) : (val_env * stri
         let st, ps = eval_expr_lst xs st env in
         (st, p :: ps)
 
-and eval_with (s: string) (cur: float) (max: float) (e: expr) (st: val_env) (env: ptr_env) : (val_env * string list) =
-    if (cur < max) then
-        let st, p = add_fresh_value st (VArray ([], [cur])) in
+and eval_with (s: string) (cur: value) (max: value) (e: expr) (st: val_env) (env: ptr_env) : (val_env * string list) =
+    if (value_is_truthy @@ value_lt cur max) then
+        let st, p = add_fresh_value st cur in
         let st, p_cur = eval_expr e st (Env.add s p env) in
-        let st, ps = eval_with s (cur +. 1.) max e st env in
+        let v_next = value_add cur (VArray ([], [1.])) in
+        let st, ps = eval_with s v_next max e st env in
         (st, p_cur :: ps)
     else
         (st, [])

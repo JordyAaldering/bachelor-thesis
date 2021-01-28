@@ -140,6 +140,28 @@ and parse_cond (lexbuf: lexbuf) : expr option =
     let e3 = expect_expr lexbuf in
     Some (ECond (e1, e2, e3))
 
+and parse_with (lexbuf: lexbuf) : expr option =
+    (* min bound can be a number or an array *)
+    let e_min = if match_token lexbuf LSQUARE then
+            let lst = parse_array lexbuf parse_expr in
+            let tmp = EArray (List.map opt_get lst) in
+            expect_token lexbuf RSQUARE;
+            tmp
+        else opt_get @@ parse_primary lexbuf
+    in
+    expect_token lexbuf LE;
+    let s_idx = expect_id lexbuf in
+    expect_token lexbuf LT;
+    (* max bound can be a number or an array *)
+    let e_max = if match_token lexbuf LSQUARE then
+            let lst = parse_array lexbuf parse_expr in
+            EArray (List.map opt_get lst)
+        else opt_get @@ parse_primary lexbuf
+    in
+    expect_token lexbuf DO;
+    let e = expect_expr lexbuf in
+    Some (EWith (e_min, s_idx, e_max, e))
+
 and parse_binary (lexbuf: lexbuf) : expr option =
     let rec resolve_stack s prec =
         let e1, op1, p1 = Stack.pop s in
@@ -170,16 +192,6 @@ and parse_binary (lexbuf: lexbuf) : expr option =
 
 and parse_unary (lexbuf: lexbuf) : expr option =
     parse_postfix lexbuf
-
-and parse_with (lexbuf: lexbuf) : expr option =
-    let e_min = expect_num lexbuf in
-    expect_token lexbuf LE;
-    let s_idx = expect_id lexbuf in
-    expect_token lexbuf LT;
-    let e_max = expect_num lexbuf in
-    expect_token lexbuf DO;
-    let e = expect_expr lexbuf in
-    Some (EWith (e_min, s_idx, e_max, e))
 
 let parse (path: string) : expr =
     token_stack := [];

@@ -1,0 +1,4 @@
+let d1 = [1, 2, 3, 4, 5] in
+let d2 = [d1, d1, d1] in
+let d3 = [d2, d2, d2, d2] in
+d3.((shape d3) - 1)

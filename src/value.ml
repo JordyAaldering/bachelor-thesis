@@ -33,6 +33,18 @@ let extract_closure v = match v with
     | _ -> value_err "invalid extract argument"
 
 
+(** Assertions **)
+
+let assert_shape_eq (token: string) (v1: value) (v2: value) = match v1, v2 with
+    | VArray (shp1, _), VArray (shp2, _) ->
+        if List.length shp1 <> List.length shp2 ||
+            List.exists2 (<>) shp1 shp2
+        then
+            value_err @@ sprintf "`%s' expected two arrays of equal shape, got shapes [%s] and [%s] (from arrays %s and %s)"
+                token (shp_to_str shp1) (shp_to_str shp2) (value_to_str v1) (value_to_str v2);
+    | _ -> ()
+
+
 (** Primitive Functions **)
 
 let sel v iv = match v, iv with
@@ -71,7 +83,7 @@ let value_append v1 v2 = match v1, v2 with
     | VArray ([], xs), VArray ([shp], ys) ->
         VArray ([shp + 1], xs @ ys)
     | VArray (shp1, xs), VArray (shp2, ys) ->
-        VArray (shp1 @ shp2, xs @ ys)
+        VArray (List.map2 (+) shp1 shp2, xs @ ys)
     | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
@@ -84,6 +96,7 @@ let value_add v1 v2 = match v1, v2 with
     | VArray (shp, xs), VArray ([], [c]) ->
         VArray (shp, List.map ((+.) c) xs)
     | VArray (shp1, xs), VArray (_shp2, ys) ->
+        assert_shape_eq "+" v1 v2;
         VArray (shp1, List.map2 (+.) xs ys)
     | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
@@ -93,6 +106,7 @@ let value_mul v1 v2 = match v1, v2 with
     | VArray (shp, xs), VArray ([], [c]) ->
         VArray (shp, List.map (( *.) c) xs)
     | VArray (shp1, xs), VArray (_shp2, ys) ->
+        assert_shape_eq "*" v1 v2;
         VArray (shp1, List.map2 ( *.) xs ys)
     | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
@@ -102,6 +116,7 @@ let value_div v1 v2 = match v1, v2 with
     | VArray (shp, xs), VArray ([], [c]) ->
         VArray (shp, List.map ((/.) c) xs)
     | VArray (shp1, xs), VArray (_shp2, ys) ->
+        assert_shape_eq "/" v1 v2;
         VArray (shp1, List.map2 (/.) xs ys)
     | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
@@ -115,40 +130,31 @@ let value_not v =
     VArray ([], [if value_is_truthy v then 0. else 1.])
 
 let value_eq v1 v2 = match v1, v2 with
-    | VArray (shp1, xs), VArray (shp2, ys) ->
-        if List.length shp1 = List.length shp2
-            && List.for_all2 (=) shp1 shp2
-            && List.for_all2 (=) xs ys
-        then VArray ([], [1.])
-        else VArray ([], [0.])
+    | VArray (_, xs), VArray (_, ys) ->
+        assert_shape_eq "=" v1 v2;
+        VArray ([], [if List.for_all2 (=) xs ys then 1. else 0.])
     | _ -> VArray ([], [0.])
 
 (** True (1) if ALL values in v1 are greater than the corresponding values in v2 *)
 let value_gt v1 v2 = match v1, v2 with
-    | VArray ([], [c]), VArray (_shp, xs) ->
+    | VArray ([], [c]), VArray (_, xs) ->
         VArray ([], [if List.for_all ((>) c) xs then 1. else 0.])
-    | VArray (_shp, xs), VArray ([], [c]) ->
+    | VArray (_, xs), VArray ([], [c]) ->
         VArray ([], [if List.for_all ((<) c) xs then 1. else 0.])
-    | VArray (shp1, xs), VArray (shp2, ys) ->
-        if List.length shp1 <> List.length shp2
-            || not @@ List.for_all2 (=) shp1 shp2
-        then value_err @@ sprintf "gt got different shapes [%s] and [%s]"
-                (shp_to_str shp1) (shp_to_str shp2);
+    | VArray (_, xs), VArray (_, ys) ->
+        assert_shape_eq ">" v1 v2;
         VArray ([], [if List.for_all2 (>) xs ys then 1. else 0.])
     | _ -> value_err @@ sprintf "invalid gt arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
 (** True (1) if ALL values in v1 are less than the corresponding values in v2 *)
 let value_lt v1 v2 = match v1, v2 with
-    | VArray ([], [c]), VArray (_shp, xs) ->
+    | VArray ([], [c]), VArray (_, xs) ->
         VArray ([], [if List.for_all ((<) c) xs then 1. else 0.])
-    | VArray (_shp, xs), VArray ([], [c]) ->
+    | VArray (_, xs), VArray ([], [c]) ->
         VArray ([], [if List.for_all ((>) c) xs then 1. else 0.])
-    | VArray (shp1, xs), VArray (shp2, ys) ->
-        if List.length shp1 <> List.length shp2
-            || not @@ List.for_all2 (=) shp1 shp2
-        then value_err @@ sprintf "lt got different shapes [%s] and [%s]"
-                (shp_to_str shp1) (shp_to_str shp2);
+    | VArray (_, xs), VArray (_, ys) ->
+        assert_shape_eq "<" v1 v2;
         VArray ([], [if List.for_all2 (<) xs ys then 1. else 0.])
     | _ -> value_err @@ sprintf "invalid lt arguments %s and %s"
             (value_to_str v1) (value_to_str v2)

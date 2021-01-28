@@ -14,7 +14,7 @@ type expr =
     | EBinary of bop * expr * expr
     | EUnary of uop * expr
     (* primitive functions *)
-    | EWith of float * string * float * expr
+    | EWith of expr * string * expr * expr
     | ESel of expr * expr
     | EShape of expr
     | EDim of expr
@@ -78,8 +78,8 @@ let rec expr_to_str (e: expr) : string =
     | EUnary (op, e1) -> sprintf "%s%s"
         (uop_to_str op) (decide_paren e1)
     (* primitive functions *)
-    | EWith (e_min, s, e_max, e3) -> sprintf "with %s <= %s < %s do %s"
-        (string_of_float e_min) s (string_of_float e_max) (expr_to_str e3)
+    | EWith (e_min, s, e_max, e3) -> sprintf "with [%s] <= %s < [%s] do %s"
+        (expr_to_str e_min) s (expr_to_str e_max) (expr_to_str e3)
     | ESel (e1, e2) -> sprintf "%s.(%s)"
         (decide_paren e1) (expr_to_str e2)
     | EShape e1 -> sprintf "shape %s"

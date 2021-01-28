@@ -1,5 +1,19 @@
+#
+# Special case for matrix vector product
+# where the matrix has only two non-zero diagonals:
+# the main diagonal dm, and a diagonal dl located below dm
+# multiplied with a vector of the same length as dm
+#
+# e.g.
+# | 1 0 0 0 0 |   | 5 |   |  5 |
+# | 0 2 0 0 0 |   | 5 |   | 10 |
+# | 1 0 3 0 0 | * | 5 | = | 20 | 
+# | 0 2 0 4 0 |   | 5 |   | 30 |
+# | 0 0 3 0 5 |   | 5 |   | 40 |
+#
+
 let take = \v.\a.
-    with 0 <= iv < v do
+    with (0 * v) <= iv < v do
         a.(iv)
 in
 
@@ -8,11 +22,11 @@ let create = \s.\x.
         x
 in
 
-let matmul = \dl.\dm.\v.
+let matmul = \dm.\dl.\v.
     let maind = dm * v in
     let lowerd = dl * take (shape dl) v in
-    let zeros = create (shape dm - shape dl) 0 in
+    let zeros = create ((shape dm) - (shape dl)) 0 in
     maind + (zeros ++ lowerd)
 in
 
-matmul [1,2,3,4,5] [1,2,3,4,5] 5
+matmul [1,2,3,4,5] [1,2,3] [5, 5, 5, 5, 5]
