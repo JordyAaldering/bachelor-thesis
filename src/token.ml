@@ -58,9 +58,9 @@ let token_to_str (tok: token) : string =
     | IF        -> "if"
     | THEN      -> "then"
     | ELSE      -> "else"
-    (* primitive functions *)
     | WITH      -> "with"
     | DO        -> "do"
+    (* primitive functions *)
     | SHAPE     -> "shape"
     | DIM       -> "dim"
     | READ      -> "read"

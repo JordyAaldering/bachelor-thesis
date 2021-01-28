@@ -9,6 +9,9 @@ let opt_get (x: expr option) : expr =
     | Some x -> x
     | None -> parse_err "expression was None"
 
+
+(** General lexbuf operations **)
+
 (* stack to keep tokens that we have peeked but not yet consumed *)
 let token_stack : token list ref = ref []
 
@@ -19,20 +22,28 @@ let get_token (lexbuf: lexbuf) : token =
         token_stack := t;
         h
 
+(** places the previous token back on the stack *)
 let unget_token (token: token) =
     token_stack := token :: !token_stack
 
+(** return the next token without consuming it *)
 let peek_token (lexbuf: lexbuf) : token =
     let t = get_token lexbuf in
     unget_token t;
     t
 
+(** step over the next token and return true if it is a expected 
+    else don't consume it and return false *)
 let match_token (lexbuf: lexbuf) (expected: token) : bool =
     if peek_token lexbuf = expected then
         let _ = get_token lexbuf in
         true
     else false
 
+
+(** Assertions **)
+
+(** get an identifier, if there is none throw an error *)
 let expect_id (lexbuf: lexbuf) : string =
     let t = get_token lexbuf in
     match t with
@@ -40,25 +51,29 @@ let expect_id (lexbuf: lexbuf) : string =
         | _ -> parse_err @@ sprintf "expected identifier, found `%s'"
                 (token_to_str t)
 
-let expect_num (lexbuf: lexbuf) : float =
-    let t = get_token lexbuf in
-    match t with
-        | INT x -> float_of_int x
-        | FLOAT x -> x
-        | _ -> parse_err @@ sprintf "expected int or float, found `%s'"
-                (token_to_str t)
-
+(** get a token, if there is none throw an error *)
 let expect_token (lexbuf: lexbuf) (expected: token) =
     let t = get_token lexbuf in
     if t <> expected then
         parse_err @@ sprintf "expected token `%s', found `%s'"
             (token_to_str expected) (token_to_str t)
 
-let rec expect_expr (lexbuf: lexbuf) : expr =
+(** get a primary expression, if there is none throw an error *)
+let rec expect_primary (lexbuf: lexbuf) : expr =
+    let e = parse_primary lexbuf in
+    if e = None then
+        parse_err "expected primary expression, found None";
+    opt_get e
+
+(** get an expression, if there is none throw an error *)
+and expect_expr (lexbuf: lexbuf) : expr =
     let e = parse_expr lexbuf in
     if e = None then
         parse_err "expected expression, found None";
     opt_get e
+
+
+(** Parsing **)
 
 and parse_expr (lexbuf: lexbuf) : expr option =
     parse_binary lexbuf
@@ -66,31 +81,55 @@ and parse_expr (lexbuf: lexbuf) : expr option =
 and parse_primary (lexbuf: lexbuf) : expr option =
     let t = get_token lexbuf in
     match t with
-        (* variables *)
-        | ID s -> Some (EVar s)
-        | INT x -> Some (EFloat (float_of_int x))
-        | FLOAT x -> Some (EFloat x)
-        (* expressions *)
-        | LAMBDA -> parse_lambda lexbuf
-        | LET -> parse_let lexbuf
-        | IF -> parse_cond lexbuf
-        (* primitive functions *)
-        | WITH -> parse_with lexbuf
-        | SHAPE -> Some (EShape (expect_expr lexbuf))
-        | DIM -> Some (EDim (expect_expr lexbuf))
-        | READ -> Some ERead
-        (* symbols *)
-        | LSQUARE ->
-            let lst = if peek_token lexbuf = RSQUARE
-                then [] else parse_array lexbuf parse_expr
-            in
-            expect_token lexbuf RSQUARE;
-            Some (EArray (List.map opt_get lst))
-        | LPAREN ->
-            let e = parse_expr lexbuf in
-            expect_token lexbuf RPAREN;
-            e
-        | _ -> unget_token t; None
+    (* variables *)
+    | ID s -> Some (EVar s)
+    | INT x -> Some (EFloat (float_of_int x))
+    | FLOAT x -> Some (EFloat x)
+    (* expressions *)
+    | LAMBDA ->
+        let s = expect_id lexbuf in
+        expect_token lexbuf DOT;
+        let e1 = expect_expr lexbuf in
+        Some (ELambda (s, e1))
+    | LET ->
+        let s = expect_id lexbuf in
+        expect_token lexbuf EQ;
+        let e1 = expect_expr lexbuf in
+        expect_token lexbuf IN;
+        let e2 = expect_expr lexbuf in
+        Some (ELet (s, e1, e2))
+    | IF -> 
+        let e1 = expect_expr lexbuf in
+        expect_token lexbuf THEN;
+        let e2 = expect_expr lexbuf in
+        expect_token lexbuf ELSE;
+        let e3 = expect_expr lexbuf in
+        Some (ECond (e1, e2, e3))
+    | WITH ->
+        let e_min = expect_primary lexbuf in
+        expect_token lexbuf LE;
+        let s_idx = expect_id lexbuf in
+        expect_token lexbuf LT;
+        let e_max = expect_primary lexbuf in
+        expect_token lexbuf DO;
+        let e = expect_expr lexbuf in
+        Some (EWith (e_min, s_idx, e_max, e))
+    (* primitive functions *)
+    | SHAPE -> Some (EShape (expect_expr lexbuf))
+    | DIM -> Some (EDim (expect_expr lexbuf))
+    | READ -> Some ERead
+    (* symbols *)
+    | LSQUARE ->
+        let lst = if peek_token lexbuf = RSQUARE then []
+            else parse_array lexbuf parse_expr
+        in
+        expect_token lexbuf RSQUARE;
+        Some (EArray (List.map opt_get lst))
+    | LPAREN ->
+        let e = parse_expr lexbuf in
+        expect_token lexbuf RPAREN;
+        e
+    | _ -> unget_token t; None
 
 (* Parse non-empty comma separated list of elements that can be parsed by `parse_fun' *)
 and parse_array (lexbuf: lexbuf) (parse_fun: lexbuf -> expr option) : expr option list =
@@ -114,63 +153,19 @@ and parse_postfix (lexbuf: lexbuf) : expr option =
 
 and parse_application ?(e1: expr option = None) (lexbuf: lexbuf) : expr option =
     match e1, parse_unary lexbuf with
-        | None, Some e2 -> parse_application lexbuf ~e1:(Some e2)
-        | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (EApply (e1, e2)))
-        | _ -> e1
-
-and parse_lambda (lexbuf: lexbuf) : expr option =
-    let s = expect_id lexbuf in
-    expect_token lexbuf DOT;
-    let e1 = expect_expr lexbuf in
-    Some (ELambda (s, e1))
-
-and parse_let (lexbuf: lexbuf) : expr option =
-    let s = expect_id lexbuf in
-    expect_token lexbuf EQ;
-    let e1 = expect_expr lexbuf in
-    expect_token lexbuf IN;
-    let e2 = expect_expr lexbuf in
-    Some (ELet (s, e1, e2))
-
-and parse_cond (lexbuf: lexbuf) : expr option =
-    let e1 = expect_expr lexbuf in
-    expect_token lexbuf THEN;
-    let e2 = expect_expr lexbuf in
-    expect_token lexbuf ELSE;
-    let e3 = expect_expr lexbuf in
-    Some (ECond (e1, e2, e3))
-
-and parse_with (lexbuf: lexbuf) : expr option =
-    (* min bound can be a number or an array *)
-    let e_min = if match_token lexbuf LSQUARE then
-            let lst = parse_array lexbuf parse_expr in
-            let tmp = EArray (List.map opt_get lst) in
-            expect_token lexbuf RSQUARE;
-            tmp
-        else opt_get @@ parse_primary lexbuf
-    in
-    expect_token lexbuf LE;
-    let s_idx = expect_id lexbuf in
-    expect_token lexbuf LT;
-    (* max bound can be a number or an array *)
-    let e_max = if match_token lexbuf LSQUARE then
-            let lst = parse_array lexbuf parse_expr in
-            EArray (List.map opt_get lst)
-        else opt_get @@ parse_primary lexbuf
-    in
-    expect_token lexbuf DO;
-    let e = expect_expr lexbuf in
-    Some (EWith (e_min, s_idx, e_max, e))
+    | None, Some e2 -> parse_application lexbuf ~e1:(Some e2)
+    | Some e1, Some e2 -> parse_application lexbuf ~e1:(Some (EApply (e1, e2)))
+    | _ -> e1
 
 and parse_binary (lexbuf: lexbuf) : expr option =
     let rec resolve_stack s prec =
-        let e1, op1, p1 = Stack.pop s in
-        if prec <= p1 then (
-            let e2, op2, p2 = Stack.pop s in
+        let e1, op1, prec1 = Stack.pop s in
+        if prec <= prec1 then (
+            let e2, op2, prec2 = Stack.pop s in
             let e = EBinary (op_to_binop op1, opt_get e2, opt_get e1) in
-            Stack.push (Some e, op2, p2) s;
+            Stack.push (Some e, op2, prec2) s;
             resolve_stack s prec
-        ) else Stack.push (e1, op1, p1) s
+        ) else Stack.push (e1, op1, prec1) s
     in
     let e1 = parse_application lexbuf in
     if e1 = None then e1
@@ -183,7 +178,8 @@ and parse_binary (lexbuf: lexbuf) : expr option =
                 resolve_stack s (op_prec t);
                 let e2 = parse_application lexbuf in
                 if e2 = None then
-                    parse_err @@ sprintf "expected expression after %s" (token_to_str t);
+                    parse_err @@ sprintf "expected expression after `%s'"
+                        (token_to_str t);
                 Stack.push (e2, t, op_prec t) s;
         done;
         resolve_stack s 0;
@@ -201,4 +197,3 @@ let parse (path: string) : expr =
         printf "%s\n" (expr_to_str e);
         close_in file;
         e
- 

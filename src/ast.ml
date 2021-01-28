@@ -10,11 +10,11 @@ type expr =
     | ELambda of string * expr
     | ELet of string * expr * expr
     | ECond of expr * expr * expr
+    | EWith of expr * string * expr * expr
     (* operands *)
     | EBinary of bop * expr * expr
     | EUnary of uop * expr
     (* primitive functions *)
-    | EWith of expr * string * expr * expr
     | ESel of expr * expr
     | EShape of expr
     | EDim of expr
@@ -72,14 +72,14 @@ let rec expr_to_str (e: expr) : string =
         s (expr_to_str e1) (expr_to_str e2)
     | ECond (e1, e2, e3) -> sprintf "if %s then %s else %s"
         (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
+    | EWith (e1, s, e2, e3) -> sprintf "with [%s] <= %s < [%s] do %s"
+        (expr_to_str e1) s (expr_to_str e2) (expr_to_str e3)
     (* operands *)
     | EBinary (op, e1, e2) -> sprintf "%s %s %s"
         (decide_paren e1) (bop_to_str op) (decide_paren e2)
     | EUnary (op, e1) -> sprintf "%s%s"
         (uop_to_str op) (decide_paren e1)
     (* primitive functions *)
-    | EWith (e_min, s, e_max, e3) -> sprintf "with [%s] <= %s < [%s] do %s"
-        (expr_to_str e_min) s (expr_to_str e_max) (expr_to_str e3)
     | ESel (e1, e2) -> sprintf "%s.(%s)"
         (decide_paren e1) (expr_to_str e2)
     | EShape e1 -> sprintf "shape %s"

@@ -5,16 +5,11 @@ open Printf
 
 exception EvalError of string
 
+(** an environment mapping variables to their corresponding values *)
 type val_env = value Env.t
 
 let eval_err (msg: string) =
     raise @@ EvalError msg
-
-let ptr_count : int ref = ref 0
-
-let create_fresh_ptr () =
-    ptr_count := !ptr_count + 1;
-    sprintf "p%d" !ptr_count
 
 let add_fresh_value (st: val_env) (v: value) : (val_env * string) =
     let p = create_fresh_ptr () in

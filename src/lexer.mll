@@ -27,9 +27,9 @@ rule token = parse
     | "if"      { IF }
     | "then"    { THEN }
     | "else"    { ELSE }
-    (* primitive functions *)
     | "with"    { WITH }
     | "do"      { DO }
+    (* primitive functions *)
     | "shape"   { SHAPE }
     | "dim"     { DIM }
     | "read"    { READ }
