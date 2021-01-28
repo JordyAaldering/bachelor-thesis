@@ -12,7 +12,7 @@ let opt_get (x: expr option) : expr =
 
 (** General lexbuf operations **)
 
-(* stack to keep tokens that we have peeked but not yet consumed *)
+(** stack to keep tokens that we have peeked but not yet consumed *)
 let token_stack : token list ref = ref []
 
 let get_token (lexbuf: lexbuf) : token =
