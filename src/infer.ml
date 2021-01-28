@@ -78,7 +78,7 @@ and pv (e: expr) (env: pv_env) : int Array.t =
         pv e1 env'
     (* operands *)
     | EBinary (op, _, _) -> (match op with
-        | OpAppend | OpAdd | OpMin | OpMul | OpDiv
+        | OpConcat | OpAdd | OpMin | OpMul | OpDiv
             -> [|0; 1; 2; 3|]
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
             -> [|0; 0; 0; 3|]

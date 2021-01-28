@@ -45,7 +45,7 @@ let ptr_binary (st: val_env) (op: bop) (p1: string) (p2: string) : value =
     let v1 = Env.find p1 st in
     let v2 = Env.find p2 st in
     match op with
-        | OpAppend -> value_append v1 v2
+        | OpConcat -> value_concat v1 v2
         | OpAdd -> value_add v1 v2
         | OpMin -> value_add v1 (value_neg v2)
         | OpMul -> value_mul v1 v2

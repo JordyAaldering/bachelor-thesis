@@ -25,7 +25,7 @@ type token =
     | DIM
     | READ
     (* operands *)
-    | APPEND
+    | CONCAT
     | ADD
     | MIN
     | MUL
@@ -65,7 +65,7 @@ let token_to_str (tok: token) : string =
     | DIM       -> "dim"
     | READ      -> "read"
     (* operands *)
-    | APPEND    -> "++"
+    | CONCAT    -> "@"
     | ADD       -> "+"
     | MIN       -> "-"
     | MUL       -> "*"
@@ -87,7 +87,7 @@ let token_to_str (tok: token) : string =
 
 let is_op (tok: token) : bool =
     match tok with
-    | APPEND
+    | CONCAT
     | ADD
     | MIN
     | MUL
@@ -108,7 +108,7 @@ let op_prec (tok: token) : int =
     | LE
     | GT
     | GE -> 2
-    | APPEND -> 3
+    | CONCAT -> 3
     | ADD
     | MIN -> 4
     | MUL
@@ -117,7 +117,7 @@ let op_prec (tok: token) : int =
 
 let op_to_binop (tok: token) : bop =
     match tok with
-    | APPEND -> OpAppend
+    | CONCAT -> OpConcat
     | ADD    -> OpAdd
     | MIN    -> OpMin
     | MUL    -> OpMul

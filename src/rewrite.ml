@@ -68,7 +68,7 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 2 inf env
     (* operands *)
     | EBinary (op, e1, _) -> (match op with
-        | OpAppend | OpAdd | OpMin | OpMul | OpDiv 
+        | OpConcat | OpAdd | OpMin | OpMul | OpDiv 
             -> rewrite_s e1 inf env
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
             -> EArray []
@@ -111,7 +111,7 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | ECond (e1, e2, e3) -> rewrite_if e1 e2 e3 1 inf env
     (* operands *)
     | EBinary (op, e1, _) -> (match op with
-        | OpAppend | OpAdd | OpMin | OpMul | OpDiv
+        | OpConcat | OpAdd | OpMin | OpMul | OpDiv
             -> rewrite_d e1 inf env
         | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
             -> EFloat 0.

@@ -4,7 +4,7 @@ let hanoi = \x.
     else
         let lst = hanoi (x - 1) in
         let v = 2 * lst.(0) + 1 in
-        v ++ lst
+        v @ lst
 in
 
 let x = hanoi 100 in
