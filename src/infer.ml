@@ -55,6 +55,13 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let env1 = sd e1 dem' env in
         let env2 = sd e2 dem' env in
         pv_env_union env1 env2
+    | EWith (e1, s, e2, e3) ->
+        let dem_idx = pv (ELambda (s, e3)) env in
+        let dem_idx = Array.map (Array.get dem_idx) dem in
+        let env1 = sd e1 dem_idx env in
+        let env2 = sd e2 dem_idx env in
+        let env3 = Env.remove s @@ sd e3 dem env in
+        pv_env_union env1 (pv_env_union env2 env3)
     | EUnary (_, e1)
     | EShape e1
     | EDim e1 ->
@@ -62,7 +69,6 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let dem' = Array.map (Array.get dem') dem in
         sd e1 dem' env
     | ERead -> env
-    | _ -> env
 
 and pv (e: expr) (env: pv_env) : int Array.t =
     match e with
