@@ -3,16 +3,20 @@ open Env
 open Infer
 open Printf
 
+(** an environment mapping variables to the level 
+    they have currently been rewritten to *)
 type rw_env = int Env.t
 
+(** rewrite an expression using the given rewrite level *)
 let rec rewrite_lvl (e: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
     match lvl with
     | 3 -> rewrite_f e inf env
     | 2 -> rewrite_s e inf env
     | 1 -> rewrite_d e inf env
     | 0 -> EFloat 0.
-    | _ -> rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
-        (expr_to_str e) lvl
+    | _ -> rewrite_err @@
+        sprintf "at %s: invalid eval level `%d'"
+            (expr_to_str e) lvl
 
 and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
     match e with
@@ -78,16 +82,14 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
         let e3_shp = rewrite_s e3 inf env in
         EBinary (OpConcat, idx_shp, e3_shp)
     (* operands *)
-    | EBinary (op, e1, _) -> (match op with
-        | OpConcat | OpAdd | OpMin | OpMul | OpDiv 
-            -> rewrite_s e1 inf env
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
-            -> EArray []
-    )
-    | EUnary (op, e1) -> (match op with
-        | OpNeg -> rewrite_s e1 inf env
-        | OpNot -> EArray []
-    )
+    | EBinary (op, e1, _) ->
+        if is_equality_bop op
+        then EArray []
+        else rewrite_s e1 inf env
+    | EUnary (op, e1) ->
+        if is_equality_uop op
+        then EArray []
+        else rewrite_s e1 inf env
     (* primitive functions *)
     | ESel _ -> EArray []
     | EShape e1 -> EArray [rewrite_d e1 inf env]
@@ -125,16 +127,14 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
         let e3_dim = rewrite_d e3 inf env in
         EBinary (OpAdd, idx_dim, e3_dim)
     (* operands *)
-    | EBinary (op, e1, _) -> (match op with
-        | OpConcat | OpAdd | OpMin | OpMul | OpDiv
-            -> rewrite_d e1 inf env
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
-            -> EFloat 0.
-    )
-    | EUnary (op, e1) -> (match op with
-        | OpNeg -> rewrite_d e1 inf env
-        | OpNot -> EFloat 0.
-    )
+    | EBinary (op, e1, _) ->
+        if is_equality_bop op
+        then EFloat 0.
+        else rewrite_d e1 inf env
+    | EUnary (op, e1) ->
+        if is_equality_uop op
+        then EFloat 0.
+        else rewrite_d e1 inf env
     (* primitive functions *)
     | ESel _ -> EFloat 0.
     | EShape _ -> EFloat 1.

@@ -7,6 +7,7 @@ exception RewriteError of string
 let rewrite_err (msg: string) =
     raise @@ RewriteError msg
 
+(** returns an environment containing demands for all free variables *)
 let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
     match e with
     (* variables *)
@@ -20,12 +21,10 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
             with Not_found -> [|0; 0; 0; 0|] in
         Env.add x dem' env1
     | EApply (EVar fid, e2) ->
-        let dem' = try Env.find fid env
-            with Not_found -> [|0; 1; 2; 3|] in
+        let dem' = try Env.find fid env with Not_found -> [|0; 1; 2; 3|] in
         let dem' = Array.map (Array.get dem') dem in
         sd e2 dem' env
-    | EApply (e1, e2) ->
-        (* e1 is a lambda- or primitive expression *)
+    | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
         let dem' = pv e1 env in
         let dem' = Array.map (Array.get dem') dem in
         sd e2 dem' env
@@ -46,6 +45,13 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let env2 = sd e2 dem env in
         let env3 = sd e3 dem env in
         pv_env_union env1 (pv_env_union env2 env3)
+    | EWith (e1, s, e2, e3) ->
+        let dem_idx = pv (ELambda (s, e3)) env in
+        let dem_idx = Array.map (Array.get dem_idx) dem in
+        let env1 = sd e1 dem_idx env in
+        let env2 = sd e2 dem_idx env in
+        let env3 = Env.remove s @@ sd e3 dem env in
+        pv_env_union env1 (pv_env_union env2 env3)
     (* operands, and *)
     (* primitive functions *)
     | EBinary (_, e1, e2)
@@ -55,13 +61,6 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let env1 = sd e1 dem' env in
         let env2 = sd e2 dem' env in
         pv_env_union env1 env2
-    | EWith (e1, s, e2, e3) ->
-        let dem_idx = pv (ELambda (s, e3)) env in
-        let dem_idx = Array.map (Array.get dem_idx) dem in
-        let env1 = sd e1 dem_idx env in
-        let env2 = sd e2 dem_idx env in
-        let env3 = Env.remove s @@ sd e3 dem env in
-        pv_env_union env1 (pv_env_union env2 env3)
     | EUnary (_, e1)
     | EShape e1
     | EDim e1 ->
@@ -70,6 +69,7 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         sd e1 dem' env
     | ERead -> env
 
+(** returns the demand array for the given expression *)
 and pv (e: expr) (env: pv_env) : int Array.t =
     match e with
     (* expressions *)
@@ -83,16 +83,14 @@ and pv (e: expr) (env: pv_env) : int Array.t =
         let env' = sd e2 [|0; 1; 2; 3|] env in
         pv e1 env'
     (* operands *)
-    | EBinary (op, _, _) -> (match op with
-        | OpConcat | OpAdd | OpMin | OpMul | OpDiv
-            -> [|0; 1; 2; 3|]
-        | OpEq | OpNe | OpLt | OpLe | OpGt | OpGe
-            -> [|0; 0; 0; 3|]
-    )
-    | EUnary (op, _) -> (match op with
-        | OpNeg -> [|0; 1; 2; 3|]
-        | OpNot -> [|0; 0; 0; 3|]
-    )
+    | EBinary (op, _, _) ->
+        if is_equality_bop op
+        then [|0; 0; 0; 3|]
+        else [|0; 1; 2; 3|]
+    | EUnary (op, _) ->
+        if is_equality_uop op
+        then [|0; 0; 0; 3|]
+        else [|0; 1; 2; 3|]
     (* primitive functions *)
     | ESel _   -> [|0; 2; 2; 3|]
     | EShape _ -> [|0; 0; 1; 2|]

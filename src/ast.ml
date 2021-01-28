@@ -37,6 +37,21 @@ and uop =
     | OpNeg
     | OpNot
 
+let is_equality_bop (op: bop) : bool =
+    match op with
+    | OpEq
+    | OpNe
+    | OpLt
+    | OpLe
+    | OpGt
+    | OpGe -> true
+    | _ -> false
+
+let is_equality_uop (op: uop) : bool =
+    match op with
+    | OpNot -> true
+    | _ -> false
+
 let bop_to_str (op: bop) : string =
     match op with
     | OpConcat -> "@"
