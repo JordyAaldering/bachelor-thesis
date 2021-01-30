@@ -42,7 +42,7 @@ let ptr_binary (st: val_env) (op: bop) (p1: string) (p2: string) : value =
     match op with
         | OpConcat -> value_concat v1 v2
         | OpAdd -> value_add v1 v2
-        | OpMin -> value_add v1 (value_neg v2)
+        | OpMin -> value_sub v1 v2
         | OpMul -> value_mul v1 v2
         | OpDiv -> value_div v1 v2
         | OpEq -> value_eq v1 v2

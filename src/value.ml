@@ -120,6 +120,9 @@ let value_add (v1: value) (v2: value) : value =
     | _ -> value_err @@ sprintf "invalid arguments %s and %s"
             (value_to_str v1) (value_to_str v2)
 
+let value_sub (v1: value) (v2: value) : value =
+    value_add v1 (value_neg v2)
+
 let value_mul (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray ([], [c]), VArray (shp, xs)
