@@ -39,20 +39,20 @@ let extract_closure (v: value) : (string * expr * ptr_env) =
 
 (** Assertions **)
 
-let assert_dim_eq (token: string) (v1: value) (v2: value) =
-    match v1, v2 with
-    | VArray (shp1, _), VArray (shp2, _) ->
-        if List.length shp1 <> List.length shp2 then
-            value_err @@ sprintf "`%s' expected two arrays of equal dim, got dim %d and %d (from arrays %s and %s)"
-                token (List.length shp1) (List.length shp2) (value_to_str v1) (value_to_str v2);
-    | _ -> ()
-
 let assert_shape_eq (token: string) (v1: value) (v2: value) =
     match v1, v2 with
     | VArray (shp1, _), VArray (shp2, _) ->
         if List.length shp1 <> List.length shp2 || List.exists2 (<>) shp1 shp2 then
             value_err @@ sprintf "`%s' expected two arrays of equal shape, got shapes [%s] and [%s] (from arrays %s and %s)"
                 token (shp_to_str shp1) (shp_to_str shp2) (value_to_str v1) (value_to_str v2);
+    | _ -> ()
+
+let assert_dim_eq (token: string) (v1: value) (v2: value) =
+    match v1, v2 with
+    | VArray (shp1, _), VArray (shp2, _) ->
+        if List.length shp1 <> List.length shp2 then
+            value_err @@ sprintf "`%s' expected two arrays of equal dim, got dim %d and %d (from arrays %s and %s)"
+                token (List.length shp1) (List.length shp2) (value_to_str v1) (value_to_str v2);
     | _ -> ()
 
 

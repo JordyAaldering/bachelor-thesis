@@ -18,7 +18,7 @@ let take = \v.\a.
 in
 
 let create = \s.\x.
-    with 0 <= iv < s do
+    with (0 * s) <= iv < s do
         x
 in
 

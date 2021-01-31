@@ -64,8 +64,8 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     | EVar x -> (st, Env.find x env)
     | EFloat x -> add_fresh_value st (VArray ([], [x]))
     | EArray es ->
-        let st, ptr_lst = eval_expr_lst es st env in
-        let shp = List.length ptr_lst :: ptr_list_shape st ptr_lst in
+        let st, ptrs = eval_expr_lst es st env in
+        let shp = List.length ptrs :: ptr_list_shape st ptrs in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let floats = (match ptr_val with
@@ -74,7 +74,7 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
                             (value_to_str ptr_val)
                 ) in
                 floats @ val_lst
-            ) ptr_lst []
+            ) ptrs []
         in
         add_fresh_value st (VArray (shp, data))
     (* expressions *)
@@ -97,9 +97,13 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     | EWith (min, s, max, e1) ->
         let st, p_min = eval_expr min st env in
         let st, p_max = eval_expr max st env in
-        let st, v_ptrs = eval_with s (Env.find p_min st) (Env.find p_max st) e1 st env
+        let v_min = (Env.find p_min st) in
+        let v_max = (Env.find p_max st) in
+        assert_shape_eq "with" v_min v_max;
+        let st, ptrs = eval_with s v_min v_max e1 st env
         in
-        let shp = [List.length v_ptrs] in
+        let _, shp = extract_value (value_sub v_max v_min) in
+        let shp = List.map int_of_float shp in
         let data = List.fold_right (fun ptr val_lst ->
                 let ptr_val = Env.find ptr st in
                 let floats = (match ptr_val with
@@ -108,7 +112,7 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
                             (value_to_str ptr_val)
                 ) in
                 floats @ val_lst
-            ) v_ptrs []
+            ) ptrs []
         in
         add_fresh_value st (VArray (shp, data))
     (* operands *)
