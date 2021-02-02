@@ -39,6 +39,12 @@ let extract_closure (v: value) : (string * expr * ptr_env) =
 
 (** Assertions **)
 
+let assert_scalar (token: string) (v1: value) =
+    match v1 with
+    | VArray ([], _) -> ()
+    | _ -> value_err @@ sprintf "`%s' expected a scalar, got array %s"
+                token (value_to_str v1)
+
 let assert_shape_eq (token: string) (v1: value) (v2: value) =
     match v1, v2 with
     | VArray (shp1, _), VArray (shp2, _) ->
@@ -58,24 +64,42 @@ let assert_dim_eq (token: string) (v1: value) (v2: value) =
 
 (** Primitive Functions **)
 
+let rec row_major sprod res iv shp =
+    match iv, shp with
+    | [], [] -> res
+    | (i :: ivtl), (sh :: shtl) ->
+        row_major (sprod * sh) (res + sprod * i) shtl ivtl
+    | _ ->
+        value_err @@ sprintf "row_major got different shapes v:[%s] and iv:[%s]"
+            (shp_to_str shp) (shp_to_str shp)
+
+let iv_to_index (iv: value) (shp: int list) : int =
+    match iv with
+    | VArray (_, iv) ->
+        let iv = List.rev @@ List.map int_of_float iv in
+        let shp = List.rev shp in
+        row_major 1 0 iv shp
+    | _ ->
+        value_err "invalid argument in iv_to_index"
+
+let iv_set (v: value) (iv: value) (scalar: value) =
+    match v, iv, scalar with
+    | VArray (shp, data), _, VArray ([], [x]) ->
+        let i = iv_to_index iv shp in
+        let data = List.mapi (fun j y -> if i = j then x else y) data in
+        VArray (shp, data)
+    | _ ->
+        value_err "invalid argument in set"
+
 let sel (v: value) (iv: value) =
     match v, iv with
     | VArray (_, data), VArray ([], [i]) ->
         VArray ([], [List.nth data (int_of_float i)])
-    | VArray (shp, data), VArray (_, idx) ->
-        let rec row_major sprod res shp iv =
-            match shp, iv with
-            | [], [] -> res
-            | (sh :: shtl), (i :: ivtl) ->
-                row_major (sprod * sh) (res + sprod * i) shtl ivtl
-            | _ -> value_err @@ sprintf "sel got different shapes v:[%s] and iv:[%s]"
-                    (shp_to_str shp) (shp_to_str (List.map int_of_float idx))
-        in
-        let shp_vec = List.rev shp in
-        let iv_vec = List.rev @@ List.map int_of_float idx in
-        let i = row_major 1 0 shp_vec iv_vec in
+    | VArray (shp, data), _ ->
+        let i = iv_to_index iv shp in
         VArray ([], [List.nth data i])
-    | _ -> value_err @@ sprintf "invalid sel arguments %s and %s"
+    | _ ->
+        value_err @@ sprintf "invalid sel arguments %s and %s"
             (value_to_str iv) (value_to_str v)
 
 let shape (v: value) : value =

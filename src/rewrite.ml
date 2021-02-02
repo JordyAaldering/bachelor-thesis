@@ -34,11 +34,11 @@ and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 3 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 3 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 3 inf env
-    | EWith (e1, s, e2, e3) ->
+    | EWith (e0, e1, s, e2, e3) ->
         let e1' = rewrite_f e1 inf env in
         let e2' = rewrite_f e2 inf env in
         let e3' = rewrite_f e3 inf env in
-        EWith (e1', s, e2', e3')
+        EWith (e0, e1', s, e2', e3')
     (* operands *)
     | EBinary (op, e1, e2) -> EBinary (op, rewrite_f e1 inf env, rewrite_f e2 inf env)
     | EUnary (op, e1) -> EUnary (op, rewrite_f e1 inf env)
@@ -74,7 +74,7 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 2 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 2 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 2 inf env
-    | EWith (e1, _s, e2, e3) ->
+    | EWith (_e0, e1, _s, e2, e3) ->
         (* temporary, incorrect, implementation *)
         let e1' = rewrite_s e1 inf env in
         let e2' = rewrite_s e2 inf env in
@@ -121,7 +121,7 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 1 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 1 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 1 inf env
-    | EWith (e1, _s, _e2, e3) ->
+    | EWith (_e0, e1, _s, _e2, e3) ->
         (* temporary, incorrect, implementation *)
         let idx_dim = rewrite_d e1 inf env in
         let e3_dim = rewrite_d e3 inf env in

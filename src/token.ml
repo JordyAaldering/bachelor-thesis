@@ -18,9 +18,9 @@ type token =
     | IF
     | THEN
     | ELSE
-    (* primitive functions *)
+    | GEN
     | WITH
-    | DO
+    (* primitive functions *)
     | SHAPE
     | DIM
     | READ
@@ -58,8 +58,8 @@ let token_to_str (tok: token) : string =
     | IF        -> "if"
     | THEN      -> "then"
     | ELSE      -> "else"
+    | GEN       -> "gen"
     | WITH      -> "with"
-    | DO        -> "do"
     (* primitive functions *)
     | SHAPE     -> "shape"
     | DIM       -> "dim"

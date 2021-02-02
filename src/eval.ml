@@ -94,27 +94,35 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
         let st, p1 = eval_expr e1 st env in
         let v = Env.find p1 st in
         eval_expr (if value_is_truthy v then e2 else e3) st env
-    | EWith (min, s, max, e1) ->
-        let st, p_min = eval_expr min st env in
-        let st, p_max = eval_expr max st env in
-        let v_min = (Env.find p_min st) in
-        let v_max = (Env.find p_max st) in
+    | EWith (e_gen, e_min, s_idx, e_max, e5) ->
+        let st, p_gen = eval_expr e_gen st env in
+        let st, p_min = eval_expr e_min st env in
+        let st, p_max = eval_expr e_max st env in
+        let v_gen = Env.find p_gen st in
+        let v_min = Env.find p_min st in
+        let v_max = Env.find p_max st in
         assert_shape_eq "with" v_min v_max;
-        let st, ptrs = eval_with s v_min v_max e1 st env
+
+        let _, v_shp = extract_value v_gen in
+        let v_shp = List.map int_of_float v_shp in
+        let v_len = List.fold_right ( * ) v_shp 1 in
+        let v_ref = ref (VArray (v_shp, List.init v_len (fun _ -> 0.)))
         in
-        let _, shp = extract_value (value_sub v_max v_min) in
-        let shp = List.map int_of_float shp in
-        let data = List.fold_right (fun ptr val_lst ->
-                let ptr_val = Env.find ptr st in
-                let floats = (match ptr_val with
-                    | VArray (_, xs) -> xs
-                    | _ -> eval_err @@ sprintf "invalid value in list `%s'"
-                            (value_to_str ptr_val)
-                ) in
-                floats @ val_lst
-            ) ptrs []
+        let rec eval_with iv_cur iv_max st env =
+            if (value_is_truthy @@ value_lt iv_cur iv_max) then (
+                let st, p = add_fresh_value st iv_cur in
+                let st, p_cur = eval_expr e5 st (Env.add s_idx p env) in
+                let v_set = Env.find p_cur st in
+                v_ref := iv_set !v_ref iv_cur v_set;
+                (* recursion *)
+                let iv_next = value_add iv_cur (VArray ([], [1.])) in
+                let st = eval_with iv_next iv_max st env in
+                st
+            ) else
+                st
         in
-        add_fresh_value st (VArray (shp, data))
+        let st = eval_with v_min v_max st env in
+        add_fresh_value st !v_ref
     (* operands *)
     | EBinary (op, e1, e2) ->
         let st, p1 = eval_expr e1 st env in
@@ -151,16 +159,6 @@ and eval_expr_lst (es: expr list) (st: val_env) (env: ptr_env) : (val_env * stri
         let st, p = eval_expr x st env in
         let st, ps = eval_expr_lst xs st env in
         (st, p :: ps)
-
-and eval_with (s: string) (cur: value) (max: value) (e: expr) (st: val_env) (env: ptr_env) : (val_env * string list) =
-    if (value_is_truthy @@ value_lt cur max) then
-        let st, p = add_fresh_value st cur in
-        let st, p_cur = eval_expr e st (Env.add s p env) in
-        let v_next = value_add cur (VArray ([], [1.])) in
-        let st, ps = eval_with s v_next max e st env in
-        (st, p_cur :: ps)
-    else
-        (st, [])
 
 let eval (e: expr) =
     ptr_count := 0;

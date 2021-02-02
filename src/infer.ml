@@ -45,7 +45,7 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let env2 = sd e2 dem env in
         let env3 = sd e3 dem env in
         pv_env_union env1 (pv_env_union env2 env3)
-    | EWith (e1, s, e2, e3) ->
+    | EWith (e1, e2, s, e3, _e4) ->
         let dem_idx = pv (ELambda (s, e3)) env in
         let dem_idx = Array.map (Array.get dem_idx) dem in
         let env1 = sd e1 dem_idx env in

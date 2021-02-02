@@ -58,14 +58,13 @@ let expect_token (lexbuf: lexbuf) (expected: token) =
         parse_err @@ sprintf "expected token `%s', found `%s'"
             (token_to_str expected) (token_to_str t)
 
-(** get a primary expression, if there is none throw an error *)
+(** get an expression, if there is none throw an error *)
 let rec expect_primary (lexbuf: lexbuf) : expr =
     let e = parse_primary lexbuf in
     if e = None then
-        parse_err "expected primary expression, found None";
+        parse_err "expected primary, found None";
     opt_get e
 
-(** get an expression, if there is none throw an error *)
 and expect_expr (lexbuf: lexbuf) : expr =
     let e = parse_expr lexbuf in
     if e = None then
@@ -105,15 +104,17 @@ and parse_primary (lexbuf: lexbuf) : expr option =
         expect_token lexbuf ELSE;
         let e3 = expect_expr lexbuf in
         Some (ECond (e1, e2, e3))
-    | WITH ->
+    | GEN ->
+        let e_gen = expect_expr lexbuf in
+        expect_token lexbuf WITH;
         let e_min = expect_primary lexbuf in
         expect_token lexbuf LE;
         let s_idx = expect_id lexbuf in
         expect_token lexbuf LT;
         let e_max = expect_primary lexbuf in
-        expect_token lexbuf DO;
-        let e = expect_expr lexbuf in
-        Some (EWith (e_min, s_idx, e_max, e))
+        expect_token lexbuf IN;
+        let e5 = expect_expr lexbuf in
+        Some (EWith (e_gen, e_min, s_idx, e_max, e5))
     (* primitive functions *)
     | SHAPE -> Some (EShape (expect_expr lexbuf))
     | DIM -> Some (EDim (expect_expr lexbuf))
