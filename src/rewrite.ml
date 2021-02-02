@@ -34,11 +34,12 @@ and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 3 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 3 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 3 inf env
-    | EWith (e0, e1, s, e2, e3) ->
-        let e1' = rewrite_f e1 inf env in
-        let e2' = rewrite_f e2 inf env in
-        let e3' = rewrite_f e3 inf env in
-        EWith (e0, e1', s, e2', e3')
+    | EWith (e_gen, e_min, s, e_max, e) ->
+        let rw_gen = rewrite_f e_gen inf env in
+        let rw_min = rewrite_f e_min inf env in
+        let rw_max = rewrite_f e_max inf env in
+        let rw_e = rewrite_f e inf env in
+        EWith (rw_gen, rw_min, s, rw_max, rw_e)
     (* operands *)
     | EBinary (op, e1, e2) -> EBinary (op, rewrite_f e1 inf env, rewrite_f e2 inf env)
     | EUnary (op, e1) -> EUnary (op, rewrite_f e1 inf env)
@@ -74,13 +75,8 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 2 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 2 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 2 inf env
-    | EWith (_e0, e1, _s, e2, e3) ->
-        (* temporary, incorrect, implementation *)
-        let e1' = rewrite_s e1 inf env in
-        let e2' = rewrite_s e2 inf env in
-        let idx_shp = EBinary (OpMin, e2', e1') in
-        let e3_shp = rewrite_s e3 inf env in
-        EBinary (OpConcat, idx_shp, e3_shp)
+    | EWith (e_gen, _, _, _, _) ->
+        rewrite_f e_gen inf env
     (* operands *)
     | EBinary (op, e1, _) ->
         if is_equality_bop op
@@ -121,11 +117,8 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 1 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 1 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 1 inf env
-    | EWith (_e0, e1, _s, _e2, e3) ->
-        (* temporary, incorrect, implementation *)
-        let idx_dim = rewrite_d e1 inf env in
-        let e3_dim = rewrite_d e3 inf env in
-        EBinary (OpAdd, idx_dim, e3_dim)
+    | EWith (e_gen, _, _, _, _) ->
+        rewrite_s e_gen inf env
     (* operands *)
     | EBinary (op, e1, _) ->
         if is_equality_bop op
