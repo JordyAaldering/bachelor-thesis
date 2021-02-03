@@ -45,8 +45,8 @@ type token =
     | RSQUARE
     | EOF
 
-let token_to_str (tok: token) : string =
-    match tok with
+let token_to_str (t: token) : string =
+    match t with
     (* variables *)
     | ID s      -> s
     | INT x     -> string_of_int x
@@ -61,8 +61,8 @@ let token_to_str (tok: token) : string =
     | GEN       -> "gen"
     | WITH      -> "with"
     (* primitive functions *)
-    | SHAPE     -> "value_shape"
-    | DIM       -> "value_dim"
+    | SHAPE     -> "shape"
+    | DIM       -> "dim"
     | READ      -> "read"
     (* operands *)
     | CONCAT    -> "@"
@@ -85,8 +85,8 @@ let token_to_str (tok: token) : string =
     | RSQUARE   -> "]"
     | EOF       -> "EOF"
 
-let is_op (tok: token) : bool =
-    match tok with
+let is_op (t: token) : bool =
+    match t with
     | CONCAT
     | ADD
     | MIN
@@ -100,8 +100,8 @@ let is_op (tok: token) : bool =
     | GE -> true
     | _ -> false
 
-let op_prec (tok: token) : int =
-    match tok with
+let op_prec (t: token) : int =
+    match t with
     | EQ
     | NE -> 1
     | LT
@@ -115,8 +115,8 @@ let op_prec (tok: token) : int =
     | DIV -> 5
     | _ -> 6
 
-let op_to_binop (tok: token) : bop =
-    match tok with
+let op_to_binop (t: token) : bop =
+    match t with
     | CONCAT -> OpConcat
     | ADD    -> OpAdd
     | MIN    -> OpMin
@@ -128,5 +128,6 @@ let op_to_binop (tok: token) : bop =
     | LE     -> OpLe
     | GT     -> OpGt
     | GE     -> OpGe
-    | _ -> parse_err @@ sprintf "token `%s' is not a binary operand"
-            (token_to_str tok)
+    | _ ->
+        parse_err @@ sprintf "token `%s' is not a binary operand"
+            (token_to_str t)
