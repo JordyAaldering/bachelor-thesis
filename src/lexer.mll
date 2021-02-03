@@ -30,8 +30,8 @@ rule token = parse
     | "gen"     { GEN }
     | "with"    { WITH }
     (* primitive functions *)
-    | "value_shape"   { SHAPE }
-    | "value_dim"     { DIM }
+    | "shape"   { SHAPE }
+    | "dim"     { DIM }
     | "read"    { READ }
     (* variables *)
     | id as i   { ID i }
