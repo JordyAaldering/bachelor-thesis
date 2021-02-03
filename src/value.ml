@@ -175,7 +175,7 @@ let value_div (v1: value) (v2: value) : value =
  * Equality operations
  *)
 
-(** A value is false if ALL its floats are 0, else it is true *)
+(** a value is false if ALL its floats are 0, else it is true *)
 let value_is_truthy (v: value) : bool =
     match v with
     | VArray (_, xs) -> List.exists ((<>) 0.) xs
@@ -184,7 +184,7 @@ let value_is_truthy (v: value) : bool =
 let value_not (v: value) : value =
     VArray ([], [if value_is_truthy v then 0. else 1.])
 
-(** True (1) if ALL values in v1 are = the corresponding values in v2 *)
+(** true (1) if ALL values in v1 are = the corresponding values in v2 *)
 let value_eq (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray (_, xs), VArray (_, ys) ->
@@ -193,11 +193,11 @@ let value_eq (v1: value) (v2: value) : value =
     | _ ->
         VArray ([], [0.])
 
-(** True (1) if ALL values in v1 are != the corresponding values in v2 *)
+(** true (1) if ALL values in v1 are != the corresponding values in v2 *)
 let value_ne (v1: value) (v2: value) : value =
     value_not @@ value_eq v1 v2
 
-(** True (1) if ALL values in v1 are < the corresponding values in v2 *)
+(** true (1) if ALL values in v1 are < the corresponding values in v2 *)
 let value_lt (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray (_, xs), VArray ([], [c]) ->
@@ -210,7 +210,7 @@ let value_lt (v1: value) (v2: value) : value =
     | _ ->
         invalid_arguments [v1; v2]
 
-(** True (1) if ALL values in v1 are <= the corresponding values in v2 *)
+(** true (1) if ALL values in v1 are <= the corresponding values in v2 *)
 let value_le (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray (_, xs), VArray ([], [c]) ->
@@ -223,7 +223,7 @@ let value_le (v1: value) (v2: value) : value =
     | _ ->
         invalid_arguments [v1; v2]
 
-(** True (1) if ALL values in v1 are > the corresponding values in v2 *)
+(** true (1) if ALL values in v1 are > the corresponding values in v2 *)
 let value_gt (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray (_, xs), VArray ([], [c]) ->
@@ -236,7 +236,7 @@ let value_gt (v1: value) (v2: value) : value =
     | _ ->
         invalid_arguments [v1; v2]
 
-(** True (1) if ALL values in v1 are >= the corresponding values in v2 *)
+(** true (1) if ALL values in v1 are >= the corresponding values in v2 *)
 let value_ge (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray (_, xs), VArray ([], [c]) ->
