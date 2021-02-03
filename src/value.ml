@@ -84,7 +84,7 @@ let iv_to_index (iv: value) (shp: int list) : int =
     | _ ->
         invalid_argument iv
 
-let value_set (v: value) (iv: value) (scalar: value) =
+let value_set (v: value) (iv: value) (scalar: value) : value =
     match v, iv, scalar with
     | VArray (shp, data), _, VArray ([], [x]) ->
         let i = iv_to_index iv shp in
@@ -93,7 +93,7 @@ let value_set (v: value) (iv: value) (scalar: value) =
     | _ ->
         invalid_arguments [v; iv; scalar]
 
-let value_sel (v: value) (iv: value) =
+let value_sel (v: value) (iv: value) : value =
     match v, iv with
     | VArray (_, data), VArray ([], [i]) ->
         VArray ([], [List.nth data (int_of_float i)])
