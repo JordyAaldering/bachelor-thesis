@@ -197,32 +197,6 @@ let value_eq (v1: value) (v2: value) : value =
 let value_ne (v1: value) (v2: value) : value =
     value_not @@ value_eq v1 v2
 
-(** True (1) if ALL values in v1 are > the corresponding values in v2 *)
-let value_gt (v1: value) (v2: value) : value =
-    match v1, v2 with
-    | VArray (_, xs), VArray ([], [c]) ->
-        VArray ([], [if List.for_all ((<) c) xs then 1. else 0.])
-    | VArray ([], [c]), VArray (_, ys) ->
-        VArray ([], [if List.for_all ((>) c) ys then 1. else 0.])
-    | VArray (_, xs), VArray (_, ys) ->
-        assert_shape_eq v1 v2;
-        VArray ([], [if List.for_all2 (>) xs ys then 1. else 0.])
-    | _ ->
-        invalid_arguments [v1; v2]
-
-(** True (1) if ALL values in v1 are >= the corresponding values in v2 *)
-let value_ge (v1: value) (v2: value) : value =
-    match v1, v2 with
-    | VArray (_, xs), VArray ([], [c]) ->
-        VArray ([], [if List.for_all ((<=) c) xs then 1. else 0.])
-    | VArray ([], [c]), VArray (_, ys) ->
-        VArray ([], [if List.for_all ((>=) c) ys then 1. else 0.])
-    | VArray (_, xs), VArray (_, ys) ->
-        assert_shape_eq v1 v2;
-        VArray ([], [if List.for_all2 (>=) xs ys then 1. else 0.])
-    | _ ->
-        invalid_arguments [v1; v2]
-
 (** True (1) if ALL values in v1 are < the corresponding values in v2 *)
 let value_lt (v1: value) (v2: value) : value =
     match v1, v2 with
@@ -246,6 +220,32 @@ let value_le (v1: value) (v2: value) : value =
     | VArray (_, xs), VArray (_, ys) ->
         assert_shape_eq v1 v2;
         VArray ([], [if List.for_all2 (<=) xs ys then 1. else 0.])
+    | _ ->
+        invalid_arguments [v1; v2]
+
+(** True (1) if ALL values in v1 are > the corresponding values in v2 *)
+let value_gt (v1: value) (v2: value) : value =
+    match v1, v2 with
+    | VArray (_, xs), VArray ([], [c]) ->
+        VArray ([], [if List.for_all ((<) c) xs then 1. else 0.])
+    | VArray ([], [c]), VArray (_, ys) ->
+        VArray ([], [if List.for_all ((>) c) ys then 1. else 0.])
+    | VArray (_, xs), VArray (_, ys) ->
+        assert_shape_eq v1 v2;
+        VArray ([], [if List.for_all2 (>) xs ys then 1. else 0.])
+    | _ ->
+        invalid_arguments [v1; v2]
+
+(** True (1) if ALL values in v1 are >= the corresponding values in v2 *)
+let value_ge (v1: value) (v2: value) : value =
+    match v1, v2 with
+    | VArray (_, xs), VArray ([], [c]) ->
+        VArray ([], [if List.for_all ((<=) c) xs then 1. else 0.])
+    | VArray ([], [c]), VArray (_, ys) ->
+        VArray ([], [if List.for_all ((>=) c) ys then 1. else 0.])
+    | VArray (_, xs), VArray (_, ys) ->
+        assert_shape_eq v1 v2;
+        VArray ([], [if List.for_all2 (>=) xs ys then 1. else 0.])
     | _ ->
         invalid_arguments [v1; v2]
 
