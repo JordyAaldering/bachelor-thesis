@@ -40,23 +40,23 @@ let ptr_binary (st: val_env) (op: bop) (p1: string) (p2: string) : value =
     let v1 = Env.find p1 st in
     let v2 = Env.find p2 st in
     match op with
-        | OpConcat -> value_concat v1 v2
-        | OpAdd -> value_add v1 v2
-        | OpMin -> value_sub v1 v2
-        | OpMul -> value_mul v1 v2
-        | OpDiv -> value_div v1 v2
-        | OpEq -> value_eq v1 v2
-        | OpNe -> value_not @@ value_eq v1 v2
-        | OpLt -> value_lt v1 v2
-        | OpLe -> value_not @@ value_gt v1 v2
-        | OpGt -> value_gt v1 v2
-        | OpGe -> value_not @@ value_lt v1 v2
+    | OpConcat -> value_concat v1 v2
+    | OpAdd -> value_add v1 v2
+    | OpMin -> value_sub v1 v2
+    | OpMul -> value_mul v1 v2
+    | OpDiv -> value_div v1 v2
+    | OpEq -> value_eq v1 v2
+    | OpNe -> value_ne v1 v2
+    | OpLt -> value_lt v1 v2
+    | OpLe -> value_le v1 v2
+    | OpGt -> value_gt v1 v2
+    | OpGe -> value_ge v1 v2
 
 let ptr_unary (st: val_env) (op: uop) (p: string) : value =
     let v = Env.find p st in
     match op with
-        | OpNeg -> value_neg v
-        | OpNot -> value_not v
+    | OpNeg -> value_neg v
+    | OpNot -> value_not v
 
 let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     match e with
@@ -101,7 +101,7 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
         let v_gen = Env.find p_gen st in
         let v_min = Env.find p_min st in
         let v_max = Env.find p_max st in
-        assert_shape_eq "with" v_min v_max;
+        assert_shape_eq v_min v_max;
 
         let _, v_shp = extract_value v_gen in
         let v_shp = List.map int_of_float v_shp in
