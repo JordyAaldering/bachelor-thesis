@@ -32,13 +32,13 @@ let value_err (msg: string) =
     raise @@ ValueError msg
 
 let invalid_argument ?(msg: string = "") (v: value) =
-    value_err @@ sprintf "invalid argument %s%s%s"
-        (value_to_str v) (if msg = "" then "" else ", ") msg
+    value_err @@ sprintf "invalid argument %s%s"
+        (value_to_str v) (if msg = "" then "" else ", " ^ msg)
 
 let invalid_arguments ?(msg: string = "") (vs: value list) =
-    value_err @@ sprintf "invalid arguments %s%s%s"
+    value_err @@ sprintf "invalid arguments %s%s"
         (String.concat ", " (List.map value_to_str vs))
-        (if msg = "" then "" else ", ") msg
+        (if msg = "" then "" else ", " ^ msg)
 
 let assert_scalar (v1: value) =
     match v1 with
