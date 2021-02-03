@@ -32,7 +32,7 @@ let ptr_list_shape (st: val_env) (ptr_lst: string list) : int list =
         []
     else
         let vec = Env.find (List.hd ptr_lst) st in
-        let shp = shape vec in
+        let shp = value_shape vec in
         let _, shp = extract_value shp in
         List.map int_of_float shp
 
@@ -113,7 +113,7 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
                 let st, p = add_fresh_value st iv_cur in
                 let st, p_cur = eval_expr e5 st (Env.add s_idx p env) in
                 let v_set = Env.find p_cur st in
-                v_ref := iv_set !v_ref iv_cur v_set;
+                v_ref := value_set !v_ref iv_cur v_set;
                 (* recursion *)
                 let iv_next = value_add iv_cur (VArray ([], [1.])) in
                 let st = eval_with iv_next iv_max st env in
@@ -137,15 +137,15 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     | ESel (e1, e2) ->
         let st, v1 = eval_expr e1 st env in
         let st, iv = eval_expr e2 st env in
-        let v2 = sel (Env.find v1 st) (Env.find iv st) in
+        let v2 = value_sel (Env.find v1 st) (Env.find iv st) in
         add_fresh_value st v2
     | EShape e1 ->
         let st, p = eval_expr e1 st env in
-        let v = shape (Env.find p st) in
+        let v = value_shape (Env.find p st) in
         add_fresh_value st v
     | EDim e1 ->
         let st, p = eval_expr e1 st env in
-        let v = dim (Env.find p st) in
+        let v = value_dim (Env.find p st) in
         add_fresh_value st v
     | ERead ->
         printf "> ";

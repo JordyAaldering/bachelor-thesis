@@ -97,9 +97,9 @@ let rec expr_to_str (e: expr) : string =
     (* primitive functions *)
     | ESel (e1, e2) -> sprintf "%s.(%s)"
         (decide_paren e1) (expr_to_str e2)
-    | EShape e1 -> sprintf "shape %s"
+    | EShape e1 -> sprintf "value_shape %s"
         (decide_paren e1)
-    | EDim e1 -> sprintf "dim %s"
+    | EDim e1 -> sprintf "value_dim %s"
         (decide_paren e1)
     | ERead -> "read"
 

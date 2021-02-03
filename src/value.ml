@@ -49,7 +49,7 @@ let assert_shape_eq (v1: value) (v2: value) =
     match v1, v2 with
     | VArray (shp1, _), VArray (shp2, _) ->
         if List.length shp1 <> List.length shp2 || List.exists2 (<>) shp1 shp2 then
-            value_err @@ sprintf "expected two arrays of equal shape, got shapes [%s] and [%s] (from arrays %s and %s)"
+            value_err @@ sprintf "expected two arrays of equal value_shape, got shapes [%s] and [%s] (from arrays %s and %s)"
                 (shp_to_str shp1) (shp_to_str shp2) (value_to_str v1) (value_to_str v2);
     | _ -> ()
 
@@ -57,7 +57,7 @@ let assert_dim_eq (v1: value) (v2: value) =
     match v1, v2 with
     | VArray (shp1, _), VArray (shp2, _) ->
         if List.length shp1 <> List.length shp2 then
-            value_err @@ sprintf "expected two arrays of equal dim, got dim %d and %d (from arrays %s and %s)"
+            value_err @@ sprintf "expected two arrays of equal value_dim, got value_dim %d and %d (from arrays %s and %s)"
                 (List.length shp1) (List.length shp2) (value_to_str v1) (value_to_str v2);
     | _ -> ()
 
@@ -72,7 +72,7 @@ let rec row_major (iv: int list) (shp: int list) (sprod: int) (res: int) : int =
     | (i :: ivtl), (sh :: shtl) ->
         row_major shtl ivtl (sprod * sh) (res + sprod * i)
     | _ ->
-        value_err @@ sprintf "expected two arrays of equal shape, got shapes [%s] and [%s]"
+        value_err @@ sprintf "expected two arrays of equal value_shape, got shapes [%s] and [%s]"
             (shp_to_str iv) (shp_to_str shp)
 
 let iv_to_index (iv: value) (shp: int list) : int =
@@ -84,7 +84,7 @@ let iv_to_index (iv: value) (shp: int list) : int =
     | _ ->
         invalid_argument iv
 
-let iv_set (v: value) (iv: value) (scalar: value) =
+let value_set (v: value) (iv: value) (scalar: value) =
     match v, iv, scalar with
     | VArray (shp, data), _, VArray ([], [x]) ->
         let i = iv_to_index iv shp in
@@ -93,7 +93,7 @@ let iv_set (v: value) (iv: value) (scalar: value) =
     | _ ->
         invalid_arguments [v; iv; scalar]
 
-let sel (v: value) (iv: value) =
+let value_sel (v: value) (iv: value) =
     match v, iv with
     | VArray (_, data), VArray ([], [i]) ->
         VArray ([], [List.nth data (int_of_float i)])
@@ -103,7 +103,7 @@ let sel (v: value) (iv: value) =
     | _ ->
         invalid_arguments [iv; v]
 
-let shape (v: value) : value =
+let value_shape (v: value) : value =
     match v with
     | VArray (shp, _) ->
         let shp' = [List.length shp] in
@@ -112,7 +112,7 @@ let shape (v: value) : value =
     | _ ->
         invalid_argument v
 
-let dim (v: value) : value =
+let value_dim (v: value) : value =
     match v with
     | VArray (shp, _) ->
         VArray ([], [float_of_int @@ List.length shp])

@@ -61,8 +61,8 @@ let token_to_str (tok: token) : string =
     | GEN       -> "gen"
     | WITH      -> "with"
     (* primitive functions *)
-    | SHAPE     -> "shape"
-    | DIM       -> "dim"
+    | SHAPE     -> "value_shape"
+    | DIM       -> "value_dim"
     | READ      -> "read"
     (* operands *)
     | CONCAT    -> "@"
