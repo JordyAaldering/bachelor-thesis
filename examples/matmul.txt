@@ -13,12 +13,12 @@
 #
 
 let take = \v.\a.
-    gen v with (v * 0) <= iv < v in
+    gen v 0 with (v * 0) <= iv < v in
         a.(iv)
 in
 
 let create = \s.\x.
-    gen s with (s * 0) <= iv < s in
+    gen s x with (s * 0) <= iv < s in
         x
 in
 

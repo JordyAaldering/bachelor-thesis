@@ -34,12 +34,13 @@ and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 3 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 3 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 3 inf env
-    | EWith (e_gen, e_min, s, e_max, e) ->
+    | EWith (e_gen, e_def, e_min, s, e_max, e) ->
         let rw_gen = rewrite_f e_gen inf env in
+        let rw_def = rewrite_f e_def inf env in
         let rw_min = rewrite_f e_min inf env in
         let rw_max = rewrite_f e_max inf env in
         let rw_e = rewrite_f e inf env in
-        EWith (rw_gen, rw_min, s, rw_max, rw_e)
+        EWith (rw_gen, rw_def, rw_min, s, rw_max, rw_e)
     (* operands *)
     | EBinary (op, e1, e2) -> EBinary (op, rewrite_f e1 inf env, rewrite_f e2 inf env)
     | EUnary (op, e1) -> EUnary (op, rewrite_f e1 inf env)
@@ -75,7 +76,7 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 2 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 2 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 2 inf env
-    | EWith (e_gen, _, _, _, _) ->
+    | EWith (e_gen, _, _, _, _, _) ->
         rewrite_f e_gen inf env
     (* operands *)
     | EBinary (op, e1, _) ->
@@ -117,7 +118,7 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | EApply (e1, e2) -> rewrite_apply e1 e2 1 inf env
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 1 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 1 inf env
-    | EWith (e_gen, _, _, _, _) ->
+    | EWith (e_gen, _, _, _, _, _) ->
         rewrite_s e_gen inf env
     (* operands *)
     | EBinary (op, e1, _) ->

@@ -85,44 +85,66 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
         eval_expr body st (Env.add x p2 env')
     | ELambda (s, e1) ->
         add_fresh_value st (VClosure (s, e1, env))
-    | ELet (x, e1, e2) ->
+    | ELet (s, e1, e2) ->
         let pname = create_fresh_ptr () in
-        let st, p1 = eval_expr e1 st (Env.add x pname env) in
+        let st, p1 = eval_expr e1 st (Env.add s pname env) in
         let st = update_let_ptr st pname p1 in
-        eval_expr e2 st (Env.add x p1 env)
+        eval_expr e2 st (Env.add s p1 env)
     | ECond (e1, e2, e3) ->
         let st, p1 = eval_expr e1 st env in
         let v = Env.find p1 st in
         eval_expr (if value_is_truthy v then e2 else e3) st env
-    | EWith (e_gen, e_min, s_idx, e_max, e5) ->
+    | EWith (e_gen, e_def, e_min, s, e_max, e) ->
         let st, p_gen = eval_expr e_gen st env in
+        let st, p_def = eval_expr e_def st env in
         let st, p_min = eval_expr e_min st env in
         let st, p_max = eval_expr e_max st env in
         let v_gen = Env.find p_gen st in
+        let v_def = Env.find p_def st in
         let v_min = Env.find p_min st in
         let v_max = Env.find p_max st in
         assert_shape_eq v_min v_max;
 
         let _, v_shp = extract_value v_gen in
+        let def_shp, def = extract_value v_def in
+        (* [1], [3] *)
+        let gen_sub = List.filteri (fun i _ -> i >= List.length def_shp) v_shp in
+        let v_gen_sub = VArray ([List.length gen_sub], gen_sub) in
         let v_shp = List.map int_of_float v_shp in
-        let v_len = List.fold_right ( * ) v_shp 1 in
-        let v_ref = ref (VArray (v_shp, List.init v_len (fun _ -> 0.)))
+
+        let rec eval_with iv_cur st env =
+            if (value_is_truthy @@ value_lt iv_cur v_max) then (
+                let v_res = if value_is_truthy @@ value_ge iv_cur v_min then (
+                    let st, p = add_fresh_value st iv_cur in
+                    let st, p_cur = eval_expr e st (Env.add s p env) in
+                    let v_res = Env.find p_cur st in
+                    assert_shape_eq v_def v_res;
+                    v_res
+                ) else v_def
+                in    
+
+                let _, data = extract_value v_res in
+                let shp_shp, shp_cur = extract_value iv_cur in
+                let st_ref = ref st in
+                let data_ref = ref data in
+                
+                (* increase every shape index by one, recursively *)
+                (* from right to left *)
+                for i = 0 to List.length shp_cur - 1 do
+                    let iv_next = VArray (shp_shp, List.mapi (fun j y -> if i = List.length shp_cur - j - 1 then y +. 1. else y) shp_cur) in
+                    let st, data_next = eval_with iv_next !st_ref env in
+                    st_ref := st;
+                    data_ref := !data_ref @ data_next;
+                done;
+                (!st_ref, !data_ref)
+            ) else if (value_is_truthy @@ value_lt iv_cur v_gen_sub) then
+                (st, def)
+            else
+                (st, [])
         in
-        let rec eval_with iv_cur iv_max st env =
-            if (value_is_truthy @@ value_lt iv_cur iv_max) then (
-                let st, p = add_fresh_value st iv_cur in
-                let st, p_cur = eval_expr e5 st (Env.add s_idx p env) in
-                let v_set = Env.find p_cur st in
-                v_ref := value_set !v_ref iv_cur v_set;
-                (* recursion *)
-                let iv_next = value_add iv_cur (VArray ([], [1.])) in
-                let st = eval_with iv_next iv_max st env in
-                st
-            ) else
-                st
-        in
-        let st = eval_with v_min v_max st env in
-        add_fresh_value st !v_ref
+        let v_zeros = value_mul v_min (VArray ([], [0.])) in
+        let st, data = eval_with v_zeros st env in
+        add_fresh_value st (VArray(v_shp, data))
     (* operands *)
     | EBinary (op, e1, e2) ->
         let st, p1 = eval_expr e1 st env in

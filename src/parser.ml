@@ -105,7 +105,8 @@ and parse_primary (lexbuf: lexbuf) : expr option =
         let e3 = expect_expr lexbuf in
         Some (ECond (e1, e2, e3))
     | GEN ->
-        let e_gen = expect_expr lexbuf in
+        let e_gen = expect_primary lexbuf in
+        let e_def = expect_primary lexbuf in
         expect_token lexbuf WITH;
         let e_min = expect_primary lexbuf in
         expect_token lexbuf LE;
@@ -114,7 +115,7 @@ and parse_primary (lexbuf: lexbuf) : expr option =
         let e_max = expect_primary lexbuf in
         expect_token lexbuf IN;
         let e5 = expect_expr lexbuf in
-        Some (EWith (e_gen, e_min, s_idx, e_max, e5))
+        Some (EWith (e_gen, e_def, e_min, s_idx, e_max, e5))
     (* primitive functions *)
     | SHAPE -> Some (EShape (expect_expr lexbuf))
     | DIM -> Some (EDim (expect_expr lexbuf))

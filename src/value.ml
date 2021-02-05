@@ -49,7 +49,7 @@ let assert_shape_eq (v1: value) (v2: value) =
     match v1, v2 with
     | VArray (shp1, _), VArray (shp2, _) ->
         if List.length shp1 <> List.length shp2 || List.exists2 (<>) shp1 shp2 then
-            value_err @@ sprintf "expected two arrays of equal value_shape, got shapes [%s] and [%s] (from arrays %s and %s)"
+            value_err @@ sprintf "expected two arrays of equal shape, got shapes [%s] and [%s] (from arrays %s and %s)"
                 (shp_to_str shp1) (shp_to_str shp2) (value_to_str v1) (value_to_str v2);
     | _ -> ()
 
@@ -57,7 +57,7 @@ let assert_dim_eq (v1: value) (v2: value) =
     match v1, v2 with
     | VArray (shp1, _), VArray (shp2, _) ->
         if List.length shp1 <> List.length shp2 then
-            value_err @@ sprintf "expected two arrays of equal value_dim, got value_dim %d and %d (from arrays %s and %s)"
+            value_err @@ sprintf "expected two arrays of equal dim, got dim %d and %d (from arrays %s and %s)"
                 (List.length shp1) (List.length shp2) (value_to_str v1) (value_to_str v2);
     | _ -> ()
 
@@ -72,7 +72,7 @@ let rec row_major (iv: int list) (shp: int list) (sprod: int) (res: int) : int =
     | (i :: ivtl), (sh :: shtl) ->
         row_major ivtl shtl (sprod * sh) (res + sprod * i)
     | _ ->
-        value_err @@ sprintf "expected two arrays of equal value_shape, got shapes [%s] and [%s]"
+        value_err @@ sprintf "expected two arrays of equal shape, got shapes [%s] and [%s]"
             (shp_to_str iv) (shp_to_str shp)
 
 let iv_to_index (iv: int list) (shp: int list) : int =
@@ -80,22 +80,12 @@ let iv_to_index (iv: int list) (shp: int list) : int =
         let shp = List.rev shp in
         row_major iv shp 1 0
 
-let value_set (v: value) (iv: value) (scalar: value) : value =
-    match v, iv, scalar with
-    | VArray (shp, data), VArray (_, iv), VArray ([], [x]) ->
-        let i = iv_to_index (List.map int_of_float iv) shp in
-        let data = List.mapi (fun j y -> if i = j then x else y) data in
-        VArray (shp, data)
-    | _ ->
-        invalid_arguments [v; iv; scalar]
-
 let value_sel (v: value) (iv: value) : value =
     match v, iv with
     | VArray (shp, data), VArray (_, iv) ->
         (* the iv is appended with 0s to match the data shape *)
         let iv_start = List.mapi (fun i _ -> if i < List.length iv then List.nth iv i else 0.) shp in
         let iv_start = List.map int_of_float iv_start in
-        printf ":%s :%s\n" (shp_to_str iv_start) (shp_to_str shp);
         let i_start = iv_to_index iv_start shp in
         (* the resulting shape consists of the dimensions that have not been selected by the iv *)
         let sel_shp = List.filteri (fun i _ -> i >= List.length iv) shp in

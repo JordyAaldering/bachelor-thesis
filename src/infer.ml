@@ -45,15 +45,16 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let env2 = sd e2 dem env in
         let env3 = sd e3 dem env in
         pv_env_union env1 (pv_env_union env2 env3)
-    | EWith (e_gen, e_min, s, e_max, e) ->
+    | EWith (e_gen, e_def, e_min, s, e_max, e) ->
         let dem_shp = Array.map (Array.get [|0; 2; 3; 3|]) dem in
         let dem_idx = pv (ELambda (s, e)) env in
         let dem_idx = Array.map (Array.get dem_idx) dem in
         let env_gen = sd e_gen dem_shp env in
+        let env_def = sd e_def dem env in
         let env_min = sd e_min dem_idx env in
         let env_max = sd e_max dem_idx env in
         let env_e = Env.remove s @@ sd e dem env in
-        pv_env_union env_gen (pv_env_union env_min (pv_env_union env_max env_e))
+        pv_env_union env_gen (pv_env_union env_def (pv_env_union env_min (pv_env_union env_max env_e)))
     (* operands, and *)
     (* primitive functions *)
     | EBinary (_, e1, e2)
