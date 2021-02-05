@@ -107,7 +107,6 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
 
         let _, v_shp = extract_value v_gen in
         let def_shp, def = extract_value v_def in
-        (* [1], [3] *)
         let gen_sub = List.filteri (fun i _ -> i >= List.length def_shp) v_shp in
         let v_gen_sub = VArray ([List.length gen_sub], gen_sub) in
         let v_shp = List.map int_of_float v_shp in
