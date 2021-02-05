@@ -70,24 +70,20 @@ let rec row_major (iv: int list) (shp: int list) (sprod: int) (res: int) : int =
     match iv, shp with
     | [], [] -> res
     | (i :: ivtl), (sh :: shtl) ->
-        row_major shtl ivtl (sprod * sh) (res + sprod * i)
+        row_major ivtl shtl (sprod * sh) (res + sprod * i)
     | _ ->
         value_err @@ sprintf "expected two arrays of equal value_shape, got shapes [%s] and [%s]"
             (shp_to_str iv) (shp_to_str shp)
 
-let iv_to_index (iv: value) (shp: int list) : int =
-    match iv with
-    | VArray (_, iv) ->
-        let iv = List.rev @@ List.map int_of_float iv in
+let iv_to_index (iv: int list) (shp: int list) : int =
+        let iv = List.rev iv in
         let shp = List.rev shp in
         row_major iv shp 1 0
-    | _ ->
-        invalid_argument iv
 
 let value_set (v: value) (iv: value) (scalar: value) : value =
     match v, iv, scalar with
-    | VArray (shp, data), _, VArray ([], [x]) ->
-        let i = iv_to_index iv shp in
+    | VArray (shp, data), VArray (_, iv), VArray ([], [x]) ->
+        let i = iv_to_index (List.map int_of_float iv) shp in
         let data = List.mapi (fun j y -> if i = j then x else y) data in
         VArray (shp, data)
     | _ ->
@@ -95,11 +91,17 @@ let value_set (v: value) (iv: value) (scalar: value) : value =
 
 let value_sel (v: value) (iv: value) : value =
     match v, iv with
-    | VArray (_, data), VArray ([], [i]) ->
-        VArray ([], [List.nth data (int_of_float i)])
-    | VArray (shp, data), _ ->
-        let i = iv_to_index iv shp in
-        VArray ([], [List.nth data i])
+    | VArray (shp, data), VArray (_, iv) ->
+        (* the iv is appended with 0s to match the data shape *)
+        let iv_start = List.mapi (fun i _ -> if i < List.length iv then List.nth iv i else 0.) shp in
+        let iv_start = List.map int_of_float iv_start in
+        printf ":%s :%s\n" (shp_to_str iv_start) (shp_to_str shp);
+        let i_start = iv_to_index iv_start shp in
+        (* the resulting shape consists of the dimensions that have not been selected by the iv *)
+        let sel_shp = List.filteri (fun i _ -> i >= List.length iv) shp in
+        let sel_length = List.fold_right ( * ) sel_shp 1 in
+        let sel = List.init sel_length (fun i -> List.nth data (i + i_start)) in
+        VArray (sel_shp, sel)
     | _ ->
         invalid_arguments [iv; v]
 
