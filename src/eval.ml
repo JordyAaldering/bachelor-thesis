@@ -120,13 +120,11 @@ let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
                     assert_shape_eq v_def v_res;
                     v_res
                 ) else v_def
-                in    
-
+                in
                 let _, data = extract_value v_res in
                 let shp_shp, shp_cur = extract_value iv_cur in
                 let st_ref = ref st in
                 let data_ref = ref data in
-                
                 (* increase every shape index by one, recursively *)
                 (* from right to left *)
                 for i = 0 to List.length shp_cur - 1 do
