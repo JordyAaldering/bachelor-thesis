@@ -21,7 +21,7 @@ type expr =
     | ERead
 
 and bop =
-    | OpConcat
+    | OpAppend
     | OpAdd
     | OpMin
     | OpMul
@@ -54,7 +54,7 @@ let is_equality_uop (op: uop) : bool =
 
 let bop_to_str (op: bop) : string =
     match op with
-    | OpConcat -> "@"
+    | OpAppend -> "++"
     | OpAdd    -> "+"
     | OpMin    -> "-"
     | OpMul    -> "*"

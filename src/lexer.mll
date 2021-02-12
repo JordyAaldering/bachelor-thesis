@@ -38,11 +38,12 @@ rule token = parse
     | int       { INT (int_of_string @@ lexeme lexbuf) }
     | float     { FLOAT (float_of_string @@ lexeme lexbuf) }
     (* operands *)
-    | "@"       { CONCAT }
+    | "++"       { APPEND }
     | "+"       { ADD }
     | "-"       { MIN }
     | "*"       { MUL }
     | "/"       { DIV }
+    | "!"       { NOT }
     | "="       { EQ }
     | "!="      { NE }
     | "<"       { LT }

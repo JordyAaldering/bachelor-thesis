@@ -25,11 +25,12 @@ type token =
     | DIM
     | READ
     (* operands *)
-    | CONCAT
+    | APPEND
     | ADD
     | MIN
     | MUL
     | DIV
+    | NOT
     | EQ
     | NE
     | LT
@@ -65,13 +66,14 @@ let token_to_str (t: token) : string =
     | DIM       -> "dim"
     | READ      -> "read"
     (* operands *)
-    | CONCAT    -> "@"
+    | APPEND    -> "++"
     | ADD       -> "+"
     | MIN       -> "-"
     | MUL       -> "*"
     | DIV       -> "/"
+    | NOT       -> "!"
+    | EQ        -> "="
     | NE        -> "!="
-    | EQ        -> "=="
     | LT        -> "<"
     | LE        -> "<="
     | GT        -> ">"
@@ -87,11 +89,12 @@ let token_to_str (t: token) : string =
 
 let is_op (t: token) : bool =
     match t with
-    | CONCAT
+    | APPEND
     | ADD
     | MIN
     | MUL
     | DIV
+    | NOT
     | EQ
     | NE
     | LT
@@ -108,16 +111,17 @@ let op_prec (t: token) : int =
     | LE
     | GT
     | GE -> 2
-    | CONCAT -> 3
+    | APPEND -> 3
     | ADD
-    | MIN -> 4
+    | MIN
+    | NOT -> 4
     | MUL
     | DIV -> 5
     | _ -> 6
 
-let op_to_binop (t: token) : bop =
+let op_to_bop (t: token) : bop =
     match t with
-    | CONCAT -> OpConcat
+    | APPEND -> OpAppend
     | ADD    -> OpAdd
     | MIN    -> OpMin
     | MUL    -> OpMul
@@ -130,4 +134,12 @@ let op_to_binop (t: token) : bop =
     | GE     -> OpGe
     | _ ->
         parse_err @@ sprintf "token `%s' is not a binary operand"
+            (token_to_str t)
+
+let op_to_uop (t: token) : uop =
+    match t with
+    | MIN -> OpNeg
+    | NOT -> OpNot
+    | _ ->
+        parse_err @@ sprintf "token `%s' is not a unary operand"
             (token_to_str t)

@@ -1,0 +1,34 @@
+let neg = \v.
+    v * 0 - v
+in
+
+let abs = \v.
+    if v < 0 then (neg v) else v
+in
+
+let take = \n.\arr.
+    let offset = if n > 0 then 0
+        else (shape arr).([0]) + n
+    in
+    let absn = abs n in
+    gen [absn] 0 with [n * 0] <= iv < [absn] in
+        arr.(iv + offset)
+in
+
+let drop = \n.\arr.
+    if n > 0 then
+        take (n - (shape arr).([0])) arr
+    else
+        take ((shape arr).([0]) + n) arr
+in
+
+let shift = \n.\arr.
+    let pad = (shape (take n arr)) * 0 in
+    let xs = drop (neg n) arr in
+    if n > 0 then pad ++ xs
+        else xs ++ pad
+in
+
+let arr = gen 100 0 with 0 <= iv < 100 in iv in
+let xs = shift 20 arr in
+xs

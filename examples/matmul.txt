@@ -26,7 +26,7 @@ let matmul = \dm.\dl.\v.
     let maind = dm * v in
     let lowerd = dl * take (shape dl) v in
     let zeros = create ((shape dm) - (shape dl)) 0 in
-    maind + (zeros @ lowerd)
+    maind + (zeros ++ lowerd)
 in
 
 let dm = [1,2,3,4,5] in

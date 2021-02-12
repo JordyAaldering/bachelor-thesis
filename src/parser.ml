@@ -59,10 +59,10 @@ let expect_token (lexbuf: lexbuf) (expected: token) =
             (token_to_str expected) (token_to_str t)
 
 (** get an expression, if there is none throw an error *)
-let rec expect_primary (lexbuf: lexbuf) : expr =
-    let e = parse_primary lexbuf in
+let rec expect_unary (lexbuf: lexbuf) : expr =
+    let e = parse_unary lexbuf in
     if e = None then
-        parse_err "expected primary, found None";
+        parse_err "expected unary, found None";
     opt_get e
 
 and expect_expr (lexbuf: lexbuf) : expr =
@@ -105,14 +105,14 @@ and parse_primary (lexbuf: lexbuf) : expr option =
         let e3 = expect_expr lexbuf in
         Some (ECond (e1, e2, e3))
     | GEN ->
-        let e_gen = expect_primary lexbuf in
-        let e_def = expect_primary lexbuf in
+        let e_gen = expect_unary lexbuf in
+        let e_def = expect_unary lexbuf in
         expect_token lexbuf WITH;
-        let e_min = expect_primary lexbuf in
+        let e_min = expect_unary lexbuf in
         expect_token lexbuf LE;
         let s_idx = expect_id lexbuf in
         expect_token lexbuf LT;
-        let e_max = expect_primary lexbuf in
+        let e_max = expect_unary lexbuf in
         expect_token lexbuf IN;
         let e5 = expect_expr lexbuf in
         Some (EWith (e_gen, e_def, e_min, s_idx, e_max, e5))
@@ -164,7 +164,7 @@ and parse_binary (lexbuf: lexbuf) : expr option =
         let e1, op1, prec1 = Stack.pop s in
         if prec <= prec1 then (
             let e2, op2, prec2 = Stack.pop s in
-            let e = EBinary (op_to_binop op1, opt_get e2, opt_get e1) in
+            let e = EBinary (op_to_bop op1, opt_get e2, opt_get e1) in
             Stack.push (Some e, op2, prec2) s;
             resolve_stack s prec
         ) else Stack.push (e1, op1, prec1) s
