@@ -21,4 +21,4 @@ let shift = \n.\arr.
 in
 
 let arr = gen 100 0 with 0 <= iv < 100 in iv in
-shift -20 (shift 40 arr)
+shape (shift 20 arr)
