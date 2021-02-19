@@ -14,11 +14,11 @@ let drop = \n.\arr.
 in
 
 let shift = \n.\arr.
-    let pad = (take n arr) * 0 in
+    let pad = gen (shape (take n arr)) 0 in
     let xs = drop (~n) arr in
     if n > 0 then pad ++ xs
         else xs ++ pad
 in
 
 let arr = gen 100 0 with 0 <= iv < 100 in iv in
-shape (shift 20 arr)
+shift 20 arr

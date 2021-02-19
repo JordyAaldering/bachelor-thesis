@@ -107,15 +107,19 @@ and parse_primary (lexbuf: lexbuf) : expr option =
     | GEN ->
         let e_gen = expect_unary lexbuf in
         let e_def = expect_unary lexbuf in
-        expect_token lexbuf WITH;
-        let e_min = expect_unary lexbuf in
-        expect_token lexbuf LE;
-        let s_idx = expect_id lexbuf in
-        expect_token lexbuf LT;
-        let e_max = expect_unary lexbuf in
-        expect_token lexbuf IN;
-        let e5 = expect_expr lexbuf in
-        Some (EWith (e_gen, e_def, e_min, s_idx, e_max, e5))
+        if match_token lexbuf WITH then
+            let e_min = expect_unary lexbuf in
+            expect_token lexbuf LE;
+            let s = expect_id lexbuf in
+            expect_token lexbuf LT;
+            let e_max = expect_unary lexbuf in
+            expect_token lexbuf IN;
+            let e5 = expect_expr lexbuf in
+            Some (EWith (e_gen, e_def, e_min, s, e_max, e5))
+        else
+            let e_min = EBinary (OpMul, e_gen, EFloat 0.) in
+            let e_max = e_gen in
+            Some (EWith (e_gen, e_def, e_min, "_", e_max, e_def))
     (* primitive functions *)
     | SHAPE -> Some (EShape (expect_expr lexbuf))
     | DIM -> Some (EDim (expect_expr lexbuf))
