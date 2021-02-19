@@ -40,6 +40,8 @@ type token =
     (* symbols *)
     | DOT
     | COMMA
+    | TILDE
+    | BAR
     | LPAREN
     | RPAREN
     | LSQUARE
@@ -81,6 +83,8 @@ let token_to_str (t: token) : string =
     (* symbols *)
     | DOT       -> "."
     | COMMA     -> ","
+    | TILDE     -> "~"
+    | BAR       -> "|"
     | LPAREN    -> "("
     | RPAREN    -> ")"
     | LSQUARE   -> "["
@@ -100,7 +104,9 @@ let is_op (t: token) : bool =
     | LT
     | LE
     | GT
-    | GE -> true
+    | GE
+    | TILDE
+    | BAR -> true
     | _ -> false
 
 let op_prec (t: token) : int =
@@ -112,12 +118,14 @@ let op_prec (t: token) : int =
     | GT
     | GE -> 2
     | APPEND -> 3
+    | TILDE
+    | BAR -> 4
     | ADD
     | MIN
-    | NOT -> 4
+    | NOT -> 5
     | MUL
-    | DIV -> 5
-    | _ -> 6
+    | DIV -> 6
+    | _ -> 7
 
 let op_to_bop (t: token) : bop =
     match t with
@@ -138,8 +146,8 @@ let op_to_bop (t: token) : bop =
 
 let op_to_uop (t: token) : uop =
     match t with
-    | MIN -> OpNeg
-    | NOT -> OpNot
+    | TILDE -> OpNeg
+    | BAR   -> OpAbs
     | _ ->
         parse_err @@ sprintf "token `%s' is not a unary operand"
             (token_to_str t)

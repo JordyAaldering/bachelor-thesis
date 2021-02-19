@@ -56,6 +56,7 @@ let ptr_unary (st: val_env) (op: uop) (p: string) : value =
     let v = Env.find p st in
     match op with
     | OpNeg -> value_neg v
+    | OpAbs -> value_abs v
     | OpNot -> value_not v
 
 let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =

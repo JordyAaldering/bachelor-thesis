@@ -131,7 +131,9 @@ and parse_primary (lexbuf: lexbuf) : expr option =
         let e = parse_expr lexbuf in
         expect_token lexbuf RPAREN;
         e
-    | _ -> unget_token t; None
+    | _ ->
+        unget_token t;
+        None
 
 (* Parse non-empty comma separated list of elements that can be parsed by `parse_fun' *)
 and parse_array (lexbuf: lexbuf) (parse_fun: lexbuf -> expr option) : expr option list =
@@ -170,7 +172,7 @@ and parse_binary (lexbuf: lexbuf) : expr option =
         ) else Stack.push (e1, op1, prec1) s
     in
     let e1 = parse_application lexbuf in
-    if e1 = None then e1
+    if e1 = None then None
     else
         let s = Stack.create () in
         (* first expression has no priority; -1 *)
@@ -189,7 +191,13 @@ and parse_binary (lexbuf: lexbuf) : expr option =
         e
 
 and parse_unary (lexbuf: lexbuf) : expr option =
-    parse_postfix lexbuf
+    let t = get_token lexbuf in
+    match t with
+    | TILDE -> Some (EUnary (OpNeg, expect_expr lexbuf))
+    | BAR -> Some (EUnary (OpAbs, expect_expr lexbuf))
+    | _ ->
+        unget_token t;
+        parse_postfix lexbuf
 
 let parse (path: string) : expr =
     token_stack := [];

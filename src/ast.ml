@@ -35,6 +35,7 @@ and bop =
 
 and uop =
     | OpNeg
+    | OpAbs
     | OpNot
 
 let is_equality_bop (op: bop) : bool =
@@ -68,7 +69,8 @@ let bop_to_str (op: bop) : string =
 
 let uop_to_str (op: uop) : string =
     match op with
-    | OpNeg -> "-"
+    | OpNeg -> "~"
+    | OpAbs -> "|"
     | OpNot -> "!"
 
 let rec expr_to_str (e: expr) : string =
@@ -93,7 +95,7 @@ let rec expr_to_str (e: expr) : string =
         sprintf "if %s then %s else %s"
             (expr_to_str e1) (expr_to_str e2) (expr_to_str e3)
     | EWith (e1, e2, e3, s, e4, e5) ->
-        sprintf "gen %s %s with %s <= %s < %s do %s"
+        sprintf "gen %s %s with %s <= %s < %s in %s"
             (expr_to_str e1) (expr_to_str e2) (expr_to_str e3) s (expr_to_str e4) (expr_to_str e5)
     (* operands *)
     | EBinary (op, e1, e2) ->

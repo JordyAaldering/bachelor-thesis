@@ -38,7 +38,7 @@ rule token = parse
     | int       { INT (int_of_string @@ lexeme lexbuf) }
     | float     { FLOAT (float_of_string @@ lexeme lexbuf) }
     (* operands *)
-    | "++"       { APPEND }
+    | "++"      { APPEND }
     | "+"       { ADD }
     | "-"       { MIN }
     | "*"       { MUL }
@@ -53,6 +53,8 @@ rule token = parse
     (* symbols *)
     | "."       { DOT }
     | ","       { COMMA }
+    | "~"       { TILDE }
+    | "|"       { BAR }
     | "("       { LPAREN }
     | ")"       { RPAREN }
     | "["       { LSQUARE }

@@ -129,6 +129,11 @@ let value_neg (v: value) : value =
     | VArray (shp, data) -> VArray (shp, List.map (fun x -> -. x) data)
     | _ -> invalid_argument v
 
+let value_abs (v: value) : value =
+    match v with
+    | VArray (shp, data) -> VArray (shp, List.map abs_float data)
+    | _ -> invalid_argument v
+
 let value_add (v1: value) (v2: value) : value =
     match v1, v2 with
     | VArray (shp, xs), VArray ([], [c]) ->
