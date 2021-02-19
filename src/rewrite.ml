@@ -57,17 +57,13 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
             let _ = Env.find s inf in
             (* The variable is the name of a function *)
             EVar (s ^ "_s")
-        with Not_found -> (try
-                let lvl = Env.find s env in
-                if lvl = 3 then EShape e
-                else if lvl = 2 then e
-                else if lvl = 1 then EFloat 0.
-                else rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
-                        (expr_to_str e) lvl
-            with Not_found ->
-                rewrite_err @@ sprintf "at %s: key `%s' was not found"
-                    (expr_to_str e) s
-        )
+        with Not_found ->
+            let lvl = Env.find s env in
+            if lvl = 3 then EShape e
+            else if lvl = 2 then e
+            else if lvl = 1 then EFloat 0.
+            else rewrite_err @@ sprintf "at %s: invalid eval level `%d'"
+                    (expr_to_str e) lvl
     )
     | EFloat _ -> EArray []
     | EArray xs -> EArray [EFloat (float_of_int @@ List.length xs)]
@@ -102,16 +98,12 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
             let _ = Env.find s inf in
             (* The variable is the name of a function *)
             EVar (s ^ "_d")
-        with Not_found -> (try
-                let lvl = Env.find s env in
-                if lvl = 3 then EDim e
-                else if lvl = 2 then ESel (EShape e, EFloat 0.)
-                else if lvl = 1 then e
-                else EFloat 0.
-            with Not_found ->
-                rewrite_err @@ sprintf "at %s: key `%s' was not found"
-                    (expr_to_str e) s
-        )
+        with Not_found ->
+            let lvl = Env.find s env in
+            if lvl = 3 then EDim e
+            else if lvl = 2 then ESel (EShape e, EFloat 0.)
+            else if lvl = 1 then e
+            else EFloat 0.
     )
     | EFloat _ -> EFloat 0.
     | EArray _ -> EFloat 1.
