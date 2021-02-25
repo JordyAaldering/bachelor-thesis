@@ -188,6 +188,8 @@ and rewrite_cond (e1: expr) (e2: expr) (e3: expr) (lvl: int) (inf: pv_env) (env:
 
 let rewrite (e: expr) : expr =
     let inf = infer e in
-    let e = rewrite_f e inf Env.empty in
+    let e = Debug.time "Rewrite" (fun () ->
+        rewrite_f e inf Env.empty
+    ) in
     printf "Rewrite:\n%s\n\n" (expr_to_str e);
     e

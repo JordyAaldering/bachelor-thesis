@@ -20,5 +20,7 @@ let shift = \n.\arr.
         else xs ++ pad
 in
 
-let arr = gen 100 0 with 0 <= iv < 100 in iv in
-shift 20 arr
+let size = 10000 in
+let arr = gen size 0
+    with 0 <= iv < size in iv in
+shift 5000 arr

@@ -2,4 +2,5 @@
 
 (library
     (name src)
+    (libraries mtime mtime.clock.os)
 )

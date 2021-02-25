@@ -103,6 +103,8 @@ and pv (e: expr) (env: pv_env) : int Array.t =
             (expr_to_str e)
 
 let infer (e: expr) : pv_env =
-    let env = sd e [|0; 1; 2; 3|] Env.empty in
+    let env = Debug.time "Inference" (fun () ->
+        sd e [|0; 1; 2; 3|] Env.empty
+    ) in
     printf "Demand environment:\n%s\n\n" (pv_env_to_str env);
     env

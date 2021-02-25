@@ -182,5 +182,7 @@ and eval_expr_lst (es: expr list) (st: val_env) (env: ptr_env) : (val_env * stri
 
 let eval (e: expr) =
     ptr_count := 0;
-    let st, p = eval_expr e Env.empty Env.empty in
+    let st, p = Debug.time "Evaluation" (fun () ->
+        eval_expr e Env.empty Env.empty
+    ) in
     printf "%s\n" (value_to_str (Env.find p st))

@@ -11,8 +11,12 @@ type value =
 let shp_to_str (shp: int list) : string =
     String.concat ", " (List.map string_of_int shp)
 
-let data_to_str (data: float list) : string =
-    String.concat ", " (List.map (sprintf "%g") data)
+let data_to_str ?(max_prints: int = 100) (data: float list) : string =
+    if List.length data <= max_prints then
+        String.concat ", " (List.map (sprintf "%g") data)
+    else
+        let data_subset = List.filteri (fun i _ -> i <= max_prints) data in
+        String.concat ", " (List.map (sprintf "%g") data_subset) ^ ", ..."
 
 let value_to_str (v: value) : string =
     match v with
