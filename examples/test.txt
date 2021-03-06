@@ -1,0 +1,3 @@
+let f = \y.42 in
+let g = \x.f (shape x) in
+g 10

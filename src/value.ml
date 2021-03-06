@@ -11,11 +11,11 @@ type value =
 let shp_to_str (shp: int list) : string =
     String.concat ", " (List.map string_of_int shp)
 
-let data_to_str ?(max_prints: int = 100) (data: float list) : string =
-    if List.length data <= max_prints then
+let data_to_str (data: float list) : string =
+    if List.length data <= 100 then
         String.concat ", " (List.map (sprintf "%g") data)
     else
-        let data_subset = List.filteri (fun i _ -> i <= max_prints) data in
+        let data_subset = List.filteri (fun i _ -> i <= 100) data in
         String.concat ", " (List.map (sprintf "%g") data_subset) ^ ", ..."
 
 let value_to_str (v: value) : string =
@@ -55,7 +55,8 @@ let assert_shape_eq (v1: value) (v2: value) =
         if List.length shp1 <> List.length shp2 || List.exists2 (<>) shp1 shp2 then
             value_err @@ sprintf "expected two arrays of equal shape, got shapes [%s] and [%s] (from arrays %s and %s)"
                 (shp_to_str shp1) (shp_to_str shp2) (value_to_str v1) (value_to_str v2);
-    | _ -> ()
+    | _ ->
+        invalid_arguments [v1; v2]
 
 let assert_dim_eq (v1: value) (v2: value) =
     match v1, v2 with
@@ -63,7 +64,8 @@ let assert_dim_eq (v1: value) (v2: value) =
         if List.length shp1 <> List.length shp2 then
             value_err @@ sprintf "expected two arrays of equal dim, got dim %d and %d (from arrays %s and %s)"
                 (List.length shp1) (List.length shp2) (value_to_str v1) (value_to_str v2);
-    | _ -> ()
+    | _ ->
+        invalid_arguments [v1; v2]
 
 
 (** 
@@ -80,9 +82,9 @@ let rec row_major (iv: int list) (shp: int list) (sprod: int) (res: int) : int =
             (shp_to_str iv) (shp_to_str shp)
 
 let iv_to_index (iv: int list) (shp: int list) : int =
-        let iv = List.rev iv in
-        let shp = List.rev shp in
-        row_major iv shp 1 0
+    let iv = List.rev iv in
+    let shp = List.rev shp in
+    row_major iv shp 1 0
 
 let value_sel (v: value) (iv: value) : value =
     match v, iv with
