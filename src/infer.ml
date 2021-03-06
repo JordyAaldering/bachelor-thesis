@@ -70,7 +70,6 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
         let dem' = pv e env in
         let dem' = Array.map (Array.get dem') dem in
         sd e1 dem' env
-    | _ -> env
 
 (** returns the demand array for the given expression *)
 and pv (e: expr) (env: pv_env) : int Array.t =

@@ -48,7 +48,6 @@ and rewrite_f (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | ESel (e1, e2) -> ESel (rewrite_f e1 inf env, rewrite_f e2 inf env)
     | EShape e1 -> rewrite_s e1 inf env
     | EDim e1 -> rewrite_d e1 inf env
-    | ERead -> ERead
 
 and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     match e with
@@ -89,7 +88,6 @@ and rewrite_s (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | ESel _ -> EArray []
     | EShape e1 -> EArray [rewrite_d e1 inf env]
     | EDim _ -> EFloat 1.
-    | ERead -> ERead
 
 and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     match e with
@@ -127,7 +125,6 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | ESel _ -> EFloat 0.
     | EShape _ -> EFloat 1.
     | EDim _ -> EFloat 0.
-    | ERead -> ERead
 
 and rewrite_lambda (s: string) (e1: expr) (lvl: int) (inf: pv_env) (env: rw_env) : expr =
     let dem = pv (ELambda (s, e1)) inf in

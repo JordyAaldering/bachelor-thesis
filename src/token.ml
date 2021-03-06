@@ -23,7 +23,6 @@ type token =
     (* primitive functions *)
     | SHAPE
     | DIM
-    | READ
     (* operands *)
     | APPEND
     | ADD
@@ -66,7 +65,6 @@ let token_to_str (t: token) : string =
     (* primitive functions *)
     | SHAPE     -> "shape"
     | DIM       -> "dim"
-    | READ      -> "read"
     (* operands *)
     | APPEND    -> "++"
     | ADD       -> "+"

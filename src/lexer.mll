@@ -32,7 +32,6 @@ rule token = parse
     (* primitive functions *)
     | "shape"   { SHAPE }
     | "dim"     { DIM }
-    | "read"    { READ }
     (* variables *)
     | id as i   { ID i }
     | int       { INT (int_of_string @@ lexeme lexbuf) }

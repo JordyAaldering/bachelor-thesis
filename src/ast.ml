@@ -18,7 +18,6 @@ type expr =
     | ESel of expr * expr
     | EShape of expr
     | EDim of expr
-    | ERead
 
 and bop =
     | OpAppend
@@ -114,12 +113,10 @@ let rec expr_to_str (e: expr) : string =
     | EDim e1 ->
         sprintf "dim %s"
             (decide_paren e1)
-    | ERead -> "read"
 
 and decide_paren (e: expr) : string =
     match e with
     | EVar _
     | EFloat _
-    | EArray _
-    | ERead -> expr_to_str e
+    | EArray _ -> expr_to_str e
     | _ -> sprintf "(%s)" (expr_to_str e)

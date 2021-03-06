@@ -123,7 +123,6 @@ and parse_primary (lexbuf: lexbuf) : expr option =
     (* primitive functions *)
     | SHAPE -> Some (EShape (expect_expr lexbuf))
     | DIM -> Some (EDim (expect_expr lexbuf))
-    | READ -> Some ERead
     (* symbols *)
     | LSQUARE ->
         let lst = if peek_token lexbuf = RSQUARE then []
