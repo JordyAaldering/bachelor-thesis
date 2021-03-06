@@ -16,16 +16,16 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
     | EArray _ -> env
     (* expressions *)
     | ELambda (x, e1) ->
-        let env1 = sd e1 dem env in
-        let dem' = try Env.find x env1
+        let env' = sd e1 dem env in
+        let dem' = try Env.find x env'
             with Not_found -> [|0; 0; 0; 0|] in
-        Env.add x dem' env1
+        Env.add x dem' env'
     | EApply (EVar fid, e2) ->
         let dem' = try Env.find fid env with Not_found -> [|0; 1; 2; 3|] in
         let dem' = Array.map (Array.get dem') dem in
         sd e2 dem' env
-    | EApply (e1, e2) -> (* e1 is a lambda- or primitive expression *)
-        let dem' = pv e1 env in
+    | EApply (_e1, e2) -> (* e1 is a lambda- or primitive expression *)
+        let dem' = pv e env in
         let dem' = Array.map (Array.get dem') dem in
         sd e2 dem' env
     | ELet (fid, ELambda(s, e1), e2) ->
@@ -75,9 +75,13 @@ let rec sd (e: expr) (dem: int Array.t) (env: pv_env) : pv_env =
 and pv (e: expr) (env: pv_env) : int Array.t =
     match e with
     (* expressions *)
-    | ELambda (s, e1)
-    | EApply (EVar s, e1) -> (try
+    | ELambda (s, e1) -> (try
             let env' = sd e1 [|0; 1; 2; 3|] env in
+            Env.find s env'
+        with Not_found -> [|0; 1; 2; 3|]
+    )
+    | EApply (EVar s, e2) -> (try
+            let env' = sd e2 [|0; 1; 2; 3|] env in
             Env.find s env'
         with Not_found -> [|0; 0; 0; 0|]
     )

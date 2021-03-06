@@ -17,15 +17,10 @@ let take = \v.\a.
         a.(iv)
 in
 
-let create = \s.\x.
-    gen s x with (s * 0) <= iv < s in
-        x
-in
-
 let matmul = \dm.\dl.\v.
     let maind = dm * v in
-    let lowerd = dl * take (shape dl) v in
-    let zeros = create ((shape dm) - (shape dl)) 0 in
+    let lowerd = dl * (take (shape dl) v) in
+    let zeros = gen ((shape dm) - (shape dl)) 0 in
     maind + (zeros ++ lowerd)
 in
 
@@ -33,8 +28,5 @@ let dm = [1,2,3,4,5] in
 let dl = [1,2,3] in
 let v = [5, 5, 5, 5, 5] in
 
-let res_f = matmul dm dl v in
-let res_s = shape (matmul dm dl v) in
-let res_d = dim (matmul dm dl v) in
-
-[res_f, res_s, res_d]
+let res = matmul dm dl v in
+shape res

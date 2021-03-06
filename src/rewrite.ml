@@ -152,10 +152,8 @@ and rewrite_apply (e1: expr) (e2: expr) (lvl: int) (inf: pv_env) (env: rw_env) :
             else if lvl = 2 then "_s"
             else "_d"
         in
-        if lvl' = 0 then
-            EVar fid
-        else
-            EApply (EVar fid, rewrite_lvl e2 lvl' inf env)
+        if lvl' = 0 then EVar fid
+        else EApply (EVar fid, rewrite_lvl e2 lvl' inf env)
     | _ ->
         let dem = pv e1 inf in
         let lvl' = Array.get dem lvl in
