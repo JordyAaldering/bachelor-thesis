@@ -62,7 +62,7 @@ let ptr_unary (st: val_env) (op: uop) (p: string) : value =
 let rec eval_expr (e: expr) (st: val_env) (env: ptr_env) : (val_env * string) =
     match e with
     (* variables *)
-    | EVar x -> (st, Env.find x env)
+    | EVar x -> (st, try Env.find x env with Not_found -> "_")
     | EFloat x -> add_fresh_value st (VArray ([], [x]))
     | EArray es ->
         let st, ptrs = eval_expr_lst es st env in

@@ -80,7 +80,7 @@ and pv (e: expr) (env: pv_env) : int Array.t =
     | EApply (EVar s, e1) -> (try
             let env' = sd e1 [|0; 1; 2; 3|] env in
             Env.find s env'
-        with Not_found -> [|0; 1; 2; 3|]
+        with Not_found -> [|0; 0; 0; 0|]
     )
     | EApply (e1, e2) ->
         let env' = sd e2 [|0; 1; 2; 3|] env in
