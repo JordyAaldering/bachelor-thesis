@@ -24,9 +24,9 @@ let matmul = \dm.\dl.\v.
     maind + (zeros ++ lowerd)
 in
 
-let dm = [1,2,3,4,5] in
-let dl = [1,2,3] in
+let dm = [1, 2, 3, 4, 5] in
+let dl = [1, 2, 3] in
 let v = [5, 5, 5, 5, 5] in
 
 let res = matmul dm dl v in
-shape res
+res
