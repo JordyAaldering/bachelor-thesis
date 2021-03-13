@@ -30,10 +30,10 @@ let test_file (e: expr) (expected: value) (dem: int) =
     let res = eval @@ rewrite e in
     assert_equal res (lower_value expected dem)
 
-let create_tests (path: string) (expected: value) =
-    let e = parse ("../../../examples/" ^ path ^ ".txt") in
-    (path ^ " tests") >::: [
-        (path ^ "matmul full") >:: (fun _ -> test_file e expected 3);
-        (path ^ "matmul shape") >:: (fun _ -> test_file e expected 2);
-        (path ^ "matmul dim") >:: (fun _ -> test_file e expected 1);
+let create_tests (fname: string) (expected: value) =
+    let e = parse ("../../../examples/" ^ fname ^ ".txt") in
+    (fname ^ " tests") >::: [
+        (fname ^ "matmul full") >:: (fun _ -> test_file e expected 3);
+        (fname ^ "matmul shape") >:: (fun _ -> test_file e expected 2);
+        (fname ^ "matmul dim") >:: (fun _ -> test_file e expected 1);
     ]

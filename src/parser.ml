@@ -207,6 +207,6 @@ let parse (path: string) : expr =
     let file = open_in path in
     let lexbuf = Lexing.from_channel file in
     let e = opt_get @@ parse_expr lexbuf in
-        printf "%s\n" (expr_to_str e);
+        Debug.print (expr_to_str e);
         close_in file;
         e

@@ -109,5 +109,5 @@ let infer (e: expr) : pv_env =
     let env = Debug.time "Inference" (fun () ->
         sd e [|0; 1; 2; 3|] Env.empty
     ) in
-    printf "Demand environment:\n%s\n\n" (pv_env_to_str env);
+    Debug.print @@ sprintf "%s\n" (pv_env_to_str env);
     env

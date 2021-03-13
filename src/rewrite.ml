@@ -186,5 +186,5 @@ let rewrite (e: expr) : expr =
     let e = Debug.time "Rewrite" (fun () ->
         rewrite_f e inf Env.empty
     ) in
-    printf "Rewrite:\n%s\n\n" (expr_to_str e);
+    Debug.print @@ sprintf "%s\n" (expr_to_str e);
     e

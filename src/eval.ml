@@ -182,5 +182,5 @@ let eval (e: expr) : value =
         eval_expr e Env.empty Env.empty
     ) in
     let res = Env.find p st in
-    printf "%s\n" (value_to_str res);
+    Debug.print (value_to_str res);
     res
