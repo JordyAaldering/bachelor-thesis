@@ -33,7 +33,7 @@ let test_file (e: expr) (expected: value) (dem: int) =
 let create_tests (fname: string) (expected: value) =
     let e = parse ("../../../examples/" ^ fname ^ ".txt") in
     (fname ^ " tests") >::: [
-        (fname ^ "matmul full") >:: (fun _ -> test_file e expected 3);
-        (fname ^ "matmul shape") >:: (fun _ -> test_file e expected 2);
-        (fname ^ "matmul dim") >:: (fun _ -> test_file e expected 1);
+        (fname ^ " full") >:: (fun _ -> test_file e expected 3);
+        (fname ^ " shape") >:: (fun _ -> test_file e expected 2);
+        (fname ^ " dim") >:: (fun _ -> test_file e expected 1);
     ]

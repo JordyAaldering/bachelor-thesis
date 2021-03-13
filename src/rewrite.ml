@@ -111,7 +111,7 @@ and rewrite_d (e: expr) (inf: pv_env) (env: rw_env) : expr =
     | ELet (s, e1, e2) -> rewrite_let s e1 e2 1 inf env
     | ECond (e1, e2, e3) -> rewrite_cond e1 e2 e3 1 inf env
     | EWith (e_gen, _, _, _, _, _) ->
-        rewrite_s e_gen inf env
+        ESel (rewrite_s e_gen inf env, EFloat 0.)
     (* operands *)
     | EBinary (op, e1, _) ->
         if is_equality_bop op

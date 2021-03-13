@@ -1,5 +1,0 @@
-#let f = \y.42 in
-#let g = \x.f (shape x) in
-#g 10
-
-(\x. (\y.42) (shape x)) 10
