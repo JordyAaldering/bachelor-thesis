@@ -1,0 +1,127 @@
+\documentclass[11pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{pbox}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{syntax}
+\usepackage{semantic}
+
+\usepackage{tikz,tikz-qtree,pgfplots}
+\usetikzlibrary{arrows,positioning,calc,automata,trees}
+\pgfplotsset{compat=1.18}
+
+\usepackage{biblatex}
+\addbibresource{bibliography.bib}
+
+% Grammar
+\newcommand{\valpair}[2]{\langle #1,\, #2 \rangle}
+\newcommand{\sempair}[2][\sigma]{\left( #2,\, #1 \right)}
+\newcommand{\sempairb}[2][\sigma]{\bm{\left(} #2,\, #1 \bm{\right)}}
+\newcommand{\DownA}{\makebox[14.9pt][c]{$\Downarrow$}}
+\newcommand{\cls}[2]{\texttt{cls}(#1,\, #2)}
+
+% Expressions
+\newcommand{\lambdaexpr}[2]{\lambda #1.\, #2}
+\newcommand{\applyexpr}[3]{(\lambda #1.\, #2)\; #3}
+\newcommand{\letexpr}[3]{\text{let}\, #1\hspace{-1pt} =\hspace{-1pt} #2\, \text{in}\, #3}
+\newcommand{\condexpr}[3]{\text{if}\; #1\, \text{then}\; #2\, \text{else}\; #3}
+\newcommand{\withexpr}[6]{\pbox[c]{\textwidth}{\relax\ifvmode\centering\fi
+    gen $#1$ $#2$ \\ with $#3\hspace{-1pt} \leq\hspace{-1pt} #4\hspace{-1pt} <\hspace{-1pt} #5$}\, \text{in}\, #6}
+\newcommand{\genexpr}[2]{\text{gen}\, #1\; #2}
+\newcommand{\bopexpr}[2]{#1\; \texttt{bop}\; #2}
+\newcommand{\uopexpr}[1]{\texttt{uop}\; #1}
+\newcommand{\selexpr}[2]{\text{sel}\; #1\, #2}
+\newcommand{\shpexpr}[1]{\text{shape}\; #1}
+\renewcommand{\dimexpr}[1]{\text{dim}\; #1}
+
+\newcommand{\sd}[3][\gamma]{\mathcal{SD}\hspace{-1.2pt} \left( #2,\, #3,\, #1 \right) \hspace{-1pt}}
+\newcommand{\pv}[2][\gamma]{\mathcal{PV}\hspace{-1.2pt} \left( #2,\, #1 \right) \hspace{-1pt}}
+\newcommand{\reduce}[3][\varepsilon]{\mathcal{#2}\hspace{-1.2pt} \left( #3,\, #1 \right) \hspace{-1pt}}
+
+\newcommand{\oplusnl}{\\&\hspace{1em}\oplus}
+\newcommand{\dem}[2]{\text{#1}\colon\hspace{-2pt}#2}
+\newcommand{\envmap}[3]{#1\{\text{#2}\hspace{-2pt}\to\hspace{-2pt}#3\}}
+
+\makeatletter
+\newcommand{\pushleft}[1]{\ifmeasuring@#1\else\omit$\displaystyle#1$\hfill\fi\ignorespaces}
+\makeatother
+
+\setlength{\grammarparsep}{8pt}
+\setlength{\grammarindent}{6.5em}
+\newcommand{\grammarcomment}[1]{\hfill(#1)}
+\newcommand{\grammarnewline}{\\\hphantom{1em}}
+
+\begin{document}
+
+\begin{titlepage}
+  \begin{center}
+    \textsc{\LARGE Bachelor thesis \\ Computing Science} \\[1.5cm]
+    \includegraphics[height=100pt]{images/logo.png}
+    \vspace{0.4cm}
+    \textsc{\Large Radboud University} \\[1cm]
+    \hrule
+    \vspace{0.4cm}
+    \textbf{\huge A new semantics for array programming languages; how to introduce some laziness without being lazy} \\[0.8cm]
+    \hrule
+    \vspace{2cm}
+    \begin{minipage}[t]{0.45\textwidth}
+      \begin{flushleft} \large
+        \textit{Author:} \\
+          J.M. (Jordy) Aaldering \\
+          s1004292 \\
+          \texttt{j.aaldering@student.ru.nl}
+      \end{flushleft}
+    \end{minipage}
+    \begin{minipage}[t]{0.45\textwidth}
+      \begin{flushright} \large
+        \textit{First supervisor/assessor:} \\
+          Prof. Dr. S.B. (Sven-Bodo) Scholz \\
+          \texttt{svenbodo.scholz@ru.nl} \\[1.3cm]
+        \textit{Second assessor:} \\
+          Dr. P.W.M. (Pieter) Koopman \\
+          \texttt{pieter@cs.ru.nl}
+      \end{flushright}
+    \end{minipage}
+    \vfill
+    {\large March 17, 2021}
+  \end{center}
+\end{titlepage}
+
+\input{sections/abstract}
+
+\tableofcontents
+
+\input{sections/introduction}
+
+\input{sections/background}
+
+\input{sections/grammar}
+
+\input{sections/semantics}
+
+\input{sections/inference}
+
+\input{sections/inference-example}
+
+\input{sections/rewrite}
+
+\input{sections/rewrite-example}
+
+\input{sections/correctness}
+
+\input{sections/rewrite-proof}
+
+\input{sections/implementation}
+
+\input{sections/performance}
+
+\input{sections/conclusion}
+
+\printbibliography
+
+\end{document}

@@ -1,0 +1,33 @@
+\chapter{Performance}\label{sec:performance}
+
+There exist very many programs, some of which will profit greatly from our rewrite rules and some of which might not differ at all.
+This makes evaluating the performance of our rewrite rules in a general case very hard, so instead we will again look at the shift example discussed earlier and see how it fares, to get an idea of the possible performance improvements.
+This way we can still get an idea of the potential benefits of the rewrite rules, using a realistic example.
+
+Figure~\ref{fig:performance} below shows the performance of both the original and rewritten program when shifting a list of length $20000$ by some amount to the right.
+\begin{figure}[!h]
+    \centering
+    \caption{Running time of shifting a list of length 20000}
+    \pgfplotsset{scaled x ticks=false}
+    \begin{tikzpicture}
+        \begin{axis}[
+                xlabel=Shift distance,
+                ylabel=Time (ms),
+                xmin=0, xmax=10000,
+                ymin=0, ymax=400,
+                legend pos=south east,
+                ymajorgrids=true,
+                grid style=dashed,
+            ]
+            \addplot+[color=blue, mark=square] table[x index=0, y index=1] {\main/data/performance.dat};
+            \addlegendentry{original}
+            \addplot+[color=red, mark=triangle] table[x index=0, y index=2] {\main/data/performance.dat};
+            \addlegendentry{rewrite}
+        \end{axis}
+    \end{tikzpicture}
+    \label{fig:performance}
+\end{figure}
+
+From our examples we know that most of the performance is gained by rewriting the \texttt{take n arr} expression to a version that only gets its shape.
+The farther we shift, the longer the original program will spend in the with-expression of this function.
+This is not necessary in our rewritten program, which is why we see greatly improved performance with an increasing shift distance.

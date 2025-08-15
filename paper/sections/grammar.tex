@@ -1,0 +1,124 @@
+\chapter{Syntax}\label{sec:syntax}
+
+We start this paper by creating a small array programming language, which we will use throughout this paper.
+This language will have the basic functionality which most array programming languages have, with which we will be able to create most simple programs.
+The syntax follows a lambda-calculus style, where a program is defined as a single expression, recursively containing sub-expressions.
+Every program must evaluate to a value.
+
+\section{Grammar}
+In this section we will use the Backus-Naur form\cite{backus} to explain the program's control structure, with the added symbol `\texttt{+}' which means `one or more'.
+Anything between quotes are the literal characters of the syntax.
+We will also allow for comments in our language; comments start at a `\texttt{\#}', and stop at the end of a line.
+
+Our language consists of scalars, which are simply a decimal value, and arrays.
+These arrays can be made up of numbers, but they can also contain expressions.
+Additionally; arrays can also be empty, meaning they do not contain any values.
+We also have variable identifiers which are strings that point variable names to their values.
+\begin{grammar}
+<value> ::= <scalar>
+     \alt <array>
+     \alt <var-id>
+
+<scalar> ::= <decimal>
+
+<array> ::= `[]' | `[' <expr> (`,' <expr>)+ `]'
+\end{grammar}
+
+Since all our expressions evaluate to values, we can easily define binary and unary operations to transform values.
+In the case of binary operations, the right expression must always be of the same shape as the left expression or it must be a scalar.
+\begin{grammar}
+<binary> ::= <expr> <bop> <expr>
+
+<unary> ::= <uop> <expr>
+
+<bop> ::= `+' | `-' | `*' | `/'                 \grammarcomment{maths}
+    \alt `=' | `!=' | `>' | `>=' | `<' | `<='   \grammarcomment{equality}
+
+<uop> ::= `-' | `||'    \grammarcomment{maths}
+    \alt `!'            \grammarcomment{equality}
+\end{grammar}
+
+We can assign values to a variable by using a let-expression.
+This expression takes the variable name and an expression to compute its value.
+This variable will then be in scope for the second expression, after the `in'.
+Similarly, we can also assign a lambda expression to an identifier, which essentially makes the identifier the name of a function which can later be called with a number of arguments.
+These functions can be recursive.
+\begin{grammar}
+<let> ::= `let' <var-id> `=' <expr> `in' <expr>
+
+<fun-def> ::= `let' <fun-id> `=' <lambda> `in' <expr>
+
+<lambda> ::= ( `\\' <var-id> `.' )+ <expr>
+\end{grammar}
+
+So now we need to be able to call these user-defined functions, as well as our built-in primitive functions, by passing them values which gives us some result.
+The first argument of selection is the array from which we want to select, the second argument is the index at which to select.
+The selected value can be a scalar, but it can also be an array; when the dimensionality of the selection index is lower than that of the array.
+We can also call a lambda function directly instead of assigning it to a function identifier first.
+Every function call takes at least one, and potentially multiple, arguments.
+\begin{grammar}
+<call> ::= <prf>                    \grammarcomment{primitive function}
+     \alt <fun-id> <expr>+          \grammarcomment{user-defined function}
+     \alt `(' <lambda> `)' <expr>+  \grammarcomment{lambda application}
+
+<prf> ::= <expr> `.(' <expr> `)'    \grammarcomment{selection}
+    \alt `shape' <expr>             \grammarcomment{shape}
+    \alt `dim' <expr>               \grammarcomment{dimensionality}
+\end{grammar}
+
+We also define a conditional expression.
+Since our language only has scalars and arrays, and no boolean values, we define a scalar as being false if it is 0, else it is true.
+One thing to note is that there there must always be an else branch.
+This follows from the fact that an expression must always evaluate to a value, and thus the expression must evaluate to a value for both cases.
+\begin{grammar}
+<if> ::= `if' <expr> `then' <expr> `else' <expr>
+\end{grammar}
+
+Finally we have the with expression, which is arguably the most useful in array programming languages.
+We use this expression to generate arrays.
+This expression first takes a shape for the new value to generate, along with a default argument for the iteration.
+If the shape of this argument has size $n$, that shape should correspond with the last $n$ arguments of the first expression.
+Then it takes two bounds, and a variable name that will iteratively be assigned all possible values within those bounds, the dimensionality of these bounds should be the dimensionality of the first expression minus $n$.
+Then the in-expression is expected to return a value of the same shape as the default value, which is then placed at the correct spot in the new array.
+We also allow a shorter case, which simply assigns the default value to every element.
+\begin{grammar}
+<with> ::= `gen' <expr> <expr> \\
+            `with' <expr> `<=' <var-id> `<' <expr> \\
+            `in' <expr>
+    \alt `gen' <expr> <expr>
+\end{grammar}
+
+Combining these we get the core expression, which we use to generate our programs.
+\begin{grammar}
+<program> ::= <expr>
+
+<expr> ::= <fun-def>
+    \alt <call>
+    \alt <let>
+    \alt <if>
+    \alt <with>
+    \alt <binary>
+    \alt <unary>
+    \alt <value>
+\end{grammar}
+
+\section{Example}
+We will now look at part of a program as an example to see how this grammar works in practise.
+This example will be used throughout the paper.
+In this example we define a function \texttt{shift n arr}, this function shifts the values of the given array \texttt{n} spots to the right if \texttt{n} is positive or \texttt{n} to the left otherwise.
+With zeros at all empty positions.
+\begin{lstlisting}
+let shift = \n.\arr.
+    let pad = gen (shape (take n arr)) 0 in
+    let xs = drop (-n) arr in
+    if n > 0 then pad ++ xs
+        else xs ++ pad
+in
+\end{lstlisting}
+
+We start by defining a function \texttt{shift n arr}, which takes two arguments.
+We then assign a value to the variable \texttt{pad} by using a with-expression.
+This with-expression creates a new array with a shape equal to the shape of the result of the function \texttt{take n arr}, which is user-defined.
+Then we assign a value to the variable xs with the other user-defined function \texttt{drop n arr}.
+Then we go to the conditional expression and, depending on the value of n, we append the values of the variables pad and xs.
+Here we have no more expressions so the result of this conditional expression is then the returned value when calling the function \texttt{shift n arr}.

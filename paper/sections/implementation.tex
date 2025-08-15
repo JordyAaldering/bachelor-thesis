@@ -1,0 +1,123 @@
+\chapter{Implementation}\label{sec:implementation}
+
+Accompanying this paper is a prototypical implementation of the grammar and rules discussed above. The code is based on the languages \texttt{SaC}\cite{sac-backend} and \texttt{heh}\cite{auxiliary-computations}, and can be found on GitHub\footnote{\url{https://github.com/JordyAaldering/Bachelor-Thesis}}. The language is implemented in the strict programming language \texttt{OCaml}\cite{ocaml}, throughout this chapter we will see the benefits of choosing this language.
+
+The language consists of three main stages; the parser, the rewrite, and the evaluator. In the parser the user's input is processed and transformed into a tree. The rewrite then applies the rules discussed in this paper to rewrite that program, which is then evaluated in the evaluator, producing a result and printing that to the screen.
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}[
+    squarednode/.style={%
+        rectangle,
+        draw=black!60,
+        fill=white,
+        very thick,
+        minimum size=5mm,
+        text centered,
+        text width=25mm,
+    }]
+    % Nodes
+    \node[squarednode,initial by arrow,initial text=input] (parser) {Parser};
+    \node[squarednode]  (rewrite)   [right=of parser]               {Rewrite};
+    \node[squarednode]  (evaluator) [right=of rewrite]              {Evaluator};
+    % Edges
+    \draw[->] (parser)  -- node {} (rewrite);
+    \draw[->] (rewrite) -- node {} (evaluator);
+    \draw[->] (evaluator) --++(0:20mm) node[right] {output};
+    \end{tikzpicture}
+    \caption{Program pipeline}
+    \label{fig:pipeline}
+\end{figure}
+
+\section{Parser}
+The first step in processing our input is parsing the program. The parser transforms the text file that contains the program to a something that is easily readable by our compiler, we will do this using an abstract syntax tree. This tree consists of nodes of expressions, where each node has subtrees containing the sub-expressions. Leaf nodes of the abstract syntax tree must always be strings (variables) or values.
+Before parsing we must transform the input program such that it is represented as tokens. This is easily done in \texttt{OCaml} using its built-in lexer\cite{ocamllex}.
+
+Lets look a look at our shift example again.
+\begin{lstlisting}
+let shift = \n.\arr.
+    let pad = gen (shape (take n arr)) 0 in
+    let xs = drop (-n) arr in
+    if n > 0 then pad ++ xs
+        else xs ++ pad
+in
+\end{lstlisting}
+
+\subsection{Abstract Syntax Tree}
+The root of the abstract syntax tree is then the let expression that defines the function. The first child must be a string, so we get a leaf containing `shift', the second child is then the lambda expression that describes this function which has children itself, and the final expression is the rest of our program, which we have omitted here. This produces the syntax tree shown in figure \ref{fig:ast}.
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}[
+        sibling distance=0mm,
+        scale=0.95,
+        every node/.style={scale=0.95}
+    ]
+    \Tree
+    [.\texttt{let}
+        [.`\textit{shift}' ]
+        [.\texttt{lambda}
+            [.`\textit{n}' ]
+            [.\texttt{lambda}
+                [.`\textit{arr}' ]
+                [.\texttt{let}
+                    [.`\textit{pad}' ]
+                    [.\texttt{with}
+                        [.\texttt{shape}
+                            [.\texttt{apply}
+                                [.\texttt{apply}
+                                    [.`\textit{take}' ]
+                                    [.\texttt{var}
+                                        [.`\textit{n}' ]
+                                    ]
+                                ]
+                                [.\texttt{var}
+                                    [.`\textit{arr}' ]
+                                ]
+                            ]
+                        ]
+                        [.\texttt{scalar}
+                            [.0 ]
+                        ]
+                    ]
+                    [.\texttt{let}
+                        [.`\textit{xs}' ]
+                        [.\texttt{apply}
+                            [.\texttt{apply}
+                                [.`\textit{drop}' ]
+                                [.\texttt{unary}
+                                    [.- ]
+                                    [.\texttt{var}
+                                        [.`\textit{n}' ]
+                                    ]
+                                ]
+                            ]
+                            [.\texttt{var}
+                                [.`\textit{arr}' ]
+                            ]
+                        ]
+                        [.\texttt{cond}
+                            [.$\vdots$ ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        [.\texttt{body}
+            [.$\vdots$ ]
+        ]
+    ]
+    \end{tikzpicture}
+    \caption{Abstract Syntax Tree}
+    \label{fig:ast}
+\end{figure}
+
+\section{Rewrite}
+This syntax tree is then passed on to the rewrite, where the tree will be rewritten using our rewrite rules. Doing this is now very easy because our rules work very well on this syntax tree. Let's say we want to rewrite the outer let-expression.
+\begin{align*}
+    \reduce{F}{\letexpr{x}{e_1}{e_2}}
+        &\to \reduce{F}{\letexpr{shift}{\texttt{lambda}}{\texttt{body}}}
+\end{align*}
+We can then easily get the three arguments of the expression by getting the three child nodes and continuing the rewrite at each of those children. Implementing this in code is also very easy, as we can simply use pattern matching~\cite{pattern-matching}.
+
+\section{Evaluator}
+After rewriting the abstract syntax tree we pass it on to the evaluator. The evaluator passes over this tree to compute the resulting value. The evaluator also has to keep track of an environment that maps variables to their corresponding values or functions. For instance; when we encounter a let-expression we map the variable to the result of the first expression, and then add that to the environment of the second expression. Using pattern matching again we do certain operations and computations for each expression, which will eventually get us the result after having evaluated the entire tree.

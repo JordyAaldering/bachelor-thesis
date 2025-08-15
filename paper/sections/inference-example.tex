@@ -1,0 +1,127 @@
+\section{Example}
+As an example, let's take a look at a function `\texttt{take n arr}', which we have talked about before but not yet seen.
+This function takes the first n values from the list arr if n is positive, or the last n values of arr if n is negative.
+In our language this function looks as follows:
+\begin{lstlisting}
+let take = \n.\arr.
+    let ofs = if n > 0 then 0               # offset
+        else (sel [0] (shape arr)) + n
+    in
+    gen |n| 0 with [n * 0] <= iv < [|n|] in
+        sel (iv + ofs) arr
+in
+\end{lstlisting}
+
+Say we want to find the propagation of this function, we then need to solve:
+\begin{align*}
+    \pv{\lambdaexpr{n}{\lambdaexpr{arr}{e_{body}}}}
+        &= [env[n],\, env[arr]] \\
+        &\text{where } env = \sd{e_{body}}{[0,1,2,3]}
+\end{align*}
+For readability purposes we will start at the end and work our way up.
+So lets first take a look at the inner expression of the with-loop; \texttt{sel (iv + offset) arr}, with the identity demand $[0,1,2,3]$.
+First we apply the rule for primitive functions.
+Which will require us to get the propagation vector for \texttt{sel}:
+\begin{align*}
+    \sd{\selexpr{(iv + \textit{ofs})}{arr}}{[0,1,2,3]}
+        &= \sd{iv + \textit{ofs}}{\pv{sel}[0][0,1,2,3]}
+            \oplusnl \sd{arr}{\pv{sel}[1][0,1,2,3]} \\
+    \pv{sel} &= [[0,2,2,3],\, [0,1,2,3]]
+\end{align*}
+This gives us two cases we need to solve.
+One for the binary operator for addition, and one for the variable named \texttt{arr}.
+\begin{align*}
+    \sd{iv + \textit{ofs}}{pv[0][0,1,2,3]}
+        &= \sd{iv + \textit{ofs}}{[0,2,2,3]} \\
+        &= \sd{iv}{\pv{+}[0][0,2,2,3]}
+            \oplusnl \sd{\textit{ofs}}{\pv{+}[1][0,2,2,3]} \\
+        &= \sd{iv}{[0,1,2,3][0,2,2,3]}
+            \oplusnl \sd{\textit{ofs}}{[0,1,2,3][0,2,2,3]} \\
+        &= \sd{iv}{[0,2,2,3]} \oplus \sd{\textit{ofs}}{[0,2,2,3]} \\
+        &= \{ \dem{iv}{[0,2,2,3]} \} \oplus \{ \dem{ofs}{[0,2,2,3]} \} \\
+        &= \{ \dem{iv}{[0,2,2,3]},\, \dem{ofs}{[0,2,2,3]} \} \\
+    \sd{arr}{pv[1][0,1,2,3]}
+        &= \sd{arr}{[0,1,2,3]} \\
+        &= \{ \dem{arr}{[0,1,2,3]} \}
+\end{align*}
+Combining these results, we get the following demand environment for \texttt{sel}.
+\begin{align*}
+    \sd{\selexpr{(iv + \textit{ofs})}{arr}}{[0,1,2,3]}
+        &= \{ \dem{iv}{[0,2,2,3]},\, \dem{ofs}{[0,2,2,3]} \}
+            \oplus \{ \dem{arr}{[0,1,2,3]} \} \\
+        &= \{ \dem{iv}{[0,2,2,3]},\, \dem{ofs}{[0,2,2,3]},\, \dem{arr}{[0,1,2,3]} \}
+\end{align*}
+We can now use this to get the environment for the entire with-expression.
+This requires us to find the five inner environments of that expression.
+\begin{align*}
+    \sd{\withexpr{|n|}{0}{[n*0]}{iv}{[|n|]}{e}}{[0,1,2,3]}
+        &= \sd{|n|}{[0,1,2,3]}
+            \oplusnl \sd{0}{[0,1,2,3]}
+            \oplusnl \sd{[n*0]}{dem_{iv}}
+            \oplusnl \sd{[|n|]}{dem_{iv}}
+            \oplusnl (\sd{e}{[0,1,2,3]} \setminus \{iv\}) \\
+        &\text{where } dem_{iv} = \pv{\lambdaexpr{iv}{e}}[dem]
+\end{align*}
+
+\newpage
+Going from top to bottom, we get the first environment by finding the propagation vector of the primitive function for the absolute value `$||$'.
+The second environment is just a scalar value, so this gives the empty set.
+The third and fourth case are similar to the first one, usually we would have to keep in mind that these use the newly found demand, instead of the original one, but in this case we will not have to do this computation since both expressions are just arrays and will simply evaluate to an empty environment, whatever the demand is.
+This allows us to skip some computations and leaves us with only the following two cases:
+\begin{align*}
+    \sd{|n|}{[0,1,2,3]}
+        &= \sd{n}{\pv{||}[0,1,2,3]} \\
+        &= \sd{n}{[[0,1,2,3]][0,1,2,3]} \\
+        &= \{ \dem{n}{[0,1,2,3]} \} \\
+    \sd{e}{[0,1,2,3]} \setminus \{iv\}
+        &= \{ \dem{iv}{[0,2,2,3]},\, \dem{ofs}{[0,2,2,3]},\, \dem{arr}{[0,1,2,3]} \} \setminus \{iv\} \\
+        &= \{ \dem{ofs}{[0,2,2,3]},\, \dem{arr}{[0,1,2,3]} \}
+\end{align*}
+We have now found that the demand environment of the with-expression is $\{ \dem{n}{[0,1,2,3]} \}$ $\oplus$ $\{ \dem{ofs}{[0,2,2,3]},\, \dem{arr}{[0,1,2,3]} \} = \{ \dem{n}{[0,1,2,3]},\, \dem{ofs}{[0,2,2,3]},\, \dem{arr}{[0,1,2,3]} \}$.
+Now let us move another step up and take a look at the let-expression that encapsulates the with-expression we just solved.
+\begin{align*}
+    \sd{\letexpr{\textit{ofs}}{e_{cond}}{e_{with}}}{[0,1,2,3]}
+        &= \sd{e_{cond}}{dem_{\textit{ofs}}}
+            \oplusnl (\sd{e_{with}}{[0,1,2,3]} \setminus \{\textit{ofs}\}) \\
+        &\text{where } dem_{\textit{ofs}} = \pv{\lambdaexpr{\textit{ofs}}{e_{with}}}[0][0,1,2,3]
+\end{align*}
+Before we can find the demand environment of our conditional expression, we need to know what demand its resulting value, \texttt{ofs}, will have in the with-expression.
+This is easy to find, as we have already found the demand environment of the with-expression.
+\begin{align*}
+    \pv{\lambdaexpr{\textit{ofs}}{e_{with}}}
+        &= [\sd{e_{with}}{[0,1,2,3]}[\textit{ofs}]] \\
+        &= [\{ \dem{ofs}{[0,2,2,3]},\, \dem{arr}{[0,1,2,3]} \}[\textit{ofs}]] \\
+        &= [[0,2,2,3]]
+\end{align*}
+%
+Now, using this newly found demand, let us find the demand environment of the conditional expression.
+We have looked at quite a few examples already, so I will gloss over this one.
+As an exercise you could try to solve this one yourself.
+\begin{align*}
+    \sd{\condexpr{n > 0}{[0]}{e_f}}{[0,2,2,3]}
+        &= \sd{n > 0}{[0,3,3,3]}
+            \oplusnl \sd{[0]}{[0,2,2,3]}
+            \oplusnl \sd{e_f}{[0,2,2,3]} \\
+        &= \{ \dem{n}{[0,3,3,3]} \}
+            \oplusnl \{ \dem{n}{[0,2,2,3]},\, \dem{arr}{[0,0,1,2]} \} \\
+        &= \{ \dem{n}{[0,3,3,3]},\, \dem{arr}{[0,0,1,2]} \}
+\end{align*}
+Using what we now know we can solve the let-expression.
+\begin{align*}
+    \sd{\letexpr{\textit{ofs}}{e_{cond}}{e_{with}}}{[0,1,2,3]}
+        &= \sd{e_{cond}}{[0,2,2,3]}
+            \oplusnl (\sd{e_{with}}{[0,1,2,3]} \setminus \{\textit{ofs}\}) \\
+        &= \{ \dem{n}{[0,3,3,3]},\, \dem{arr}{[0,0,1,2]} \}
+            \oplusnl \{ \dem{n}{[0,1,2,3]},\, \dem{arr}{[0,1,2,3]} \} \\
+        &= \{ \dem{n}{[0,3,3,3]},\, \dem{arr}{[0,1,2,3]} \}
+\end{align*}
+Finally we can use this to find the propagation vector of the lambda expression using the calculation from the start.
+\begin{align*}
+    \pv{\lambdaexpr{n}{\lambdaexpr{arr}{e_{body}}}}
+        &= [env[n],\, env[arr]] \\
+        &\text{where } env = \{ \dem{n}{[0,3,3,3]},\, \dem{arr}{[0,1,2,3]} \} \\
+        &= [[0,3,3,3], [0,1,2,3]]
+\end{align*}
+Which shows us that the propagation vector of the user-defined function \texttt{take n arr} is $[[0,3,3,3], [0,1,2,3]]$.
+If we now, for example, want the shape of the result of this function, we see that the demand of \texttt{n} is $3$ and the demand of \texttt{arr} is $2$.
+This tells us that to get the shape of the \texttt{take} function we must have the full value of \texttt{n} and only the shape of \texttt{arr}.

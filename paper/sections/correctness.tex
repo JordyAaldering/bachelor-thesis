@@ -1,0 +1,17 @@
+\chapter{Correctness}\label{sec:correctness}
+
+One important consideration is whether the rewritten program is semantically equivalent to the original program, e.g. whether for every input of the original program, the rewritten program produces the same result.
+It turns out that this is not always the case.
+Consider the very simple expression $\shpexpr{(3 / 0)}$, which rewrites to:
+\begin{align*}
+    \reduce{F}{\shpexpr{(3 / 0)}}
+        &= \reduce{S}{3 / 0} \\
+        &= \reduce{S}{3} \\
+        &= \shpexpr{3} \\
+        &= [\,]
+\end{align*}
+In the original program the expression $3 / 0$ would result in a zero-division error, thus not evaluating to a value.
+But the rewritten expression removes unnecessary computations, causing this rewritten program to evaluate to the value $[\,]$ instead of an error.
+
+To avoid this we will create a new semantics, we get this new semantics by applying our rewrite $\mathcal{F}$ to our current semantic rules, defined in Section~\ref{sec:semantics}.
+We would like this semantics to be an extension of the original semantics, where the set of valid programs and their evaluations for the original semantics are a subset of the set of valid programs of our new semantics, where these evaluated values are the same.

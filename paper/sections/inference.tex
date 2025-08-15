@@ -1,0 +1,134 @@
+\chapter{Inference}\label{sec:inference}
+
+Our goal now is to rewrite programs in this language in a way that minimises the level of required information.
+Lets go back to the \texttt{shift n arr} example.
+\begin{lstlisting}
+let shift = \n.\arr.
+    let pad = gen (shape (take n arr)) 0 in
+    let xs = drop (-n) arr in
+    if n > 0 then pad ++ xs
+        else xs ++ pad
+in
+\end{lstlisting}
+Here we see that we take the shape of the \texttt{take n arr} function.
+So perhaps we can rewrite \texttt{shape (take n arr)} to some new function \texttt{take_s n' arr'}, which simplifies the computations within.
+This is possible because we know that we do not need the actual values of this result, only its shape, which allows us to simplify all expressions computing these values.
+
+We need a way to find out how far we can rewrite expressions, which we are going to do by finding a demand environment.
+Rewriting the \texttt{take} expression might also reduce the required level of information of the arguments \texttt{n} and \texttt{arr}, allowing us to also rewrite those.
+Here they are simply variables but keep in mind that these can also be complex expressions, which can benefit greatly from a rewrite.
+
+To do so we need to know the demand of these arguments \texttt{n} and \texttt{arr} within the function \texttt{take_s}, we call this the propagation vector of \texttt{take\_s}.
+This propagation vector is a list of demands, with a demand for each argument.
+For instance; the propagation vector of selection, which takes two arguments, is $[[0,2,2,3], [0,1,2,3]$.
+In this chapter we will see how we find these propagation vectors and demand environments.
+
+\newpage
+\section{Demand level}
+As discussed before.
+a value consists of three parts; the data, the shape of that data, and its corresponding dimensionality.
+Including the case where no information is required at all we get four levels of demands, from high to low: full, shape, dimensionality, and none.
+Which we will assign the values $3$ through $0$ respectively.
+
+The required level of information, the demand, is represented as an array containing four values.
+Each index number corresponds with the requested level of information, and the number at that index describes the lowest information level we can rewrite the expression to in order to retain the requested information.
+
+So if, for example, we have a demand $[0,2,2,3]$ and we wish to rewrite according to a demand level of dimensionality ($1$), we take index $1$, which is a $2$, which tells us that we must rewrite this argument with a demand level of shape in order to retain the requested dimensionality information of the result.
+
+\section{Propagation vectors}\label{sec:pv}
+The function $\pv{expr}$ takes a primitive expression and returns the propagation vectors of that expression, which is a list of demands with a demand for each argument of the expression.
+The indices of these demands correspond with the indices of the arguments of the expression.
+
+In case of the operands; mathematical operations are straightforward and return the identity demand.
+Equality always results in a 0 or 1 so we always already know its dimensionality and shape.
+The demands of the primitive functions can easily be inferred from the semantics.
+\begin{align*}
+    \pv{\texttt{bop}}
+        &= \begin{cases}
+            [[0,1,2,3], [0,1,2,3]] &\text{if } \texttt{bop} \in maths \\
+            [[0,0,0,3], [0,0,0,3]] &\text{if } \texttt{bop} \in equality
+        \end{cases} \\
+    \pv{\texttt{uop}}
+        &= \begin{cases}
+            [[0,1,2,3]] &\text{if } \texttt{uop} \in maths \\
+            [[0,0,0,3]] &\text{if } \texttt{uop} \in equality
+        \end{cases} \\
+    \pv{sel}   &= [[0,2,2,3], [0,1,2,3]] \\
+    \pv{shape} &= [[0,0,1,2]] \\
+    \pv{dim}   &= [[0,0,0,1]]
+\end{align*}
+We can also get the propagation vector of a lambda-expression, we first get the demand environment of the inner expression.
+We discussed this demand environment in our example, its implementation will be explained in the next section.
+Then from that environment we take the demands of the variable names of the lambda.
+\begin{align*}
+    \pv{\lambdaexpr{s_1,\dots,\lambda s_n}{e}}
+        &= [env[s_1], \dots, env[s_n]] \\
+        &\text{where } env = \sd{e}{[0,1,2,3]}
+\end{align*}
+
+\newpage
+\section{Shape demand}
+To find an environment of these demands we define a function $\mathcal{SD}$.
+The function $\sd{expr}{dem}$ takes an expression, the current demand which we got from the previous expression, and the environment $\gamma$ containing pre-computed propagation vectors for all user-defined functions.
+It returns an environment with a demand for each free variable of the given expression.
+
+We also define the operator $\oplus$ which takes the union of the given demand environments.
+If a variable exists in multiple environments the element wise maximum of its demand vectors is taken.
+As an example we will take $\{ \dem{x}{[0,1,2,3]},\, \dem{y}{[1,1,2,2]} \} \oplus \{ \dem{y}{[0,0,3,3]} \}$.
+Here $x$ only occurs on the left, so it will stay the same.
+But $y$ occurs on both side, so we will look at both demands and take the maximum of the two at each index.
+This will then give us the new environment $\{ \dem{x}{[0,1,2,3]},\, \dem{y}{[1,1,3,3]} \}$.
+
+We have two non-recursive cases; $value$ (a scalar or an array) and \texttt{VarId}.
+A value produces no demand, as we already have the value itself.
+A variable name adds that variable to the environment with the current demand.
+\begin{align*}
+    \sd{value}{dem}
+        &= \emptyset \\
+    \sd{\texttt{VarId}}{dem}
+        &= \{ \dem{\texttt{VarId}}{dem} \}
+\end{align*}
+The let-expression combines two demand environments.
+The demand of the first expression depends on the demand of the second one, since the second expression uses the result of this expression.
+We get that demand by getting the propagation vector, and combining it with our current demand.
+Then we take the demand environment of the second expression with our original demand, but since we provide the variable $s$ in this let-expression, we remove it from the demand environment.
+\begin{align*}
+    \sd{\letexpr{s}{e_1}{e_2}}{dem}
+        &= \sd{e_1}{dem_s}
+            \oplusnl (\sd{e_2}{dem} \setminus \{s\}) \\
+        &\text{where } dem_s = \pv{\lambdaexpr{s}{e_2}}[0][dem]
+\end{align*}
+Since we always need the result of the condition if we want to know anything about the result, we must use a demand of $[0,3,3,3]$ for the condition of the conditional expression.
+Then we can simply combine it with the demand environments of the two branches since we have no way to know which branch will terminate at this point.
+\begin{align*}
+    \sd{\condexpr{e_c}{e_t}{e_f}}{dem}
+        &= \sd{e_c}{[0,3,3,3]}
+            \oplusnl \sd{e_t}{dem}
+            \oplusnl \sd{e_f}{dem}
+\end{align*}
+The with-expression is a bit more complicated.
+$e_{gen}$ and $e_{def}$ can be calculated as normal.
+But the bounds depend on the demand of the last expression, so like before we take the propagation vector of that expression and use it to get the demand environments of our bounds.
+Similar to in the let-expression we remove $s$ from the demand environment of the last expression since it is provided by the with-expression itself.
+
+\begin{align*}
+    \sd{\withexpr{e_{gen}}{e_{def}}{e_l}{s}{e_u}{e}}{dem}
+        &= \sd{e_{gen}}{dem}
+            \oplusnl \sd{e_{def}}{dem}
+            \oplusnl \sd{e_l}{dem_s}
+            \oplusnl \sd{e_u}{dem_s}
+            \oplusnl (\sd{e}{dem} \setminus \{s\}) \\
+        &\text{where } dem_s = \pv{\lambdaexpr{s}{e}}[0][dem]
+\end{align*}
+Finding the demand of a primitive expression is simple, since the propagation vectors are known to us, as we have already seen in section \ref{sec:pv}.
+So we can simply get this demand and combine it with our current demand, to then pass it through to the parameters of the primitive expression.
+
+When calling a user-defined function we do something similar, but instead of finding the propagation vector we look up the demand of the function in the pre-computed function environment $\gamma$.
+\begin{align*}
+    \sd{\texttt{Prf}\, e_0\, \dots\, e_n}{dem}
+        &= \sd{e_0}{dem_0} \oplus \dots \oplus \sd{e_n}{dem_n} \\
+        &\text{where } dem_i = \pv{\texttt{prf}}[i][dem] \\
+    \sd{\texttt{FunId}\, e_0\, \dots\, e_n}{dem}
+        &= \sd{e_0}{dem_0} \oplus \dots \oplus \sd{e_n}{dem_n} \\
+        &\text{where } dem_i = \gamma[\texttt{FunId}][i][dem]
+\end{align*}

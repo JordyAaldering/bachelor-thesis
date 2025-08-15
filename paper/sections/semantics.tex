@@ -1,0 +1,194 @@
+\section{Operational semantics}\label{sec:semantics}
+Now that we have a grammar, we know how a program is formed but not how it gives us a result.
+For this we will define semantics that tell us how we get the results from expressions.
+We will formalise the semantics of this language using big-step operational semantics.
+Here we will denote a value with dimensionality $n$ as a pair of shape and data: $\valpair{[shp_1, \dots, shp_n]}{[data_1, \dots, data_m]}$, where we have $m = \prod_{i=1}^n shp_i$.
+
+This semantics will make use of a program environment: $\sigma$, which maps all variable names that are currently in scope to their corresponding values.
+
+First we look at how scalars and vectors are transformed into their internal representation.
+A scalar is simply placed in an array with an empty shape.
+An array can be multi-dimensional and thus the elements can be arrays themselves, note here that all of these elements must evaluate to the same shape.
+\[
+\inference[scalar]{}{
+    \sempair{x} \Downarrow \valpair{[\,]}{[x]}
+    }
+\]
+\[
+\inference[array]{
+    \forall_{i\in[1,n]}\hspace{-2pt}:
+        \sempair{e_i} \Downarrow \valpair{[shp_1, \dots, shp_m]}{[data_1^i, \dots, data_p^i]}
+    }{
+    \sempair{[e_1, \dots, e_n]} \Downarrow \valpair{[n, shp_1, \dots, shp_m]}{[data_1^1, \dots, data_p^1, \dots, data_1^n, \dots, data_p^n]}
+    }
+\]
+\vspace{-15pt}
+\begin{align*}
+    \text{where } p &= \textstyle\prod_{i=1}^m shp_i
+\end{align*}
+
+We can also get a value from a variable name, which we find by looking that variable name up in the program environment $\sigma$.
+\[
+\inference[var]{}{
+    \sempair{s} \Downarrow \sigma[s] = \valpair{[shp_1, \dots, shp_n]}{[data_1, \dots, data_m]}
+    }
+\]
+
+Next we have the primitive functions \texttt{dim}, \texttt{shape}, and \texttt{sel}.
+We can get both the dimensionality and shape by looking at the shape vector of the value.
+\[
+\inference[dim]{
+    \sempair{e} \Downarrow \valpair{[shp_1, \dots, shp_n]}{\_}
+    }{
+    \sempair{\dimexpr{e}} \Downarrow \valpair{[\,]}{[n]}
+    }
+\]
+\[
+\inference[shape]{
+    \sempair{e} \Downarrow \valpair{[shp_1, \dots, shp_n]}{\_}
+    }{
+    \sempair{\shpexpr{e}} \Downarrow \valpair{[n]}{[shp_1, \dots, shp_n]}
+    }
+\]
+
+Selection can be done with an index vector with a lower dimensionality than that of the array we are selecting from, giving a sub-array of that array as a result.
+The dimensionality of this result is the difference of the dimensionality of the index vector and the array.
+If this difference were to give us $[shp_1, \dots, shp_0]$ we will read that as an empty shape: $[\,]$.
+
+We get the values of the result by first finding the start index.
+We find that index using a function \texttt{row\_major}, it is not important how this function works exactly.
+Then from there we take the correct amount of values, which we get from the index vector.
+\[
+\inference[sel]{
+    \sempair{iv} \Downarrow \valpair{[n]}{[idx_1, \dots, idx_n]} \\
+    \sempair{e} \Downarrow \valpair{[shp_1, \dots, shp_p]}{[data_1, \dots, data_q]}
+    }{
+    \sempair{\selexpr{iv}{e}} \Downarrow \valpair{[shp_1, \dots, shp_{p-n}]}{[data_x, \dots, data_{x+s-1}]}
+    }
+\]
+\vspace{-15pt}
+\begin{align*}
+    \text{where } x &= row\_major\ iv\ e \\
+    \text{and } s &= \textstyle\prod_{i=1}^{p-n} shp_i
+\end{align*}
+
+Unary mathematical operators apply the operator to each element of the array.
+Binary mathematical operators work element-wise, meaning that the two arrays must be of the same shape.
+Additionally the right hand array may also be a scalar, which is internally broadcast to be of the same shape as the left hand array.
+Broadcasting means that if the right hand side is a scalar, it becomes an array of the same shape as the left hand argument filled with the original value of that scalar.
+\[
+\inference[unary]{
+    \sempair{e} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1, \dots, data_m]}
+    }{
+    \sempair{\uopexpr{e}} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[\uopexpr{data_1}, \dots, \uopexpr{data_m}]}
+    }
+\]
+\[
+\inference[binary]{
+    \sempair{e_l} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1^l, \dots, data_m^l]} \\
+    \sempair{e_r} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1^r, \dots, data_m^r]}
+    }{
+    \sempair{\bopexpr{e_l}{e_r}} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[(\bopexpr{data_1^l}{data_1^r}), \dots, (\bopexpr{data_m^l}{data_m^r})]}
+    }
+\]
+
+Unary and binary equality operators work slightly differently, as they will always return a boolean value, which is internally represented as a scalar of value $0$ for false, and $1$ for true.
+For the unary case the shape does not matter, but for the binary case we will have to make sure both sides are of the same shape.
+\[
+\inference[unary]{
+    \sempair{e} \Downarrow \valpair{\_}{[data_1, \dots, data_m]}
+    }{
+    \sempair{\uopexpr{e}} \Downarrow \valpair{[\,]}{[\uopexpr{data_1} \wedge \dots \wedge \uopexpr{data_m}]}
+    }
+\]
+\[
+\inference[binary]{
+    \sempair{e_l} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1^l, \dots, data_m^l]} \\
+    \sempair{e_r} \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1^r, \dots, data_m^r]}
+    }{
+    \sempair{\bopexpr{e_l}{e_r}} \Downarrow \valpair{[\,]}{[(\bopexpr{data_1^l}{data_1^r}) \wedge \dots \wedge (\bopexpr{data_m^l}{data_m^r})]}
+    }
+\]
+
+In the with expression we use the generator to get the shape of the result and the default argument.
+This default argument corresponds to some sub-list of the shape.
+We then find the range, to which we will apply the in-expression, from the lower and upper bounds.
+For each index in this range we add a variable $x$ to the environment that maps to this index.
+The resulting value, which can be a scalar or an array, is then placed at the correct position in the result, replacing the default argument.
+
+\[
+\inference[with]{
+    \sempair{e_{gen}} \Downarrow \valpair{[n]}{[shp_1, \dots, shp_n] = shp} \\
+    \sempair{e_{def}} \Downarrow \valpair{[shp_p, \dots, shp_n]}{[def_1, \dots, def_m] = def} \\
+    \sempair{e_l}     \Downarrow \valpair{[p]}{[idx_1^l, \dots, idx_p^l] = l} \\
+    \sempair{e_u}     \Downarrow \valpair{[p]}{[idx_1^u, \dots, idx_p^u] = u} \\
+    \forall_{i\in[l,u)}:
+        \sempair[\envmap{\sigma}{x}{i}]{e}
+            \Downarrow \valpair{[shp_p, \dots, shp_n]}{[data_1^i, \dots, data_q^i] = d^i}
+    }{
+    \sempair{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}} \Downarrow \valpair{shp}{[def, \dots, def, d^l, \dots, d^{u-1}, def, \dots, def]}
+    }
+\]
+
+In the conditional expression then, the conditional must evaluate to a scalar.
+A scalar internally represents false if it is 0 and true otherwise.
+Depending on this scalar the conditional expression then evaluates to either the true case or the false case.
+These cases do not have to be of the same shape.
+\[
+\inference[cond]{
+    \sempair{e_c} \Downarrow \valpair{[\,]}{[x]} \\
+    \sempair{e_t} \Downarrow \valpair{[shp_1^t, \dots, shp_n^t]}{[data_1^t, \dots, data_m^t]} = v_t \\
+    \sempair{e_f} \Downarrow \valpair{[shp_1^f, \dots, shp_p^f]}{[data_1^f, \dots, data_q^f]} = v_f
+    }{
+    \sempair{\condexpr{e_c}{e_t}{e_f}} \Downarrow \text{if } x \not= 0 \text{ then } v_t \text{ else } v_f
+    }
+\]
+
+We add variables to the program environment using the let-expression.
+We get the result of the first expression and assign it to the variable name in the environment of the second expression, where this variable name can then be used to get that result.
+\[
+\inference[let]{
+    \sempair{e_1}
+        \Downarrow \valpair{[shp_1^x, \dots, shp_n^x]}{[data_1^x, \dots, data_m^x]} = v_1 \\
+    \sempair[\envmap{\sigma}{x}{v_1}]{e_2}
+        \Downarrow \valpair{[shp_1, \dots, shp_p]}{[data_1, \dots, data_q]} \\
+    }{
+    \sempair{\letexpr{x}{e_1}{e_2}}
+        \Downarrow \valpair{[shp_1, \dots, shp_p]}{[data_1, \dots, data_q]}
+    }
+\]
+
+The let-expression can also be used to add functions to the environment.
+These functions must also be able to use variables defined before this function, so the function needs to keep track of its own environment.
+We call this a closure.
+\[
+\inference[fun-def]{
+    \sempair{\lambdaexpr{x}{e_1}}
+        \Downarrow \cls{\lambdaexpr{x}{e_1}}{\sigma} \\
+    \sempair[\envmap{\sigma}{f}{\cls{\lambdaexpr{x}{e_1}}{\sigma}}]{e_2}
+        \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1, \dots, data_m]}
+    }{
+    \sempair{\letexpr{f}{\lambdaexpr{x}{e_1}}{e_2}}
+        \Downarrow \valpair{[shp_1, \dots, shp_n]}{[data_1, \dots, data_m]}
+    }
+\]
+
+Now that we can add lambda expressions to the environment, we can apply arguments to these expressions to get their results.
+These arguments must be values since we do not have a higher-order language.
+When the expression is another function, we use currying to apply multiple parameters.
+So an application can result in a value, or in a closure to which we can again apply an argument.
+\[
+\inference[apply]{
+    \sempair{a}
+        \Downarrow \valpair{[shp_1^a, \dots, shp_n^a]}{[data_1^a, \dots, data_m^a]} = v_a \\
+    \sempair[\envmap{\sigma'}{x}{v_a}]{e}
+        \Downarrow \boldsymbol{(}
+            \text{if } e = \lambdaexpr{y}{e_2} \text{ then }
+                \cls{\lambdaexpr{y}{e_2}}{\sigma'[x \to v_a]} \\
+            \text{ else }
+                \valpair{[shp_1, \dots, shp_p]}{[data_1, \dots, data_q]}
+        \boldsymbol{)} = v_e \hspace{-26mm}\\
+    }{
+    \sempair{(\cls{\lambdaexpr{x}{e}}{\sigma'})\, a} \Downarrow v_e
+    }
+\]

@@ -1,0 +1,95 @@
+\section{Example}
+Lets now take a look at an example of a rewrite.
+We will be extending the example \texttt{take n xs} from the inference.
+We will use this function to implement a function that shifts the values of an array left or right by some amount \texttt{n}.
+
+This program is shown below, along with the pre-computed demands for each user-defined function, these are computed like we did in the inference section (\ref{sec:inference}).
+The program creates a list ranging from $0$ to $99$ and shifts those values 20 indices to the right, placing zeros at the now empty indices.
+\begin{lstlisting}
+# demand: [[0,3,3,3], [0,1,2,3]]
+let take = \n.\arr.
+    let ofs = if n > 0 then 0
+        else (shape arr).([0]) + n
+    in
+    gen [|n|] 0 with [n * 0] <= iv < [|n|] in
+        arr.(iv + ofs)
+in
+
+# demand: [[0,3,3,3], [0,1,2,3]]
+let drop = \n.\arr.
+    if n > 0 then
+        take (n - (shape arr).([0])) arr
+    else
+        take ((shape arr).([0]) + n) arr
+in
+
+# demand: [[0,3,3,3], [0,1,2,3]]
+let shift = \n.\arr.
+    let pad = gen (shape (take n arr)) 0 in     # (1)
+    let xs = drop (-n) arr in
+    if n > 0 then pad ++ xs
+        else xs ++ pad
+in
+
+let size = 20000 in
+let arr = gen size 0
+    with 0 <= iv < size in iv in
+shift 5000 arr
+\end{lstlisting}
+
+As can be seen in the first line of the shift function (1), we compute the entire result of \texttt{take}, but then only use its shape.
+So instead of looking at rewriting the entire program we will look at how this line would be rewritten, as it is the most interesting.
+
+Lets assume we want the full result of this expression and that the parameters have not been rewritten to a lower level, we would then have to apply the following rewrite rule to the with-expression:
+\begin{align*}
+\reduce{F}{\genexpr{(\shpexpr{(take\; n\; arr)})}{0}}
+    &= \genexpr{\reduce{F}{\shpexpr{(take\; n\; arr)}}}{\reduce{F}{0}} \\
+    &= \genexpr{\reduce{F}{\shpexpr{(take\; n\; arr)}}}{0}
+\end{align*}
+%
+We know that if we want the full value of a shape, we can rewrite the inner expression to the shape level.
+We would officially use currying currying here, but we won't worry about those extra steps in this example and just combine them.
+\begin{align*}
+\reduce{F}{\genexpr{(\shpexpr{(take\; n\; arr)})}{0}}
+    &= \genexpr{\reduce{S}{(take\; n)\; arr}}{0} \\
+    &= \genexpr{\reduce{S}{take\; n\; arr}}{0}
+\end{align*}
+Now we are going to need a new version of the \texttt{take} function, which we will call \texttt{take\_s}.
+Usually this would already been done by this point but for readability we'll change the order up a bit.
+First we can the let-expression by removing the variable $\textit{ofs}$ (offset), this is possible because the demand of $\textit{ofs}$ in the with-expression is $\mathcal{N}$.
+The rewrite of the with-expression is also very simple as we only need its shape, which is given by the programmer.
+\begin{align*}
+\reduce{S}{\letexpr{\textit{ofs}}{e_{cond}}{e_{with}}}
+    &= \reduce{S}{e_{with}} \\
+    &= \reduce{F}{[|n|]} \\
+    &= [\reduce{F}{|n|}] \\
+    &= [|\reduce{F}{n}|] \\
+    &= [|n|]
+\end{align*}
+So our \texttt{take n arr} function is now a lot simpler.
+\begin{align*}
+    \text{let } take\_s = \lambdaexpr{n}{\lambdaexpr{arr}{[|n|]}}
+\end{align*}
+We now get the application rule, but since \texttt{take} is a pointer to a lambda expression, we will point to the rewritten function of the required level by changing the name of this pointer.
+We also need to know to what level we need to rewrite the variables, for this we use the demand we have found earlier.
+Again, in the rules we would use currying, but here we will just do both parameters at once.
+\begin{align*}
+\reduce{F}{\genexpr{(\shpexpr{(take\; n\; arr)})}{0}}
+    &= \genexpr{(take\_s\; \reduce{X}{n}\; \reduce{Y}{arr})}{0} \\
+        &\quad\text{where } \mathcal{X} = \pv{\texttt{take}}[0][2] \\
+        &\hspace{47pt} = [[0,3,3,3], [0,1,2,3]][0][2] \\
+        &\hspace{47pt} = [0,3,3,3][2] \\
+        &\hspace{47pt} = 3 \\
+        &\quad\text{and } \mathcal{Y} = \pv{\texttt{take}}[1][2] \\
+        &\hspace{37.5pt} = [[0,3,3,3], [0,1,2,3]][1][2] \\
+        &\hspace{37.5pt} = [0,1,2,3][2] \\
+        &\hspace{37.5pt} = 2 \\
+    &= \genexpr{(take\_s\; \reduce{F}{n}\; \reduce{S}{arr})}{0}
+\end{align*}
+Which finally results in the program below.
+Especially if we expand \texttt{take\_s} we see that this computation is a lot faster and skips a lot of steps that have become unnecessary when computing only the shape.
+\begin{align*}
+\reduce{F}{\genexpr{(\shpexpr{(take\; n\; arr)})}{0}}
+    &= \genexpr{(take\_s\; n\; (\shpexpr{arr}))}{0} \\
+    &= \genexpr{((\lambdaexpr{n}{\lambdaexpr{arr}{[|n|]}})\; n\; (\shpexpr{arr}))}{0} \\
+\end{align*}

@@ -1,0 +1,335 @@
+\section{Proof}
+The property we just discussed can be defined formally as the following theorem.
+\begin{align*}
+    \forall_{prg}\hspace{-3pt}:
+        \left( \sempair[\emptyset]{prg} \DownA val \right) \to
+        \left( \sempair[\emptyset]{\reduce[\emptyset]{F}{prg}} \DownA val \right)
+\end{align*}
+Which states that for every possible program; if that program, initially with the empty program environment, evaluates to a value $val$, then the full rewrite of that program must also evaluate to the value $val$.
+
+To prove this theorem we need to show something similar for the shape and dimensionality cases.
+But since these cases change the rewrite level of variables, we will need to use that rewrite level environment $\varepsilon$ to also update the program environment.
+
+To do so we will write $\varepsilon.\sigma$, which takes keys $x$ from the program environment $\sigma$ and updates their values $v$ into $(\shpexpr{v})$ if $\varepsilon[x] = \mathcal{S}$, and into $(\dimexpr{v})$ if $\varepsilon[x] = \mathcal{D}$.
+
+For example lets take a program environment that contains a value $v$ for the variable $x$, then: $\sigma = \{ \dem{x}{v} \}$, and a rewrite level environment where $x$ has been rewritten to level $\mathcal{S}$, then: $\varepsilon = \{ \dem{x}{\mathcal{S}} \}$.
+Then $\varepsilon.\sigma$ takes key $x$ and finds that its rewrite level is $\mathcal{S}$, which means that the new program environment $\sigma'$ becomes $\{ \dem{x}{\mathcal{S}(v)} \} = \{ \dem{x}{\shpexpr{v}} \}$.
+
+Using this we can now create a lemma that includes cases for shape and dimensionality.
+For those cases we update their program environments.
+We will now also look at separate expressions, and not the entire program.
+So here we have the environments $\sigma$ and $\varepsilon$ instead of empty sets.
+\begin{align*}
+    \forall_{expr}\hspace{-3pt}:
+    \left( \sempair{expr} \DownA val \right)
+    &\to \left( \sempair{\reduce{F}{expr}} \DownA val \right) \\
+        &\hspace{6pt}\wedge \left( \sempair[\varepsilon.\sigma]{\reduce{S}{expr}} \DownA \shpexpr{val} \right) \\
+        &\hspace{6pt}\wedge \left( \sempair[\varepsilon.\sigma]{\reduce{D}{expr}} \DownA \dimexpr{val} \right)
+\end{align*}
+Here we can not take any rewrite level environment $\varepsilon$, but luckily we know all possible states for this environment.
+We find these by first applying our $\mathcal{SD}$ rule to the expression, which gives us an environment mapping the free variables of the expression to their corresponding demands.
+Then for each of these demands we take one specific index, depending on the rewrite rule this environment is in.
+These being $3$ for $\mathcal{F}$, $2$ for $\mathcal{S}$, and $1$ for $\mathcal{D}$.
+The environment $\varepsilon$ is then a combination of all possible assignments of variables to rewrite levels, where this rewrite level is at least the one we just found.
+
+For example, lets say that applying $\sd{expr}{[0,1,2,3]}$ resulted to the environment $\{ \dem{x}{[0,2,2,3]},\, \dem{y}{0,1,2,3} \}$.
+Then in the case of $\reduce{S}{expr}$ we take index $2$ of both \texttt{x} and \texttt{y}, giving us: $\{ \dem{x}{2},\, \dem{y}{2} \}$.
+Now both \texttt{x} and \texttt{y} must be at least $\mathcal{S}$.
+Getting all possible combinations with at least this demand then gets us the following possible environments: $\varepsilon \in \{\, \{\dem{x}{\mathcal{S}},\dem{y}{\mathcal{S}}\},\, \{\dem{x}{\mathcal{S}},\dem{y}{\mathcal{F}}\},\, \{\dem{x}{\mathcal{F}},\dem{y}{\mathcal{S}}\},\, \{\dem{x}{\mathcal{F}},\dem{y}{\mathcal{F}}\}\, \}$.
+
+\section{Induction}
+We will show using structural induction that this theorem holds, which will prove that that these rewrite rules do not change the result of a valid expression with a valid input.
+In some cases we will be able to prove this by showing that the rewrite evaluates to the same expression.
+In other cases this will not be possible, in which case we will show that the rewrite evaluates to the same value as the original program.
+
+\subsection{Base cases}
+Our base cases are two non-recursive expressions $value$ and \texttt{VarId}.
+The case $value$ trivially holds, as it just gets the data, shape, or dimensionality of the value as requested by the rewrite.
+
+Next we have the \texttt{VarId} case, where we will take a variable $x$ with corresponding value $v$ from the program environment.
+We have to show that the rewrite rules hold for different cases of the current rewrite level of $x$.
+We do this by showing that the expressions evaluate to the correct values, these being: $v$ for $\mathcal{F}$, $(\shpexpr{v})$ for $\mathcal{S}$, and $(\dimexpr{v})$ for $\mathcal{D}$.
+In this case we will also see why our choice for possible $\varepsilon$'s is correct.
+
+The $\mathcal{F}$ case is easy, we can always simply lookup the value of variable $x$ in the program environment without any extra work.
+So we will take this opportunity to show how these prove rules will be formulated.
+\begin{align*}
+    \sempairb{\reduce{F}{x}}
+        &= \sempairb{x} \\
+        &\DownA \sigma[x] \\
+        &= v
+\end{align*}
+In the first line we use our definition of the rewrite rules from Section~\ref{sec:rewrite} to rewrite the expression, here with level $\mathcal{F}$.
+This then gives us an expression we can evaluate.
+In the second line we then use our semantic rules from Section~\ref{sec:semantics} to get the evaluated value from this expression.
+
+For the shape and dimensionality cases we need to make use of the $\varepsilon.\sigma$ rule defined above to update the program environment before we can evaluate these expressions.
+This new environment can then be used to find the (potentially rewritten) value of variable $x$, which we can then use to evaluate the expression using our semantics.
+\begin{align*}
+    \sempairb[\varepsilon.\sigma]{\reduce{S}{x}}
+        &= \sempairb[\varepsilon.\sigma]{\shpexpr{x}}
+            &\text{if } \varepsilon[x] = \mathcal{F} \\
+        &= \sempairb[\envmap{\sigma}{x}{\reduce{F}{v}}]{\shpexpr{x}} \\
+        &= \sempairb[\envmap{\sigma}{x}{v}]{\shpexpr{x}} \\
+        &\DownA \shpexpr{(\sigma'[x])} \\
+        &= \shpexpr{v} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{S}{x}}
+        &= \sempairb[\varepsilon.\sigma]{x}
+            &\text{if } \varepsilon[x] = \mathcal{S} \\
+        &= \sempairb[\envmap{\sigma}{x}{\reduce{S}{v}}]{x} \\
+        &= \sempairb[\envmap{\sigma}{x}{\shpexpr{v}}]{x} \\
+        &\DownA \sigma'[x] \\
+        &= \shpexpr{v}
+\end{align*}
+For both cases, in the second line we find this new environment by mapping our variable \texttt{x} to either $\reduce{F}{v}$ or $\reduce{S}{e}$, depending on $\texttt{x}$'s current rewrite level.
+In the third line we can then evaluate this expression using our rewrite rules, after which we can use this new environment to look up the value of the variable \texttt{x}.
+
+\newpage
+We apply the same steps to the $\mathcal{D}$ cases.
+\begin{align*}
+    \sempairb[\varepsilon.\sigma]{\reduce{D}{x}}
+        &= \sempairb[\varepsilon.\sigma]{\dimexpr{x}}
+            &\text{if } \varepsilon[x] = \mathcal{F} \\
+        &= \sempairb[\envmap{\sigma}{x}{\reduce{F}{v}}]{\dimexpr{x}} \\
+        &= \sempairb[\envmap{\sigma}{x}{v}]{\dimexpr{x}} \\
+        &\DownA \dimexpr{(\sigma'[x])} \\
+        &= \dimexpr{v} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{D}{x}}
+        &= \sempairb[\varepsilon.\sigma]{(\shpexpr{x})[0]}
+            &\text{if } \varepsilon[x] = \mathcal{S} \\
+        &= \sempairb[\envmap{\sigma}{x}{\reduce{S}{v}}]{(\shpexpr{x})[0]} \\
+        &= \sempairb[\envmap{\sigma}{x}{\shpexpr{v}}]{(\shpexpr{x})[0]} \\
+        &\DownA (\shpexpr{(\sigma'[x])})[0] \\
+        &= (\shpexpr{(\shpexpr{v})})[0] \\
+        &= \dimexpr{v} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{D}{x}}
+        &= \sempairb[\varepsilon.\sigma]{x}
+            &\text{if } \varepsilon[x] = \mathcal{D} \\
+        &= \sempairb[\envmap{\sigma}{x}{\reduce{D}{v}}]{x} \\
+        &= \sempairb[\envmap{\sigma}{x}{\dimexpr{v}}]{x} \\
+        &\DownA \sigma'[x] \\
+        &= \dimexpr{v}
+\end{align*}
+In the case of $\mathcal{F}$ the expression evaluates to just $v$.
+For $\mathcal{S}$ it evaluates to $\shpexpr{v}$, and for $\mathcal{D}$ it evaluates to $\dimexpr{v}$.
+This is exactly what we want to show, so this case holds.
+
+\subsection{Inductive cases}
+For the inductive cases we use the lemma defined above as our induction hypothesis.
+Let's start simple and begin with binary and unary operations.
+First we take a look at only the mathematical operations.
+Since we know that mathematical operations do their operations element-wise, potentially using broadcasting on the right-hand side if it is a scalar; it follows that the result has the same shape as the array on the left.
+Because of this potential broadcasting we must take the left-hand side and not the right-hand side.
+\begin{align*}
+    \sempairb{\reduce{F}{\bopexpr{e_1}{e_2}}}
+        &= \sempairb{\bopexpr{\reduce{F}{e_1}}{\reduce{F}{e_2}}} \\
+        &\DownA \bopexpr{e_1}{e_2} \\
+    \sempairb{\reduce{S}{\bopexpr{e_1}{e_2}}}
+        &= \sempairb{\reduce{S}{e_1}} \\
+        &\DownA \shpexpr{e_1} \\
+        &= \shpexpr{(\bopexpr{e_1}{e_2})} \\
+    \sempairb{\reduce{D}{\bopexpr{e_1}{e_2}}}
+        &= \sempairb{\reduce{S}{e_1}} \\
+        &\DownA \dimexpr{e_1} \\
+        &= \dimexpr{(\bopexpr{e_1}{e_2})}
+\end{align*}
+\begin{align*}
+    \sempairb{\reduce{F}{\uopexpr{e}}}
+        &= \sempairb{\uopexpr{\reduce{F}{e}}} \\
+        &\DownA \uopexpr{e} \\
+    \sempairb{\reduce{S}{\uopexpr{e}}}
+        &= \sempairb{\uopexpr{\reduce{S}{e}}} \\
+        &\DownA \uopexpr{(\shpexpr{e})} \\
+        &= \shpexpr{(\uopexpr{e})} \\
+    \sempairb{\reduce{D}{\uopexpr{e}}}
+        &= \sempairb{\uopexpr{\reduce{D}{e}}} \\
+        &\DownA \uopexpr{(\dimexpr{e})} \\
+        &= \dimexpr{(\uopexpr{e})}
+\end{align*}
+Next come the equality operations, which always return the same default value for the shape and dimensionality cases.
+Here we make use of the fact that equality operators always return a scalar, namely $0$ for false or $1$ for true cases.
+\begin{align*}
+    \sempairb{\reduce{F}{\bopexpr{e_l}{e_r}}}
+        &= \sempairb{\bopexpr{\reduce{F}{e_l}}{\reduce{F}{e_r}}} \\
+        &\DownA \bopexpr{e_l}{e_r} \\
+    \sempairb{\reduce{S}{\bopexpr{e_l}{e_r}}}
+        &\DownA [\,] \\
+        &= \shpexpr{scalar} \\
+        &= \shpexpr{(\bopexpr{e_l}{e_r})} \\
+    \sempairb{\reduce{D}{\bopexpr{e_l}{e_r}}}
+        &\DownA 0 \\
+        &= \dimexpr{scalar} \\
+        &= \dimexpr{(\bopexpr{e_l}{e_r})}
+\end{align*}
+\begin{align*}
+    \sempairb{\reduce{F}{\uopexpr{e}}}
+        &= \sempairb{\uopexpr{\reduce{F}{e}}} \\
+        &\DownA \uopexpr{e} \\
+    \sempairb{\reduce{S}{\uopexpr{e}}}
+        &\DownA [\,] \\
+        &= \shpexpr{scalar} \\
+        &= \shpexpr{(\uopexpr{e})} \\
+    \sempairb{\reduce{D}{\uopexpr{e}}}
+        &\DownA 0 \\
+        &= \dimexpr{scalar} \\
+        &= \dimexpr{(\uopexpr{e})}
+\end{align*}
+Now we will take a look at the primitive functions.
+The shape and dimensionality cases are not very hard, though they use some common guaranteed information we get from these operations.
+We know that the shape always is a 1-dimensional array (which we will call a list), from which it follows that the shape of a shape is the shape of a list, and thus is a scalar.
+
+\begin{align*}
+    \sempairb{\reduce{F}{\shpexpr{e}}}
+        &= \sempairb{\reduce{S}{e}} \\
+        &\DownA \shpexpr{e} \\
+    \sempairb{\reduce{S}{\shpexpr{e}}}
+        &= \sempairb{[\reduce{D}{e}]} \\
+        &\DownA [\dimexpr{e}] \\
+        &= \shpexpr{(\shpexpr{e})} \\
+    \sempairb{\reduce{D}{\shpexpr{e}}}
+        &\DownA 1 \\
+        &= \dimexpr{list} \\
+        &= \dimexpr{(\shpexpr{e})}
+\end{align*}
+%
+\begin{align*}
+    \sempairb{\reduce{F}{\dimexpr{e}}}
+        &= \sempairb{\reduce{D}{e}} \\
+        &\DownA \dimexpr{e} \\
+    \sempairb{\reduce{S}{\dimexpr{e}}}
+        &\DownA [\,] \\
+        &= \shpexpr{scalar} \\
+        &= \shpexpr{(\dimexpr{e})} \\
+    \sempairb{\reduce{D}{\dimexpr{e}}}
+        &\DownA 0 \\
+        &= \dimexpr{scalar} \\
+        &= \dimexpr{(\dimexpr{e})}
+\end{align*}
+Our third primitive function is selection.
+The full rewrite of selection is very simple, but the other two cases are quite complicated.
+
+In the shape case we know that the dimensionality of $iv$ is a scalar, whose length is shorter or equal to the length of the shape of $e$, so in the rule after the induction hypothesis we take the first few values from this shape.
+But we can now also do it the other way around by first selecting the correct values and then taking the shape, which then gives us exactly the rule we want.
+
+In the dimensionality case, we can move the dimensionality operations outward to combine them in one.
+To do this we must also somehow subtract $iv$ from $e$, since we are going to only take its dimensionality we can do this be selecting $iv$ in $e$.
+\begin{align*}
+    \sempairb{\reduce{F}{\selexpr{iv}{e}}}
+        &= \sempairb{\selexpr{\reduce{F}{iv}}{\reduce{F}{e}}} \\
+        &\DownA \selexpr{iv}{e} \\
+    \sempairb{\reduce{S}{\selexpr{iv}{e}}}
+        &= \sempairb{\reduce{S}{e}[:\hspace{-2pt}\reduce{D}{iv}]} \\
+        &\DownA (\shpexpr{e})[:\hspace{-2pt}\dimexpr{iv}] \\
+        &= \shpexpr{(\selexpr{iv}{e})} \\
+    \sempairb{\reduce{D}{\selexpr{iv}{e}}}
+        &= \sempairb{\reduce{D}{e} - \reduce{D}{iv}} \\
+        &\DownA \dimexpr{e} - \dimexpr{iv} \\
+        &= \dimexpr{(\selexpr{iv}{e})}
+\end{align*}
+
+\newpage
+The conditional expression is fairly straightforward, here we can move the shape or demand expression outside of the conditional if both branches apply it.
+\begin{align*}
+    \sempairb{\reduce{F}{\condexpr{e_c}{e_t}{e_f}}}
+        &= \sempairb{\condexpr{\reduce{F}{e_c}}{\reduce{F}{e_t}}{\reduce{F}{e_f}}} \\
+        &\DownA \condexpr{e_c}{e_t}{e_f} \\
+    \sempairb{\reduce{S}{\condexpr{e_c}{e_t}{e_f}}}
+        &= \sempairb{\condexpr{\reduce{F}{e_c}}{\reduce{S}{e_t}}{\reduce{S}{e_f}}} \\
+        &\DownA \condexpr{e_c}{(\shpexpr{e_t})}{(\shpexpr{e_f})} \\
+        &= \shpexpr{(\condexpr{e_c}{e_t}{e_f})} \\
+    \sempairb{\reduce{D}{\condexpr{e_c}{e_t}{e_f}}}
+        &= \sempairb{\condexpr{\reduce{F}{e_c}}{\reduce{D}{e_t}}{\reduce{D}{e_f}}} \\
+        &\DownA \condexpr{e_c}{(\dimexpr{e_t})}{(\dimexpr{e_f})} \\
+        &= \dimexpr{(\condexpr{e_c}{e_t}{e_f})}
+\end{align*}
+The next expression is the with-expression.
+Here we require the programmer to give us the resulting shape with $e_{gen}$.
+The $\mathcal{F}$ case is trivial, in the other two cases we can simply use this $e_gen$ inside of a new with-expression of which we take the shape of demand, which will discard the computed values.
+\begin{align*}
+    \sempairb{\reduce{F}{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}}}
+        &= \sempairb{\withexpr{\reduce{F}{e_{gen}}}{\reduce{F}{e_{def}}}{\reduce{F}{e_l}}{x}{\reduce{F}{e_u}}{\reduce{F}{e}}} \\
+        &\DownA \withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e} \\
+    \sempairb{\reduce{S}{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}}}
+        &= \sempairb{\reduce{F}{e_{gen}}} \\
+        &\DownA e_{gen} \\
+        &= \shpexpr{\left(\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}\right)} \\
+    \sempairb{\reduce{D}{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}}}
+        &= \sempairb{\reduce{S}{e_{gen}}} \\
+        &\DownA (\shpexpr{e_{gen}})[0] \\
+        &= \dimexpr{\left(\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}\right)}
+\end{align*}
+
+\newpage
+Next we get the let-expression.
+From our semantics we know that; if the let-expression evaluates to a value $v_2$, then there exists an evaluation $v_1$ of $e_1$ such that expression $e_2$ with $x$ mapped to $v_1$ evaluates to $v_2$.
+\begin{align*}
+    \left( \sempairb{\letexpr{x}{e_1}{e_2}} \DownA v_2 \right)
+        &\to \exists_{v_1}\hspace{-4pt}: \left( \sempairb{e_1} \DownA v_1 \right)
+            \wedge \left( \sempairb[\envmap{\sigma}{x}{v_1}]{e_2} \DownA v_2 \right)
+\end{align*}
+Like with \texttt{VarId}, we have separate cases within each rewrite rule, depending on the demand of the variable $x$; $dem_x$, which we find by computing $\pv{\lambdaexpr{x}{e_2}}[0]$.
+Here these cases overlap nicely, so we can combine them in a single case where the demand of $x$ is $\mathcal{X}$.
+\begin{align*}
+    \pushleft{\text{if } dem_x[3] = \mathcal{X}\hspace{-2pt}:} \\
+    \sempairb{\reduce{F}{\letexpr{x}{e_1}{e_2}}}
+        &= \sempairb{\letexpr{x}{\reduce{X}{e_1}}{\reduce{F}{e_2}}} \\
+        &\DownA \letexpr{x}{\mathcal{X}(v_1)}{\sempairb[\varepsilon.\sigma]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{F}{e_2}}} \\
+        &= \letexpr{x}{\mathcal{X}(v_1)}{\sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_1)}]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{F}{e_2}}} \\
+        &= \sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_1)}]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{F}{e_2}} \\
+        &\DownA v_2
+    \\
+    \pushleft{\text{if } dem_x[2] = \mathcal{X}\hspace{-2pt}:} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{S}{\letexpr{x}{e_1}{e_2}}}
+        &= \sempairb{\letexpr{x}{\reduce{X}{e_1}}{\reduce{S}{e_2}}} \\
+        &\DownA \letexpr{x}{\mathcal{X}(v_1)}{\sempairb[\varepsilon.\sigma]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{S}{e_2}}} \\
+        &= \letexpr{x}{\mathcal{X}(v_1)}{\sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_1)}]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{S}{e_2}}} \\
+        &= \sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_1)}]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{S}{e_2}} \\
+        &\DownA \shpexpr{v_2}
+    \\
+    \pushleft{\text{if } dem_x[2] = \mathcal{X}\hspace{-2pt}:} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{D}{\letexpr{x}{e_1}{e_2}}}
+        &= \sempairb{\letexpr{x}{\reduce{X}{e_1}}{\reduce{D}{e_2}}} \\
+        &\DownA \letexpr{x}{\mathcal{X}(v_1)}{\sempairb[\varepsilon.\sigma]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{D}{e_2}}} \\
+        &= \letexpr{x}{\mathcal{X}(v_1)}{\sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_1)}]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{D}{e_2}}} \\
+        &= \sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_1)}]{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{D}{e_2}} \\
+        &\DownA \dimexpr{v_2}
+\end{align*}
+
+\newpage
+And finally we have function application.
+From our semantics we know that if; the application-expression evaluates to a value $v_e$, then there exists an evaluation $v_a$ of $a$ such that expression $e$ with $x$ mapped to $v_a$ evaluates to $v_e$.
+\begin{align*}
+    \left( \sempairb{\applyexpr{x}{e}{a}} \DownA v_e \right)
+        &\to \exists_{v_a}\hspace{-4pt}: \left( \sempairb{a} \DownA v_a \right)
+            \wedge \left( \sempairb[\envmap{\sigma}{x}{v_a}]{e} \DownA v_e \right)
+\end{align*}
+We again have separate cases within each rewrite rule, depending on the demand of the variable $x$.
+Here we find this demand with: $dem_x = \pv{\lambdaexpr{x}{e}}[0]$.
+Again there is a lot of overlap within these cases, so like before we combine them using $\mathcal{X}$ for the demand we find for $x$.
+\begin{align*}
+    \pushleft{\text{if } dem_x[3] = \mathcal{X}\hspace{-2pt}:} \\
+    \sempairb{\reduce{F}{\applyexpr{x}{e}{a}}}
+        &= \sempairb{\applyexpr{x}{\reduce[\envmap{\varepsilon}{x}{X}]{F}{e}}{\reduce{X}{a}}} \\
+        &\DownA \applyexpr{x}{\sempairb[\varepsilon.\sigma]{\reduce[\envmap{\varepsilon}{x}{X}]{F}{e}}}{\mathcal{X}(v_a)} \\
+        &= \applyexpr{x}{\sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_a)}]{\reduce[\envmap{\varepsilon}{x}{X}]{F}{e}}}{\mathcal{X}(v_a)} \\
+        &= \sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_a)}]{\reduce[\envmap{\varepsilon}{x}{X}]{F}{e}} \\
+        &\DownA v_e
+    \\
+    \pushleft{\text{if } dem_x[3] = \mathcal{X}\hspace{-2pt}:} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{S}{\applyexpr{x}{e}{a}}}
+        &= \sempairb{\applyexpr{x}{\reduce[\envmap{\varepsilon}{x}{X}]{S}{e}}{\reduce{X}{a}}} \\
+        &\DownA \applyexpr{x}{\sempairb[\varepsilon.\sigma]{\reduce[\envmap{\varepsilon}{x}{X}]{F}{e}}}{\mathcal{X}(v_a)} \\
+        &= \applyexpr{x}{\sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_a)}]{\reduce[\envmap{\varepsilon}{x}{X}]{F}{e}}}{\mathcal{X}(v_a)} \\
+        &= \sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_a)}]{\reduce[\envmap{\varepsilon}{x}{X}]{S}{e}} \\
+        &\DownA \shpexpr{v_e}
+    \\
+    \pushleft{\text{if } dem_x[3] = \mathcal{X}\hspace{-2pt}:} \\
+    \sempairb[\varepsilon.\sigma]{\reduce{D}{\applyexpr{x}{e}{a}}}
+        &= \sempairb{\applyexpr{x}{\reduce[\envmap{\varepsilon}{x}{X}]{D}{e}}{\reduce{X}{a}}} \\
+        &\DownA \applyexpr{x}{\sempairb[\varepsilon.\sigma]{\reduce[\envmap{\varepsilon}{x}{X}]{D}{e}}}{\mathcal{X}(v_a)} \\
+        &= \applyexpr{x}{\sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_a)}]{\reduce[\envmap{\varepsilon}{x}{X}]{D}{e}}}{\mathcal{X}(v_a)} \\
+        &= \sempairb[\envmap{\sigma}{x}{\mathcal{X}(v_a)}]{\reduce[\envmap{\varepsilon}{x}{X}]{D}{e}} \\
+        &\DownA \dimexpr{v_e}
+\end{align*}
+
+We have now shown that the theorem holds for each of our expressions, which concludes this proof and shows that; for all valid programs $prg$ in the original semantics, the rewrite $\reduce[\emptyset]{F}{prg}$ of this program is part of our new semantics and evaluates to the same value as the original program.

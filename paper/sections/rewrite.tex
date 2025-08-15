@@ -1,0 +1,171 @@
+\chapter{Rewrite}\label{sec:rewrite}
+
+The symbols $\mathcal{F}$, $\mathcal{S}$, $\mathcal{D}$, and $\mathcal{N}$ explain the different levels of information of a value.
+They correspond to the demand values $3$, $2$, $1$, and $0$ from the propagation vectors respectively.
+
+The recursive functions $\reduce{F}{expr}$, $\reduce{S}{expr}$, $\reduce{D}{expr}$, and $\reduce{N}{expr}$ define the rewrite rules of the expression for the corresponding demand values.
+The rewrite rule $\reduce{N}{expr}$ always returns $0$.
+Here the environment $\varepsilon$ indicates to which level the corresponding variable at runtime will have been evaluated at that point.
+
+\section{Rules}
+We will start with the cases for values and variables.
+The $value$ rule is very straightforward, we just rewrite the value to the required level.
+In the case of \texttt{VarId}, we first check if the variable has already been rewritten previously, and then only rewrite it again if necessary.
+For example, in the $\mathcal{S}$ case, if the variable is currently still in its full version, we take the shape of that variable.
+But when the variable has already been rewritten to the shape level, no more rewrites are necessary and we thus leave it as is.
+\begin{align*}
+    \reduce{F}{value} &= value \\
+    \reduce{S}{value} &= \shpexpr{value} \\
+    \reduce{D}{value} &= \dimexpr{value}
+\end{align*}
+\begin{align*}
+    \reduce{F}{\texttt{VarId}} &= \texttt{VarId} \\
+    \reduce{S}{\texttt{VarId}} &= \begin{cases}
+            \shpexpr{\texttt{VarId}} &\text{if } \varepsilon[\texttt{VarId}] = \mathcal{F} \\
+            \texttt{VarId}           &\text{if } \varepsilon[\texttt{VarId}] = \mathcal{S}
+        \end{cases} \\
+    \reduce{D}{\texttt{VarId}} &= \begin{cases}
+            \dimexpr{\texttt{VarId}}      &\text{if } \varepsilon[\texttt{VarId}] = \mathcal{F} \\
+            (\shpexpr{\texttt{VarId}})[0] &\text{if } \varepsilon[\texttt{VarId}] = \mathcal{S} \\
+            \texttt{VarId}                &\text{if } \varepsilon[\texttt{VarId}] = \mathcal{D}
+        \end{cases}
+\end{align*}
+Next up we will look at lambda-expressions and -applications.
+Here we see how the variable from the base case \texttt{VarId} can be rewritten before being evaluated.
+First we get the demand of the free variable by looking at its propagation vector.
+We then rewrite the variable to that level.
+This rewritten variable is then passed to the rewritten lambda function, where the environment is updated with the new level of the free variable to avoid incorrectly reducing the level multiple times.
+\begin{align*}
+    \reduce{F}{\lambdaexpr{x}{e}} &= \begin{cases}
+            \lambdaexpr{x}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{F}{e}}
+                &\text{if } pv_x[3] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{F}{e}
+                &\text{if } pv_x[3] = \mathcal{N}
+        \end{cases} \\
+    \reduce{S}{\lambdaexpr{x}{e}} &= \begin{cases}
+            \lambdaexpr{x}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{S}{e}}
+                &\text{if } pv_x[2] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{S}{e}
+                &\text{if } pv_x[2] = \mathcal{N}
+        \end{cases} \\
+    \reduce{D}{\lambdaexpr{x}{e}} &= \begin{cases}
+            \lambdaexpr{x}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{D}{e}}
+                &\text{if } pv_x[1] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{D}{e}
+                &\text{if } pv_x[1] = \mathcal{N}
+        \end{cases} \\
+        &\text{where } pv_x = \pv{\lambdaexpr{x}{e}}[0]
+\end{align*}
+\begin{align*}
+    \reduce{F}{\applyexpr{x}{e}{a}} &= \begin{cases}
+            \applyexpr{x}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{F}{e}}{\reduce{X}{a}}
+                &\text{if } pv_x[3] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{F}{e}
+                &\text{if } pv_x[3] = \mathcal{N}
+        \end{cases} \\
+    \reduce{S}{\applyexpr{x}{e}{a}} &= \begin{cases}
+            \applyexpr{x}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{S}{e}}{\reduce{X}{a}}
+                &\text{if } pv_x[2] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{S}{e}
+                &\text{if } pv_x[2] = \mathcal{N}
+        \end{cases} \\
+    \reduce{D}{\applyexpr{x}{e}{a}} &= \begin{cases}
+            \applyexpr{x}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{D}{e}}{\reduce{X}{a}}
+                &\text{if } pv_x[1] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{D}{e}
+                &\text{if } pv_x[1] = \mathcal{N}
+        \end{cases} \\
+        &\text{where } pv_x = \pv{\lambdaexpr{x}{e}}[0]
+\end{align*}
+
+The let-expression works similarly to the lambda cases, where we find the best level to rewrite the variable $x$ to and pass that on to the inner expression.
+\begin{align*}
+    \reduce{F}{\letexpr{x}{e_1}{e_2}} &= \begin{cases}
+            \letexpr{x}{\reduce{X}{e_1}}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{F}{e_2}}
+                &\text{if } pv_x[3] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{F}{e_2}
+                &\text{if } pv_x[3] = \mathcal{N}
+        \end{cases} \\
+    \reduce{S}{\letexpr{x}{e_1}{e_2}} &= \begin{cases}
+            \letexpr{x}{\reduce{X}{e_1}}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{S}{e_2}}
+                &\text{if } pv_x[2] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{S}{e_2}
+                &\text{if } pv_x[2] = \mathcal{N}
+        \end{cases} \\
+    \reduce{D}{\letexpr{x}{e_1}{e_2}} &= \begin{cases}
+            \letexpr{x}{\reduce{X}{e_1}}{\reduce[\envmap{\varepsilon}{x}{\mathcal{X}}]{D}{e_2}}
+                &\text{if } pv_x[1] = \mathcal{X}\hspace{-2pt} \in\hspace{-2pt} \{ \mathcal{F},\mathcal{S},\mathcal{N} \} \\
+            \reduce{D}{e_2}
+                &\text{if } pv_x[1] = \mathcal{N}
+        \end{cases} \\
+        &\text{where } pv_x = \pv{\lambdaexpr{x}{e_2}}[0]
+\end{align*}
+
+The conditional expression is also very simple.
+We always need the full rewrite of the condition, since even the dimensionality of the two branches can differ.
+Then we rewrite the two branches according to the requested rewrite level.
+\begin{align*}
+    \reduce{F}{\condexpr{e_c}{e_t}{e_f}}
+        &= \condexpr{\reduce{F}{e_c}}{\reduce{F}{e_t}}{\reduce{F}{e_f}} \\
+    \reduce{S}{\condexpr{e_c}{e_t}{e_f}}
+        &= \condexpr{\reduce{F}{e_c}}{\reduce{S}{e_t}}{\reduce{S}{e_f}} \\
+    \reduce{D}{\condexpr{e_c}{e_t}{e_f}}
+        &= \condexpr{\reduce{F}{e_c}}{\reduce{D}{e_t}}{\reduce{D}{e_f}}
+\end{align*}
+
+Since the with-expression we use expects the shape of the resulting value as an argument, the rewrites can simply use that value to find the shape and dimensionality.
+Making the rewrite of the with-expression very simple.
+\begin{align*}
+    \reduce{F}{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}}
+        &= \withexpr{\reduce{F}{e_{gen}}}{\reduce{F}{e_{def}}}{\reduce{F}{e_l}}{x}{\reduce{F}{e_u}}{\reduce{F}{e}} \\
+    \reduce{S}{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}}
+        &= \reduce{F}{e_{gen}} \\
+    \reduce{D}{\withexpr{e_{gen}}{e_{def}}{e_l}{x}{e_u}{e}}
+        &= \reduce{S}{e_{gen}}[0]
+\end{align*}
+
+Next we have all primitive functions and operators.
+Selection is quite difficult as the dimensionality of the index vector can be smaller than that of the expression, because we allow selecting sub-arrays and not just individual scalars.
+
+When taking the shape we select the first few values from the shape of the expression, depending on the dimensionality of the index vector.
+When taking the dimensionality we know that it must be the difference of the expression and index vector.
+\begin{align*}
+    \reduce{F}{\selexpr{iv}{e}} &= \selexpr{\reduce{F}{iv}}{\reduce{F}{e}} \\
+    \reduce{S}{\selexpr{iv}{e}} &= \reduce{S}{e}[:\hspace{-2pt}\reduce{D}{iv}] \\
+    \reduce{D}{\selexpr{iv}{e}} &= \reduce{D}{e} - \reduce{D}{iv}
+\\[5pt]
+    \reduce{F}{\shpexpr{e}} &= \reduce{S}{e} \\
+    \reduce{S}{\shpexpr{e}} &= [\reduce{D}{e}] \\
+    \reduce{D}{\shpexpr{e}} &= 1
+\\[5pt]
+    \reduce{F}{\dimexpr{e}} &= \reduce{D}{e} \\
+    \reduce{S}{\dimexpr{e}} &= [] \\
+    \reduce{D}{\dimexpr{e}} &= 0
+\end{align*}
+
+And finally we get to binary and unary operations.
+These contain two separate cases for maths and equality operations.
+This is because we know that an equality operation will always return a scalar, specifically always 0 or 1, so we will always know exactly what the shape and dimensionality will be.
+Maths operations are applied element-wise, where the right hand argument might have been broadcast, so maths operations will not change the shape and dimensionality of the left hand argument.
+
+\begin{align*}
+    \reduce{F}{\bopexpr{e_l}{e_r}} &= \bopexpr{\reduce{F}{e_l}}{\reduce{F}{e_r}} \\
+    \reduce{S}{\bopexpr{e_l}{e_r}} &= \begin{cases}
+            \reduce{S}{e_l} &\text{if } \texttt{bop} \in maths \\
+            []              &\text{if } \texttt{bop} \in equality
+        \end{cases} \\
+    \reduce{D}{\bopexpr{e_l}{e_r}} &= \begin{cases}
+            \reduce{D}{e_l} &\text{if } \texttt{bop} \in maths \\
+            0               &\text{if } \texttt{bop} \in equality
+        \end{cases}
+\\[5pt]
+    \reduce{F}{\uopexpr{e}} &= \uopexpr{\reduce{F}{e}} \\
+    \reduce{S}{\uopexpr{e}} &= \begin{cases}
+            \reduce{S}{e} &\text{if } \texttt{uop} \in maths \\
+            []            &\text{if } \texttt{uop} \in equality
+        \end{cases} \\
+    \reduce{D}{\uopexpr{e}} &= \begin{cases}
+            \reduce{D}{e} &\text{if } \texttt{uop} \in maths \\
+            0             &\text{if } \texttt{uop} \in equality
+        \end{cases}
+\end{align*}

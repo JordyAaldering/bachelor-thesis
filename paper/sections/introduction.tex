@@ -1,0 +1,18 @@
+\chapter{Introduction}
+
+In this paper we will be discussing a way of optimising array programming languages.
+In array programming languages all values are represented as, possibly multidimensional, arrays.
+These arrays also come with a shape vector, which gives the length of each dimension.
+Sometimes when executing a program we will not need the actual values of an array.
+Perhaps we only need the shape or dimensionality, or even nothing at all.
+Our goal then is to rewrite that program in such a way that any unused information is removed, avoiding unnecessary computations.
+If we apply this idea to a strictly evaluated language we get some of the benefits of lazy evaluation, without the added overhead it introduces.
+This idea of generating new programs by optimising them before evaluation is called partial evaluation~\cite{introduction-to-partial-evaluation,partial-evaluation,tensor-comprehension}.
+
+We will start this paper by defining a small prototype language, to which we will apply our rewrite.
+This rewrite is a set of rules, one for each expression in the language, which defines how a certain expression has to be rewritten for each required level of information.
+We will also discuss what it means for these rules to be correct, which will then be proven using induction.
+To be able to define these rules we must also know the minimal required level of information, so we will first have to find a way to do this before we are able to define our rewrite rules.
+Previous works have also looked at possible ways of finding this required level of information~\cite{binding-scope-analysis,binding-time-analysis,optimising-array-programs}.
+
+The implementation of the prototype language will briefly be explained, after which we will use it to evaluate the impact of these rewrite rules on the runtime of an example program, which will show that this rewrite has a noticeable impact on the performance of a small but realistic program.

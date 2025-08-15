@@ -1,0 +1,18 @@
+\chapter{Conclusion}\label{sec:conclusion}
+
+In this paper we have seen how programs written in array programming languages can be rewritten in a way that finds a balance between strict and lazy evaluation.
+To do so we have created a small language along with rules which define how to rewrite programs written in this language by rewriting its expressions.
+This makes use of inference rules which find the required level of information for these expressions.
+Using a small example we have seen how to apply the knowledge provided by this paper, along with a quick look at the performance benefits of using these rewrite rules.
+
+Along with the paper also comes a prototype, which implements the grammar and rules discussed in this paper.
+This prototype has shown that these rules can also be used in practise.
+Using our example program this prototype clearly shows the benefits of this rewrite by showing that the evaluation time can be greatly reduced.
+
+\section{Future work}
+Although this paper has clearly shown how these rewrite rules can be implemented to improve the performance of programs, the language discussed in this paper is not very extensive, making it hard to use it in actual applications.
+Instead, this paper has shown a new way of rewriting programs that, with further research, could be used for languages larger than the array programming language shown here.
+For example, it could be applied to the objects in an object-oriented language using the techniques shown in this paper to remove unused properties and computations on these properties, decreasing the computational and memory load of these objects.
+
+One big problem in the language discussed here is that these rewrite rules do not allow for higher order functions.
+Possible future research could look into extending the results from this paper by allowing rewrites on higher order functions to create a larger, more complete, array programming language.

@@ -1,0 +1,25 @@
+\chapter{Background}\label{sec:background}
+
+\section{Array programming}
+Array programming languages are a type of programming languages that are often used for scientific and engineering applications.
+They are languages in which the only data types are scalars and arrays.
+An array is a list of numbers along with some shape vector, this shape gives the length of each dimension of the array.
+These arrays can usually be of any dimension.
+Scalars are simply a decimal or integer value, which is internally represented as an array with a dimensionality of 0.
+
+Because the only data types are arrays, array programming languages allow the programmer to apply operations to an entire set of values, without having to result to explicit loops over each individual element like in other languages.
+This also makes programs easier to read, as they more closely resemble the mathematical notation.
+
+Two important terms in array programming are shape and dimensionality.
+The shape describes the length of each dimension of an array.
+A special case are scalars; they have an empty shape: $[\,]$, note that an empty array would have a shape of zeros: $[0]$, and not an empty shape.
+The dimensionality describes the number of dimensions, or rank, of an array.
+It corresponds to the length of the shape vector.
+
+\section{Strict vs. lazy evaluation}
+The language we will be constructing will try to find a balance between strict and lazy evaluation.
+These are two different ways of evaluating a program.
+A strict program evaluates expressions immediately when it encounters them, and a lazy program only evaluates expressions when their resulting values are required.
+Both of these have their up- and downsides.
+Strict evaluation potentially has to do more calculations, if the resulting values are not required later, but for lazy evaluation to avoid this it has to keep track of the program in order to be able to backtrack and evaluate expressions only when required.
+One thing to note here, because we will encounter it later, is that a program that runs properly in a lazy evaluation might not run in a strict evaluation, as problematic expressions that, for instance, produce a runtime error might not have been evaluated by the lazy evaluation.
