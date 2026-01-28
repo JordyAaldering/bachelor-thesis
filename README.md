@@ -1,4 +1,4 @@
-## A new semantics for array programming languages; how to introduce some laziness without being lazy
+## A New Semantics for Array Programming Languages: How to Introduce Some Laziness Without Being Lazy[^1]
 
 Array programming languages are often used in mathematical and engineering applications with very large and complicated equations.
 In these languages all values are represented as arrays, these arrays can usually be multidimensional.
@@ -8,3 +8,20 @@ The separation of knowledge of these arrays allows programs to potentially be re
 This paper defines a way to infer this required level of information and delivers rules for rewriting programs in a way that requires a lower level of information without losing strictness, finding a balance between lazy and strict evaluation.
 Along with this paper also comes a prototype language, created in a strict functional programming language, which implements these rules.
 This language will show how to implement these rules in the real world and will be used to validate and benchmark the results.
+
+```bibtex
+@mastersthesis{aaldering2021semantics,
+  author={Aaldering, Jordy
+    and Scholz, Sven-Bodo
+    and Koopman, Pieter},
+  title={A New Semantics for Array Programming Languages: How to Introduce Some Laziness Without Being Lazy},
+  type={Bachelor's thesis},
+  school={Radboud University},
+  address={Nijmegen, Netherlands},
+  year=2021,
+  month=mar,
+  url={https://www.cs.ru.nl/bachelors-theses/2021/Jordy_Aaldering___1004292___A_new_semantics_for_array_programming_languages_-_how_to_introduce_some_laziness_without_being_lazy.pdf}
+}
+```
+
+[^1]: https://www.cs.ru.nl/bachelors-theses/2021/Jordy_Aaldering___1004292___A_new_semantics_for_array_programming_languages_-_how_to_introduce_some_laziness_without_being_lazy.pdf
